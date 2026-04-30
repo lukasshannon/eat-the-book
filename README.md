@@ -14,17 +14,12 @@ The emotional tone is fear and tenderness. Corrupted worlds are dangerous, but n
 
 ### Core Genre
 
-Cozy-horror adventure
-
-Visual novel / relationship drama
-
-Stealth exploration
-
-Light Terraria-like traversal and ingredient gathering
-
-Recipe and farming progression
-
-Postgame identity customization
+- Cozy-horror adventure
+- Visual novel / relationship drama
+- Stealth exploration
+- Light Terraria-like traversal and ingredient gathering
+- Recipe and farming progression
+- Postgame identity customization
 
 
 ### Core Themes
@@ -96,14 +91,9 @@ Possible recipe scars include burns, tears, blood-like ink, missing words, black
 
 ## Cost Tiers
 
-Common cost: soul cost
-Helping a ghost requires some sacrifice of spirit, self, closure, or peace.
-
-Serious cost: recipe cost
-A recipe may be corrupted, lost, scarred, or changed forever.
-
-Highest-stakes cost: world cost
-Saving someone completely may damage, erase, or doom an entire world. This is rare and reserved for major decisions.
+- **Common cost (soul cost):** Helping a ghost requires some sacrifice of spirit, self, closure, or peace.
+- **Serious cost (recipe cost):** A recipe may be corrupted, lost, scarred, or changed forever.
+- **Highest-stakes cost (world cost):** Saving someone completely may damage, erase, or doom an entire world. This is rare and reserved for major decisions.
 
 
 ## Exploration and Stealth
@@ -112,9 +102,8 @@ Inside corrupted worlds, the player is physically vulnerable. The game is not co
 
 Early visits are stealth-focused. After a world is restored, the player can return to:
 
-the corrupted version in monster form, now able to fight and gather corrupted ingredients;
-
-the saved version in human or postgame form, able to gather pure ingredients and farm.
+- the corrupted version in monster form, now able to fight and gather corrupted ingredients;
+- the saved version in human or postgame form, able to gather pure ingredients and farm.
 
 
 ## Limb Loss and Body-Swapping
@@ -124,11 +113,8 @@ If monsters catch the player, they steal limbs one by one. The tone is cute-horr
 Examples:
 
 - limbs unscrew like doll parts;
-
 - limbs become wax, straw, ribbon, bread, porcelain, shadow, or cloth;
-
 - monsters tuck stolen limbs away like keepsakes;
-
 - replacement monster limbs are mismatched, floppy, puppet-like, wooden, waxy, or plush.
 
 
@@ -246,13 +232,10 @@ The Recipe Book is a visual artifact with tabs, stains, scars, repaired tears, b
 
 Each major NPC emphasizes one route type while containing traces of the others.
 
-Trust routes — NPCs remember whether the player’s body harmed them, even if the player was not controlling it.
-
-Sacrifice routes — close relationships ask what the player is willing to lose.
-
-Truth routes — characters uncover the player’s identity as the missing wizard.
-
-Monster routes — half-monster café NPCs explore body horror, transformation, and post-restoration identity.
+- **Trust routes:** NPCs remember whether the player’s body harmed them, even if the player was not controlling it.
+- **Sacrifice routes:** Close relationships ask what the player is willing to lose.
+- **Truth routes:** Characters uncover the player’s identity as the missing wizard.
+- **Monster routes:** Half-monster café NPCs explore body horror, transformation, and post-restoration identity.
 
 
 ## Story Escalation
@@ -505,17 +488,11 @@ Names should feel religious / ritual, not ordinary.
 Identity axes:
 
 - mercy vs control;
-
 - truth vs concealment;
-
 - self-sacrifice vs world-sacrifice;
-
 - humanity vs monsterhood;
-
 - closure vs rewriting;
-
 - trust vs isolation;
-
 - repair vs acceptance.
 
 Example structure:
@@ -540,17 +517,11 @@ World 7’s aesthetic depends on the player’s choices.
 Examples:
 
 - care-heavy route: sacred hearth-kitchen;
-
 - sabotage-heavy route: domestic horror;
-
 - monster/body-swap route: childlike nightmare kitchen;
-
 - control-heavy route: industrial fate-machine;
-
 - truth-heavy route: ritual archive-kitchen;
-
 - closure-heavy route: funeral kitchen;
-
 - rewrite-heavy route: unstable cosmic kitchen.
 
 Invariant rule:
