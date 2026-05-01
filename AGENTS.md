@@ -45,6 +45,7 @@ This repository expects coding agents to prioritize correctness, clarity, mainta
 10. **Document decisions**
    - Update docs/comments when interfaces or behavior change.
    - In PR summaries, include: problem, approach, validation, and risks.
+   - Update this file `AGENTS.md` with any important user requirements mentioned.
 
 ## Pull request checklist
 Before finalizing, ensure all are true:
@@ -54,8 +55,10 @@ Before finalizing, ensure all are true:
 - [ ] Backward compatibility considered.
 - [ ] No credentials or sensitive data introduced.
 - [ ] Documentation updated if needed.
+- [ ] User's request was satisfies completely.
 
-## UI refactor plan (2026-05-01)
+## UI plan
+- The reference mockup for the final complete UI is in `ref/ui-mockup`.
 - Separate structure (`docs/index.html`), visuals (`docs/static/css/ui.css`), and gameplay logic (`docs/static/js/*.js`) so interface work stays isolated from narrative state logic.
 - Place generated UI assets in `docs/static/img/` and reference them from CSS/HTML only.
 - Preserve existing game IDs and behavior contracts (`scenePanel`, `stats`, `book`, `inventory`, controls) while enabling incremental UI iteration.
