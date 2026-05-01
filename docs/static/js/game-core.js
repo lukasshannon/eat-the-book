@@ -239,15 +239,20 @@ function renderStats(state) {
   const truth = state.flags.sharedTruth ? "Truth Shared" : "Truth Hidden";
   const body = state.flags.limbInjury ? "Injured" : "Whole";
   ui.stats.innerHTML = `
-    <div><strong>Route Tone:</strong> ${tone}</div>
-    <div><strong>Plan:</strong> ${risk}</div>
-    <div><strong>Trust:</strong> ${truth}</div>
-    <div><strong>Body:</strong> <span class="meter">${body}</span></div>
-    <div><strong>Relations:</strong> Orchard ${state.relation.orchard}, Raincoat ${state.relation.raincoat}, Mirror ${state.relation.mirror}</div>
+    <p><strong>Route Tone:</strong> ${tone}</p>
+    <p><strong>Plan:</strong> ${risk}</p>
+    <p><strong>Trust:</strong> ${truth}</p>
+    <p><strong>Body:</strong> <span class="meter">${body}</span></p>
+    <p><strong>Relations:</strong> Orchard ${state.relation.orchard}, Raincoat ${state.relation.raincoat}, Mirror ${state.relation.mirror}</p>
   `;
-  ui.inventory.innerHTML = state.inventory.length
-    ? `<ul>${state.inventory.map((i) => `<li>${i}</li>`).join("")}</ul>`
-    : "<div class='mini'>No ingredients yet.</div>";
+
+  const slots = state.inventory.slice(-4);
+  const padded = [...slots];
+  while (padded.length < 4) padded.push("+");
+  ui.inventory.innerHTML = padded
+    .map((item) => `<div class="inv-slot">${item}</div>`)
+    .join("");
+
   ui.book.innerHTML = `<ul>${state.recipeBook.map((r) => `<li>${r}</li>`).join("")}</ul>`;
 }
 
@@ -264,8 +269,8 @@ function renderScene(state) {
   save(state);
 
   ui.progress.textContent = node.end
-    ? "Story complete — you can restart or continue to reread."
-    : `Current location: ${node.location}`;
+    ? "Today's Special: Story complete. Restart for a fresh shift."
+    : `Today's Special: ${node.location}`;
 
   const choicesHtml = (node.choices || [])
     .map((choice, i) => `<button class="choice" data-choice="${i}">${choice.label}</button>`)
@@ -274,8 +279,8 @@ function renderScene(state) {
   ui.scenePanel.innerHTML = `
     <h2>${node.location}</h2>
     <div class="tags">${(node.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}</div>
-    <div class="speaker">${node.speaker}</div>
-    <div class="dialogue">${node.text}</div>
+    <div class="speaker-label">${node.speaker}</div>
+    <div class="dialogue-text">${node.text}</div>
     <div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>
   `;
 

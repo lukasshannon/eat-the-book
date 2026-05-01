@@ -3,42 +3,74 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>eat-the-book — Vertical Slice</title>
+    <title>eat-the-book — Vintage Notebook Shift</title>
     <link rel="stylesheet" href="./static/css/ui.css" />
   </head>
   <body>
-    <main id="app">
-      <header class="panel topbar">
-        <div>
-          <div class="title">eat-the-book — Café Outside Time</div>
-          <div id="progress" class="mini">Not started</div>
-        </div>
-        <div class="btn-row">
-          <button id="startBtn">Start New</button>
-          <button id="continueBtn">Continue</button>
-          <button id="resetBtn">Reset Save</button>
-        </div>
-      </header>
+    <main id="app" aria-live="polite">
+      <aside class="desk-card desk-intro" aria-hidden="true">
+        <p class="intro-index">D1</p>
+        <h1>Vintage Notebook</h1>
+        <p>Spiral-bound pages, torn edges, ink sketches and washi tape.</p>
+      </aside>
 
-      <section class="main">
-        <article class="panel scene" id="scenePanel"></article>
-        <aside class="panel hud">
-          <div id="stats"></div>
-          <details open>
-            <summary>Recipe Book</summary>
-            <div id="book"></div>
-          </details>
-          <details>
-            <summary>Inventory</summary>
-            <div id="inventory"></div>
-          </details>
-          <div id="errorBox" class="error" role="alert"></div>
-        </aside>
+      <section class="notebook-shell" aria-label="Game notebook">
+        <div class="spiral" aria-hidden="true"></div>
+
+        <header class="top-status panel-paper">
+          <div class="status-block role-block">
+            <span class="status-value">12</span>
+            <span class="status-label">Barista</span>
+          </div>
+          <div class="status-block"><span class="icon">☕</span><span id="energyValue">125/120</span></div>
+          <div class="status-block"><span class="icon">🪙</span><span id="coinValue">1240</span></div>
+          <div class="status-block"><span class="icon">💎</span><span id="gemValue">85</span></div>
+          <button class="settings-btn" type="button" aria-label="Settings">⚙</button>
+        </header>
+
+        <div class="scene-visual panel-paper">
+          <div class="scene-glow"></div>
+          <div class="npc-portrait" aria-hidden="true"></div>
+          <aside class="special-note" id="progress">Today's Special: Begin shift.</aside>
+        </div>
+
+        <article id="scenePanel" class="dialogue-card panel-paper"></article>
+
+        <nav class="bottom-tabs panel-paper" aria-label="Notebook tabs">
+          <button class="tab-btn active" data-tab="cafe" type="button"><span>☕</span>Café</button>
+          <button class="tab-btn" data-tab="recipes" type="button"><span>📖</span>Recipes</button>
+          <button class="tab-btn" data-tab="worlds" type="button"><span>🌐</span>Worlds</button>
+          <button class="tab-btn" data-tab="journal" type="button"><span>🗒️</span>Journal</button>
+        </nav>
       </section>
 
-      <footer class="panel footer">
-        <div class="mini">Tap choices to play. Progress auto-saves after every choice.</div>
-      </footer>
+      <aside class="world-hud panel-paper" id="worldHud">
+        <h3>Exploration HUD (World)</h3>
+        <div class="stealth-row">👁️ Stealth <span>🖤🖤🖤🖤</span></div>
+        <div class="world-scene"></div>
+        <div class="slot-row" id="inventory"></div>
+        <p class="objective" id="worldObjective">Stay unseen. Find ingredients. Return to the café.</p>
+      </aside>
+
+      <section class="pockets">
+        <details class="pocket-card" open>
+          <summary>Recipe Book</summary>
+          <div id="book"></div>
+        </details>
+        <details class="pocket-card">
+          <summary>Inventory Pouch</summary>
+          <div id="stats"></div>
+        </details>
+      </section>
+
+      <section class="controls panel-paper">
+        <div class="control-row">
+          <button id="startBtn" type="button">Start New</button>
+          <button id="continueBtn" type="button">Continue</button>
+          <button id="resetBtn" type="button">Reset Save</button>
+        </div>
+        <div id="errorBox" class="error" role="alert"></div>
+      </section>
     </main>
 
     <script type="module" src="./static/js/main.js"></script>
