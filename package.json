@@ -1,0 +1,10 @@
+{
+  "name": "eat-the-book",
+  "private": true,
+  "scripts": {
+    "test:ui": "node scripts/ui-smoke.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

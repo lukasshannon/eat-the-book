@@ -793,3 +793,16 @@ This shows that the café has changed from a fate-machine into a community.
 6. Identity first emerges from consequence, then becomes choice — the main game reveals who the player has become; the postgame lets them choose who they can be.
 
 7. Hope is earned — the ending is hopeful because it does not deny horror; it digests it.
+
+
+## UI Smoke Test
+
+Run the notebook UI regression smoke test:
+
+```bash
+npm install
+npm run test:ui
+```
+
+The smoke test serves `docs/` over HTTP, opens `docs/index.html` in Playwright, and verifies tab navigation + theme-toggle accessibility state.
+
