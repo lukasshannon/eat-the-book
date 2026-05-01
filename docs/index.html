@@ -86,12 +86,14 @@
         orchard_deep:{ location:"Ruined Orchard", speaker:CHAR.you, tags:["Gathering"], text:"Take safe route home, or deep route for extra ingredients?", choices:[{label:"Safe route", next:"drowned_village", effects:{flags:{extraIngredients:false}, addItems:["orchard bark"]}, log:"You left with a lean basket."},{label:"Deep route", next:"drowned_village", effects:{flags:{extraIngredients:true}, addItems:["orchard bark","pale seaweed"]}, log:"You gathered extra stock."}] },
         drowned_village:{ location:"Drowned Village", speaker:CHAR.raincoat, tags:["Location 3"], text:"A dry cellar is safe. A watched cellar is rich with roots and salt.", choices:[{label:"Safe cellar", next:"glass_refuge", effects:{addItems:["shell salt"]}, log:"You avoided pursuit."},{label:"Watched cellar", next:"glass_refuge", effects:{addItems:["shell salt","drowned roots","pale seaweed"]}, log:"You grabbed the full broth set."}] },
         glass_refuge:{ location:"Glass Refuge", speaker:CHAR.mirror, tags:["Location 4","Trust"], text:"Will you tell the children what this cost you?", choices:[{label:"Share the truth", next:"kitchen_gate", effects:{flags:{sharedTruth:true}, relation:{orchard:1,mirror:1}}, log:"You chose honesty."},{label:"Hide the burden", next:"kitchen_gate", effects:{flags:{sharedTruth:false}, relation:{raincoat:1}}, log:"You chose silence."}] },
-        kitchen_gate:{ location:"Kitchen of Fate", speaker:CHAR.villain, tags:["Final Gate"], onEnter:{addBook:["Sun Curd"]}, text:"\"Feed the baby-sun and keep fate, or refuse and crack the machine.\"", choices:[{label:"Cook Orchard Porridge", next:"resolve_orchard", log:"You prepared Orchard Porridge."},{label:"Cook Tide Broth", next:"resolve_tide", log:"You prepared Tide Broth."},{label:"Refuse the ritual", next:"ending_refuse", effects:{flags:{choseFeed:false}}, log:"You defied the ritual."}] },
+        kitchen_gate:{ location:"Kitchen of Fate", speaker:CHAR.villain, tags:["Final Gate"], onEnter:{addBook:["Sun Curd"]}, text:"\"Feed the baby-sun and keep fate, or refuse and crack the machine.\" {contextLine}", choices:[{label:"Cook Orchard Porridge", next:"resolve_orchard", log:"You prepared Orchard Porridge."},{label:"Cook Tide Broth", next:"resolve_tide", log:"You prepared Tide Broth."},{label:"Cook Sun Curd (requires true water + ember)", next:"resolve_suncurd", log:"You attempted the final dawn ritual."},{label:"Refuse the ritual", next:"ending_refuse", effects:{flags:{choseFeed:false}}, log:"You defied the ritual."}] },
         resolve_orchard:{ location:"Kitchen of Fate", speaker:CHAR.keeper, tags:["Recipe Check"], text:"Checking Orchard Porridge ingredients...", resolver:"orchard" },
         resolve_tide:{ location:"Kitchen of Fate", speaker:CHAR.keeper, tags:["Recipe Check"], text:"Checking Tide Broth ingredients...", resolver:"tide" },
+        resolve_suncurd:{ location:"Kitchen of Fate", speaker:CHAR.keeper, tags:["Recipe Check"], text:"Checking Sun Curd ingredients...", resolver:"suncurd" },
         ending_restore:{ location:"Quiet Café — Dawn", speaker:CHAR.keeper, tags:["Ending"], end:true, text:"You fed the baby-sun. The drowned bells ring over dry stone, and the orchard warms." },
         ending_partial:{ location:"Quiet Café — Gray Dawn", speaker:CHAR.keeper, tags:["Ending"], end:true, text:"You fed a thinner meal. The world survives, but scars remain and routes narrow." },
-        ending_refuse:{ location:"Quiet Café — Dusk", speaker:CHAR.villain, tags:["Ending"], end:true, text:"You refused. No world heals tonight, but fate's machine cracks." }
+        ending_refuse:{ location:"Quiet Café — Dusk", speaker:CHAR.villain, tags:["Ending"], end:true, text:"You refused. No world heals tonight, but fate's machine cracks." },
+        ending_truthsun:{ location:"Quiet Café — Bright Morning", speaker:CHAR.keeper, tags:["Ending"], end:true, text:"You cooked Sun Curd and shared the full truth. The children name you keeper of a kinder dawn." }
       };
 
       const ui = {
@@ -111,8 +113,16 @@
       function hasAll(state, need){ return need.every(x=>state.inventory.includes(x)); }
       function applyOnEnter(state, scene){ if(state.visited[state.current]) return; if(scene.onEnter?.addItems) uniqPush(state.inventory, scene.onEnter.addItems); if(scene.onEnter?.addBook) uniqPush(state.recipeBook, scene.onEnter.addBook); state.visited[state.current]=true; }
       function applyEffects(state, eff={}){ if(eff.flags) Object.entries(eff.flags).forEach(([k,v])=>state.flags[k]=v); if(eff.relation) Object.entries(eff.relation).forEach(([k,v])=>state.relation[k]=(state.relation[k]||0)+v); if(eff.addItems) uniqPush(state.inventory, eff.addItems); if(eff.addBook) uniqPush(state.recipeBook, eff.addBook); }
+      function buildContextLine(state){
+        const mood = state.flags.protective ? "The Raincoat Child grips your sleeve, trusting your promise." : "The Mirror Child watches silently, measuring your balance.";
+        const wound = state.flags.limbInjury ? "Your injured arm trembles over the bowl." : "Your hands stay steady above the fire.";
+        return `${mood} ${wound}`;
+      }
+      function renderTextTemplate(text, state){
+        return text.replace("{contextLine}", buildContextLine(state));
+      }
 
-      function resolveScene(state, resolver){ if(resolver==="orchard"){ state.flags.choseFeed=true; addLog(state,"Attempted Orchard Porridge."); state.current=hasAll(state, RECIPES["Orchard Porridge"].need)?"ending_restore":"ending_partial"; return true; } if(resolver==="tide"){ state.flags.choseFeed=true; addLog(state,"Attempted Tide Broth."); state.current=hasAll(state, RECIPES["Tide Broth"].need)?"ending_restore":"ending_partial"; return true; } showError(`Unknown resolver '${resolver}'.`); return false; }
+      function resolveScene(state, resolver){ if(resolver==="orchard"){ state.flags.choseFeed=true; addLog(state,"Attempted Orchard Porridge."); state.current=hasAll(state, RECIPES["Orchard Porridge"].need)?"ending_restore":"ending_partial"; return true; } if(resolver==="tide"){ state.flags.choseFeed=true; addLog(state,"Attempted Tide Broth."); state.current=hasAll(state, RECIPES["Tide Broth"].need)?"ending_restore":"ending_partial"; return true; } if(resolver==="suncurd"){ state.flags.choseFeed=true; const ok = hasAll(state, RECIPES["Sun Curd"].need); addLog(state, ok ? "Sun Curd succeeded." : "Sun Curd failed due to missing components."); state.current = ok && state.flags.sharedTruth ? "ending_truthsun" : ok ? "ending_restore" : "ending_partial"; return true; } showError(`Unknown resolver '${resolver}'.`); return false; }
 
       function renderPanels(state){
         const tone=state.flags.protective?"Protective":"Balanced"; const plan=state.flags.riskyPlan?"Risky":"Careful"; const truth=state.flags.sharedTruth?"Honest":"Guarded"; const body=state.flags.limbInjury?"Injured":"Whole";
@@ -129,7 +139,7 @@
         if(scene.resolver){ if(resolveScene(state, scene.resolver)){ persist(state); render(state); } return; }
         ui.progress.textContent=scene.end?"Ending reached. Continue to review or Start New.":`Current: ${scene.location}`;
         const choices=(scene.choices||[]).map((c,i)=>`<button class='choice' data-i='${i}'>${c.label}</button>`).join("");
-        ui.story.innerHTML=`<h2 class='loc'>${scene.location}</h2><div class='chips'>${(scene.tags||[]).map(t=>`<span class='chip'>${t}</span>`).join("")}</div><div class='speaker'>${scene.speaker}</div><p class='text'>${scene.text}</p><div class='choices'>${choices||"<p class='muted'>No more choices. Start New to replay.</p>"}</div>`;
+        ui.story.innerHTML=`<h2 class='loc'>${scene.location}</h2><div class='chips'>${(scene.tags||[]).map(t=>`<span class='chip'>${t}</span>`).join("")}</div><div class='speaker'>${scene.speaker}</div><p class='text'>${renderTextTemplate(scene.text, state)}</p><div class='choices'>${choices||"<p class='muted'>No more choices. Start New to replay.</p>"}</div>`;
         ui.story.querySelectorAll("[data-i]").forEach(btn=>btn.addEventListener("click",()=>{ const choice=scene.choices?.[Number(btn.dataset.i)]; if(!choice||!choice.next){ showError("Choice data is malformed."); return; } applyEffects(state, choice.effects); addLog(state, choice.log); state.started=true; state.current=choice.next; persist(state); render(state); }));
         renderPanels(state); setTab(state, state.activeTab||"story");
       }
