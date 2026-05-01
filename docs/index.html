@@ -2,300 +2,440 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
-    />
-    <title>eat-the-book — Café Slice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>eat-the-book — Vertical Slice</title>
     <style>
       :root {
         color-scheme: dark;
-        --bg: #0e0e12;
-        --panel: rgba(18, 18, 26, 0.92);
-        --accent: #ebb96e;
-        --text: #f8f5ee;
-        --muted: #cabca6;
+        --bg: #0b0a11;
+        --panel: #171522;
+        --panel-2: #1d192b;
+        --line: #4b3b67;
+        --gold: #f0bf74;
+        --text: #f8f2e7;
+        --muted: #cab99f;
+        --danger: #f08989;
+        --ok: #a8e7b0;
       }
-
-      * {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-      }
-
+      * { box-sizing: border-box; }
       body {
         margin: 0;
-        min-height: 100svh;
-        font-family: "Avenir Next", "Segoe UI", Roboto, sans-serif;
-        background: radial-gradient(circle at top, #272034 0%, #0e0e12 60%, #07070a 100%);
+        background: radial-gradient(circle at 20% 0%, #261e37 0%, #0b0a11 55%, #050408 100%);
         color: var(--text);
+        font-family: "Avenir Next", "Segoe UI", Roboto, sans-serif;
       }
-
-      #game-container {
-        width: min(100vw, 960px);
-        height: min(100svh, 640px);
+      #app {
+        min-height: 100svh;
+        width: 100%;
+        max-width: 900px;
         margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 10px;
+        padding: 12px;
       }
-
-      canvas {
-        max-width: 100%;
-        max-height: 100%;
-        border-radius: 12px;
-        box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+      .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+      .topbar {
+        display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 12px;
+      }
+      .title { font-size: 1rem; font-weight: 700; color: var(--gold); }
+      .mini { color: var(--muted); font-size: 0.85rem; }
+      .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+      button {
+        border: 1px solid #80634a;
+        background: #2a2138;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.92rem;
+      }
+      button:active { transform: scale(0.99); }
+      .main { display: grid; grid-template-columns: 1fr; gap: 10px; }
+      .scene { padding: 12px; background: linear-gradient(180deg, var(--panel-2), #14111f); min-height: 180px; }
+      .scene h2 { margin: 0 0 6px; font-size: 1.1rem; color: #f5ddb4; }
+      .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+      .tag { border: 1px solid #65507f; border-radius: 999px; padding: 3px 8px; color: var(--muted); font-size: 0.78rem; }
+      .dialogue { margin-top: 8px; line-height: 1.45; font-size: 1.02rem; }
+      .speaker { color: var(--gold); font-weight: 700; margin-bottom: 4px; }
+      .choices { display: grid; gap: 8px; margin-top: 12px; }
+      .choice { width: 100%; text-align: left; background: #2d2540; }
+      .hud { padding: 10px 12px; display: grid; gap: 8px; }
+      .error {
+        margin-top: 8px;
+        border: 1px solid #874848;
+        background: #381f29;
+        color: #ffd7d7;
+        border-radius: 10px;
+        padding: 8px;
+        display: none;
+      }
+      .footer { padding: 10px 12px; display: grid; gap: 8px; }
+      .meter { color: var(--ok); }
+      details { background: #12101d; border: 1px solid #3f3158; border-radius: 10px; padding: 8px; }
+      summary { cursor: pointer; color: #ead8bc; }
+      ul { margin: 8px 0 0 18px; padding: 0; }
+      @media (min-width: 720px) {
+        .main { grid-template-columns: 2fr 1fr; }
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
   </head>
   <body>
-    <main id="game-container" aria-label="Café visual novel scene"></main>
+    <main id="app">
+      <header class="panel topbar">
+        <div>
+          <div class="title">eat-the-book — Café Outside Time</div>
+          <div id="progress" class="mini">Not started</div>
+        </div>
+        <div class="btn-row">
+          <button id="startBtn">Start New</button>
+          <button id="continueBtn">Continue</button>
+          <button id="resetBtn">Reset Save</button>
+        </div>
+      </header>
+
+      <section class="main">
+        <article class="panel scene" id="scenePanel"></article>
+        <aside class="panel hud">
+          <div id="stats"></div>
+          <details open>
+            <summary>Recipe Book</summary>
+            <div id="book"></div>
+          </details>
+          <details>
+            <summary>Inventory</summary>
+            <div id="inventory"></div>
+          </details>
+          <div id="errorBox" class="error" role="alert"></div>
+        </aside>
+      </section>
+
+      <footer class="panel footer">
+        <div class="mini">Tap choices to play. Progress auto-saves after every choice.</div>
+      </footer>
+    </main>
 
     <script>
-      class CafeScene extends Phaser.Scene {
-        constructor() {
-          super("CafeScene");
-          this.state = this.loadState();
-        }
+      const STORAGE_KEY = "eat-the-book-vertical-slice-v1";
 
-        create() {
-          this.cameras.main.setBackgroundColor("#111017");
-          this.drawBackground();
-          this.drawUi();
-          this.bindResize();
-          this.showNode(this.state.currentNodeId);
-        }
+      const CHARACTERS = {
+        keeper: "Keeper",
+        you: "You",
+        orchard: "Orchard Child",
+        raincoat: "Raincoat Child",
+        mirror: "Mirror Child",
+        villain: "Ashen Guest",
+      };
 
-        drawBackground() {
-          this.add.rectangle(360, 320, 720, 640, 0x1a1524, 0.9).setStrokeStyle(2, 0x3f2f55, 1);
-          this.add.circle(620, 170, 70, 0xeb9f4f, 0.85);
-          this.add.circle(620, 170, 40, 0xffdeaf, 0.9);
-          this.add.rectangle(360, 220, 720, 260, 0x251c35, 0.55);
-          this.add.rectangle(360, 430, 720, 250, 0x120e1b, 0.85);
-
-          this.add.text(34, 24, "The Quiet Café", {
-            fontSize: "30px",
-            color: "#f5dfbf",
-            fontStyle: "bold",
-          });
-
-          this.add.text(34, 62, "Outside time, between unfinished worlds.", {
-            fontSize: "18px",
-            color: "#d5c5aa",
-          });
-        }
-
-        drawUi() {
-          this.portrait = this.add.rectangle(108, 515, 150, 190, 0x2f253f, 0.9).setStrokeStyle(2, 0xe7b36f, 0.9);
-          this.speakerText = this.add.text(198, 425, "", {
-            fontSize: "22px",
-            color: "#f7d9a6",
-            fontStyle: "bold",
-          });
-
-          this.dialogueText = this.add
-            .text(198, 465, "", {
-              fontSize: "24px",
-              color: "#f3eee6",
-              wordWrap: { width: 495, useAdvancedWrap: true },
-              lineSpacing: 8,
-            })
-            .setInteractive({ useHandCursor: true });
-
-          this.dialogueText.on("pointerup", () => {
-            const node = SCRIPT[this.state.currentNodeId];
-            if (node && node.next && !node.choices) {
-              this.showNode(node.next);
-            }
-          });
-
-          this.choiceButtons = [];
-          this.choiceSummary = this.add.text(26, 88, "", {
-            fontSize: "16px",
-            color: "#f0d9b2",
-            wordWrap: { width: 660, useAdvancedWrap: true },
-          });
-          this.updateChoiceSummary();
-        }
-
-        clearChoices() {
-          this.choiceButtons.forEach((button) => button.destroy());
-          this.choiceButtons = [];
-        }
-
-        showNode(nodeId) {
-          const node = SCRIPT[nodeId];
-          if (!node) return;
-
-          this.state.currentNodeId = nodeId;
-          this.saveState();
-
-          this.speakerText.setText(node.speaker);
-          this.dialogueText.setText(node.text + (node.next && !node.choices ? "\n\n(tap dialogue to continue)" : ""));
-
-          this.portrait.setFillStyle(PORTRAIT_COLORS[node.speaker] || 0x3b304d, 0.95);
-
-          this.clearChoices();
-
-          if (node.choices) {
-            node.choices.forEach((choice, index) => {
-              const y = 540 + index * 64;
-              const bg = this.add
-                .rectangle(430, y, 430, 52, 0x2f273b, 0.92)
-                .setStrokeStyle(2, 0xdeaf71, 0.9)
-                .setInteractive({ useHandCursor: true });
-              const txt = this.add.text(230, y - 13, choice.label, {
-                fontSize: "20px",
-                color: "#fff3dd",
-                wordWrap: { width: 380, useAdvancedWrap: true },
-              });
-
-              bg.on("pointerup", () => {
-                this.applyFlags(choice.flags || {});
-                this.showNode(choice.next);
-              });
-
-              this.choiceButtons.push(bg, txt);
-            });
-          }
-        }
-
-        applyFlags(flags) {
-          Object.entries(flags).forEach(([key, value]) => {
-            this.state.flags[key] = value;
-          });
-          this.saveState();
-          this.updateChoiceSummary();
-        }
-
-        updateChoiceSummary() {
-          const mood = this.state.flags.protective ? "Protective" : "Detached";
-          const risk = this.state.flags.riskyPlan ? "Risky prep" : "Careful prep";
-          const trust = this.state.flags.sharedTruth ? "Honest" : "Guarded";
-
-          this.choiceSummary.setText(`Route tone: ${mood} · ${risk} · ${trust}`);
-        }
-
-        bindResize() {
-          this.scale.on("resize", (gameSize) => {
-            const { width, height } = gameSize;
-            const zoom = Math.min(width / 720, height / 640);
-            this.cameras.main.setZoom(zoom);
-            this.cameras.main.centerOn(360, 320);
-          });
-        }
-
-        loadState() {
-          try {
-            const raw = localStorage.getItem("eat-the-book-cafe-state");
-            if (!raw) return this.defaultState();
-            return { ...this.defaultState(), ...JSON.parse(raw) };
-          } catch {
-            return this.defaultState();
-          }
-        }
-
-        saveState() {
-          localStorage.setItem("eat-the-book-cafe-state", JSON.stringify(this.state));
-        }
-
-        defaultState() {
-          return {
-            currentNodeId: "intro",
-            flags: {
-              protective: false,
-              riskyPlan: false,
-              sharedTruth: false,
+      const GAME_DATA = {
+        title: {
+          location: "Title Screen",
+          speaker: CHARACTERS.keeper,
+          text: "Welcome back to the Quiet Café. Tonight you can save one drowning world—or leave it hungry.",
+          tags: ["Hub", "Choice", "Auto-save"],
+          choices: [
+            { label: "Begin shift", next: "cafe_intro" }
+          ]
+        },
+        cafe_intro: {
+          location: "Quiet Café",
+          speaker: CHARACTERS.you,
+          text: "Three children wait beside a scarred page: orchard straw, rain-salt, and mirrored ash.",
+          tags: ["Location 1", "Dialogue"],
+          onEnter: { addBook: ["Orchard Porridge", "Tide Broth"] },
+          choices: [
+            {
+              label: "Promise protection first",
+              next: "cafe_plan",
+              effects: { flags: { protective: true }, relation: { raincoat: 1 } }
             },
-          };
+            {
+              label: "Promise balance first",
+              next: "cafe_plan",
+              effects: { flags: { protective: false }, relation: { mirror: 1 } }
+            }
+          ]
+        },
+        cafe_plan: {
+          location: "Quiet Café",
+          speaker: CHARACTERS.raincoat,
+          text: "The drowned village is calling. Brew fast and risky, or slow and careful?",
+          tags: ["Location 1", "Branching"],
+          choices: [
+            {
+              label: "Brew fast (higher risk, extra yield)",
+              next: "orchard_gate",
+              effects: { flags: { riskyPlan: true }, addItems: ["hot kettle coal"] }
+            },
+            {
+              label: "Brew carefully (safer route)",
+              next: "orchard_gate",
+              effects: { flags: { riskyPlan: false }, addItems: ["stable broth base"] }
+            }
+          ]
+        },
+        orchard_gate: {
+          location: "Ruined Orchard",
+          speaker: CHARACTERS.orchard,
+          text: "Lantern scarecrows patrol the hedges. Wear the disguise correctly, or sprint half-finished?",
+          tags: ["Location 2", "Stealth"],
+          onEnter: { addBook: ["Scarecrow Stitch"] },
+          choices: [
+            {
+              label: "Stitch disguise fully",
+              next: "drowned_entry",
+              effects: { flags: { disguiseChecked: true }, addItems: ["grave-honey", "blighted apple milk"] }
+            },
+            {
+              label: "Rush half-masked",
+              next: "drowned_entry",
+              effects: { flags: { disguiseChecked: false, limbInjury: true }, addItems: ["grave-honey"] }
+            }
+          ]
+        },
+        drowned_entry: {
+          location: "Drowned Village",
+          speaker: CHARACTERS.raincoat,
+          text: "Water climbs the chapel stairs. One cellar is safe, one is rich with ingredients but watched.",
+          tags: ["Location 3", "Gathering"],
+          choices: [
+            {
+              label: "Take safe cellar",
+              next: "mirror_chamber",
+              effects: { flags: { extraIngredients: false }, addItems: ["shell salt"] }
+            },
+            {
+              label: "Raid rich cellar",
+              next: "mirror_chamber",
+              effects: { flags: { extraIngredients: true }, addItems: ["shell salt", "drowned roots", "pale seaweed"] }
+            }
+          ]
+        },
+        mirror_chamber: {
+          location: "Glass Refuge",
+          speaker: CHARACTERS.mirror,
+          text: "Your reflection splits: reveal the true cost to the child, or hide the injuries and fear?",
+          tags: ["Location 4", "Trust"],
+          choices: [
+            {
+              label: "Tell the truth",
+              next: "kitchen_return",
+              effects: { flags: { sharedTruth: true }, relation: { orchard: 1, mirror: 1 } }
+            },
+            {
+              label: "Hide the burden",
+              next: "kitchen_return",
+              effects: { flags: { sharedTruth: false }, relation: { raincoat: 1 } }
+            }
+          ]
+        },
+        kitchen_return: {
+          location: "Kitchen of Fate",
+          speaker: CHARACTERS.villain,
+          text: "A bitter guest blocks the stove. " +
+            "\"Feed the baby and keep the machine, or starve the machine and keep your hands clean?\"",
+          tags: ["Final Choice", "Ending Branch"],
+          onEnter: { addBook: ["Kitchen Oath"] },
+          choices: [
+            {
+              label: "Feed the baby-sun",
+              next: "ending_feed",
+              effects: { flags: { choseFeed: true }, addItems: ["new sun ember"] }
+            },
+            {
+              label: "Refuse the ritual",
+              next: "ending_refuse",
+              effects: { flags: { choseFeed: false } }
+            }
+          ]
+        },
+        ending_feed: {
+          location: "Quiet Café, Dawn",
+          speaker: CHARACTERS.keeper,
+          text: "The baby-sun wakes. The village drains, the orchard warms, and the children keep your name in the book margins.",
+          tags: ["Ending"],
+          end: true
+        },
+        ending_refuse: {
+          location: "Quiet Café, Dusk",
+          speaker: CHARACTERS.keeper,
+          text: "You deny the ritual. No world heals tonight, but the machine cracks and a new path opens with no recipe commands.",
+          tags: ["Ending"],
+          end: true
+        }
+      };
+
+      const ui = {
+        scenePanel: document.getElementById("scenePanel"),
+        stats: document.getElementById("stats"),
+        inventory: document.getElementById("inventory"),
+        book: document.getElementById("book"),
+        errorBox: document.getElementById("errorBox"),
+        progress: document.getElementById("progress"),
+        startBtn: document.getElementById("startBtn"),
+        continueBtn: document.getElementById("continueBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+      };
+
+      function defaultState() {
+        return {
+          current: "title",
+          started: false,
+          flags: {
+            protective: false,
+            riskyPlan: false,
+            sharedTruth: false,
+            disguiseChecked: false,
+            extraIngredients: false,
+            limbInjury: false,
+            choseFeed: false,
+          },
+          relation: { orchard: 0, raincoat: 0, mirror: 0 },
+          inventory: [],
+          recipeBook: ["Orchard Porridge"],
+          visited: {},
+        };
+      }
+
+      function save(state) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          const parsed = JSON.parse(raw);
+          return { ...defaultState(), ...parsed, flags: { ...defaultState().flags, ...(parsed.flags || {}) } };
+        } catch (err) {
+          showError("Save file is corrupted. Starting fresh.");
+          return defaultState();
         }
       }
 
-      const PORTRAIT_COLORS = {
-        Keeper: 0x3a2a4d,
-        "Ghost Child": 0x5d3b66,
-        You: 0x2f4664,
-      };
+      function showError(message) {
+        ui.errorBox.style.display = "block";
+        ui.errorBox.textContent = `Error: ${message}`;
+      }
 
-      const SCRIPT = {
-        intro: {
-          speaker: "Keeper",
-          text: "A new chapter stains the Recipe Book. The page smells like rain and smoke.",
-          next: "child-arrives",
-        },
-        "child-arrives": {
-          speaker: "Ghost Child",
-          text: "If you feed the world tonight, it might remember my name.",
-          next: "choice-intent",
-        },
-        "choice-intent": {
-          speaker: "You",
-          text: "Before I cook, what am I promising to protect?",
-          choices: [
-            {
-              label: "Promise to protect the child, no matter the cost.",
-              flags: { protective: true },
-              next: "choice-risk",
-            },
-            {
-              label: "Promise only to restore balance, nothing personal.",
-              flags: { protective: false },
-              next: "choice-risk",
-            },
-          ],
-        },
-        "choice-risk": {
-          speaker: "Keeper",
-          text: "The entry recipe can be brewed quickly... or safely.",
-          choices: [
-            {
-              label: "Brew fast before fear catches up.",
-              flags: { riskyPlan: true },
-              next: "choice-truth",
-            },
-            {
-              label: "Brew slowly and inspect every scarred note.",
-              flags: { riskyPlan: false },
-              next: "choice-truth",
-            },
-          ],
-        },
-        "choice-truth": {
-          speaker: "Ghost Child",
-          text: "When you come back from the world below... will you tell me what it took?",
-          choices: [
-            {
-              label: "Yes. I will share the truth, even if it hurts.",
-              flags: { sharedTruth: true },
-              next: "ending",
-            },
-            {
-              label: "No. I will carry the burden alone.",
-              flags: { sharedTruth: false },
-              next: "ending",
-            },
-          ],
-        },
-        ending: {
-          speaker: "Keeper",
-          text: "The kettle starts singing. Your choices are recorded in the page scars. This café slice is complete.",
-        },
-      };
+      function clearError() {
+        ui.errorBox.style.display = "none";
+        ui.errorBox.textContent = "";
+      }
 
-      const config = {
-        type: Phaser.AUTO,
-        parent: "game-container",
-        width: 720,
-        height: 640,
-        backgroundColor: "#111017",
-        scene: [CafeScene],
-        scale: {
-          mode: Phaser.Scale.FIT,
-          autoCenter: Phaser.Scale.CENTER_BOTH,
-        },
-      };
+      function uniquePush(list, items) {
+        items.forEach((item) => {
+          if (!list.includes(item)) list.push(item);
+        });
+      }
 
-      new Phaser.Game(config);
+      function applyEffects(state, effects = {}) {
+        if (effects.flags) {
+          Object.entries(effects.flags).forEach(([k, v]) => {
+            state.flags[k] = v;
+          });
+        }
+        if (effects.relation) {
+          Object.entries(effects.relation).forEach(([k, v]) => {
+            state.relation[k] = (state.relation[k] || 0) + v;
+          });
+        }
+        if (effects.addItems) uniquePush(state.inventory, effects.addItems);
+      }
+
+      function applyOnEnter(state, node) {
+        if (state.visited[state.current]) return;
+        if (node.onEnter?.addItems) uniquePush(state.inventory, node.onEnter.addItems);
+        if (node.onEnter?.addBook) uniquePush(state.recipeBook, node.onEnter.addBook);
+        state.visited[state.current] = true;
+      }
+
+      function renderStats(state) {
+        const tone = state.flags.protective ? "Protective" : "Balanced";
+        const risk = state.flags.riskyPlan ? "Risky Brew" : "Careful Brew";
+        const truth = state.flags.sharedTruth ? "Truth Shared" : "Truth Hidden";
+        const body = state.flags.limbInjury ? "Injured" : "Whole";
+        ui.stats.innerHTML = `
+          <div><strong>Route Tone:</strong> ${tone}</div>
+          <div><strong>Plan:</strong> ${risk}</div>
+          <div><strong>Trust:</strong> ${truth}</div>
+          <div><strong>Body:</strong> <span class="meter">${body}</span></div>
+          <div><strong>Relations:</strong> Orchard ${state.relation.orchard}, Raincoat ${state.relation.raincoat}, Mirror ${state.relation.mirror}</div>
+        `;
+        ui.inventory.innerHTML = state.inventory.length
+          ? `<ul>${state.inventory.map((i) => `<li>${i}</li>`).join("")}</ul>`
+          : "<div class='mini'>No ingredients yet.</div>";
+        ui.book.innerHTML = `<ul>${state.recipeBook.map((r) => `<li>${r}</li>`).join("")}</ul>`;
+      }
+
+      function renderScene(state) {
+        clearError();
+        const node = GAME_DATA[state.current];
+        if (!node) {
+          showError(`Scene '${state.current}' is missing. Use Reset Save to recover.`);
+          ui.scenePanel.innerHTML = `<h2>Scene Load Failure</h2><p>We couldn't find this scene ID in game data.</p>`;
+          return;
+        }
+
+        applyOnEnter(state, node);
+        save(state);
+
+        ui.progress.textContent = node.end
+          ? "Story complete — you can restart or continue to reread."
+          : `Current location: ${node.location}`;
+
+        const choicesHtml = (node.choices || [])
+          .map((choice, i) => `<button class="choice" data-choice="${i}">${choice.label}</button>`)
+          .join("");
+
+        ui.scenePanel.innerHTML = `
+          <h2>${node.location}</h2>
+          <div class="tags">${(node.tags || []).map((t) => `<span class="tag">${t}</span>`).join("")}</div>
+          <div class="speaker">${node.speaker}</div>
+          <div class="dialogue">${node.text}</div>
+          <div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>
+        `;
+
+        renderStats(state);
+
+        ui.scenePanel.querySelectorAll("[data-choice]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const index = Number(btn.getAttribute("data-choice"));
+            const selected = node.choices?.[index];
+            if (!selected) {
+              showError("Choice data is missing for this scene.");
+              return;
+            }
+            applyEffects(state, selected.effects);
+            state.started = true;
+            state.current = selected.next;
+            save(state);
+            renderScene(state);
+          });
+        });
+      }
+
+      let state = load();
+
+      ui.startBtn.addEventListener("click", () => {
+        state = defaultState();
+        state.started = true;
+        state.current = "title";
+        save(state);
+        renderScene(state);
+      });
+
+      ui.continueBtn.addEventListener("click", () => {
+        state = load();
+        renderScene(state);
+      });
+
+      ui.resetBtn.addEventListener("click", () => {
+        localStorage.removeItem(STORAGE_KEY);
+        state = defaultState();
+        renderScene(state);
+      });
+
+      renderScene(state);
     </script>
   </body>
 </html>
