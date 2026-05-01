@@ -123,3 +123,15 @@ body{
 @media (min-width:1201px){
   .pockets,.controls{max-width:560px}
 }
+
+.tab-hidden{display:none!important}
+.notebook-shell[data-theme='high-contrast'] .panel-paper,
+body[data-theme='high-contrast'] .panel-paper{
+  background:linear-gradient(180deg,#f3e4cb,#e6cfae);
+  border-color:#6f4a27;
+}
+body[data-theme='high-contrast'] .choice,
+body[data-theme='high-contrast'] .controls button{
+  background:#f2e2c7;
+  border-color:#6f4a27;
+}
