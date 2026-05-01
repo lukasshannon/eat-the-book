@@ -54,3 +54,8 @@ Before finalizing, ensure all are true:
 - [ ] Backward compatibility considered.
 - [ ] No credentials or sensitive data introduced.
 - [ ] Documentation updated if needed.
+
+## UI refactor plan (2026-05-01)
+- Separate structure (`docs/index.html`), visuals (`docs/static/css/ui.css`), and gameplay logic (`docs/static/js/*.js`) so interface work stays isolated from narrative state logic.
+- Place generated UI assets in `docs/static/img/` and reference them from CSS/HTML only.
+- Preserve existing game IDs and behavior contracts (`scenePanel`, `stats`, `book`, `inventory`, controls) while enabling incremental UI iteration.
