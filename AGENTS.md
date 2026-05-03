@@ -62,3 +62,4 @@ Before finalizing, ensure all are true:
 - Separate structure (`docs/index.html`), visuals (`docs/static/css/ui.css`), and gameplay logic (`docs/static/js/*.js`) so interface work stays isolated from narrative state logic.
 - Place generated UI assets in `docs/static/img/` and reference them from CSS/HTML only.
 - Preserve existing game IDs and behavior contracts (`scenePanel`, `stats`, `book`, `inventory`, controls) while enabling incremental UI iteration.
+- Do not add or modify dependency manifest lock files for UI-only work (`package.json` and `package-lock.json` must remain unchanged unless explicitly requested).
