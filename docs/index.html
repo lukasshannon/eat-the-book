@@ -12,6 +12,7 @@
         <p class="intro-index">D1</p>
         <h1>Vintage Notebook</h1>
         <p>Spiral-bound pages, torn edges, ink sketches and washi tape.</p>
+        <div class="sprig">❦</div>
       </aside>
 
       <section class="notebook-shell" aria-label="Game notebook">
@@ -19,19 +20,19 @@
 
         <header class="top-status panel-paper">
           <div class="status-block role-block">
-            <span class="status-value" id="chapterValue">1</span>
-            <span class="status-label" id="chapterLabel">Chapter</span>
+            <span class="status-value" id="chapterValue">12</span>
+            <span class="status-label" id="chapterLabel">Barista</span>
           </div>
-          <div class="status-block"><span class="icon">☕</span><span id="energyValue">120/120</span></div>
-          <div class="status-block"><span class="icon">🪙</span><span id="coinValue">1200</span></div>
-          <div class="status-block"><span class="icon">💎</span><span id="gemValue">80</span></div>
+          <div class="status-block"><span class="icon">☕</span><span id="energyValue">125/120</span></div>
+          <div class="status-block"><span class="icon">🪙</span><span id="coinValue">1240</span></div>
+          <div class="status-block"><span class="icon">🔮</span><span id="gemValue">85</span></div>
           <button class="settings-btn" id="themeToggle" type="button" aria-label="Toggle notebook contrast" aria-pressed="false">⚙</button>
         </header>
 
         <div class="scene-visual panel-paper">
           <div class="scene-glow"></div>
           <div class="npc-portrait" aria-hidden="true"></div>
-          <aside class="special-note" id="progress">Today's Special: Begin shift.</aside>
+          <aside class="special-note" id="progress">TODAY'S SPECIAL<br/>Honey Dream Latte</aside>
         </div>
 
         <article id="scenePanel" class="dialogue-card panel-paper" role="tabpanel" aria-labelledby="tab-cafe"></article>
@@ -40,13 +41,13 @@
           <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span>☕</span>Café</button>
           <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span>📖</span>Recipes</button>
           <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud"><span>🌐</span>Worlds</button>
-          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel"><span>🗒️</span>Journal</button>
+          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel"><span>📘</span>Journal</button>
         </nav>
       </section>
 
       <aside class="world-hud panel-paper" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
         <h3>Exploration HUD (World)</h3>
-        <div class="stealth-row">👁️ Stealth <span id="stealthMeter">🖤🖤🖤🖤</span></div>
+        <div class="stealth-row">👁 Stealth <span id="stealthMeter">🖤🖤🖤🖤</span></div>
         <div class="world-scene" id="worldScene"></div>
         <div class="slot-row" id="inventory"></div>
         <p class="objective" id="worldObjective">Stay unseen. Find ingredients. Return to the café.</p>
