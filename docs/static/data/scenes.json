@@ -1,0 +1,137 @@
+{
+  "title": {
+    "location": "Title Screen",
+    "speaker": "keeper",
+    "text": "Welcome back to the Quiet Café. Tonight you can save one drowning world—or leave it hungry.",
+    "tags": ["Hub", "Choice", "Auto-save"],
+    "choices": [{ "label": "Begin shift", "next": "cafe_intro" }]
+  },
+  "cafe_intro": {
+    "location": "Quiet Café",
+    "speaker": "you",
+    "text": "Three children wait beside a scarred page: orchard straw, rain-salt, and mirrored ash.",
+    "tags": ["Location 1", "Dialogue"],
+    "onEnter": { "addBook": ["Orchard Porridge", "Tide Broth"] },
+    "choices": [
+      {
+        "label": "Promise protection first",
+        "next": "cafe_plan",
+        "effects": { "flags": { "protective": true }, "relation": { "raincoat": 1 } }
+      },
+      {
+        "label": "Promise balance first",
+        "next": "cafe_plan",
+        "effects": { "flags": { "protective": false }, "relation": { "mirror": 1 } }
+      }
+    ]
+  },
+  "cafe_plan": {
+    "location": "Quiet Café",
+    "speaker": "raincoat",
+    "text": "The drowned village is calling. Brew fast and risky, or slow and careful?",
+    "tags": ["Location 1", "Branching"],
+    "choices": [
+      {
+        "label": "Brew fast (higher risk, extra yield)",
+        "next": "orchard_gate",
+        "effects": { "flags": { "riskyPlan": true }, "addItems": ["hot kettle coal"] }
+      },
+      {
+        "label": "Brew carefully (safer route)",
+        "next": "orchard_gate",
+        "effects": { "flags": { "riskyPlan": false }, "addItems": ["stable broth base"] }
+      }
+    ]
+  },
+  "orchard_gate": {
+    "location": "Ruined Orchard",
+    "speaker": "orchard",
+    "text": "Lantern scarecrows patrol the hedges. Wear the disguise correctly, or sprint half-finished?",
+    "tags": ["Location 2", "Stealth"],
+    "onEnter": { "addBook": ["Scarecrow Stitch"] },
+    "choices": [
+      {
+        "label": "Stitch disguise fully",
+        "next": "drowned_entry",
+        "effects": {
+          "flags": { "disguiseChecked": true },
+          "addItems": ["grave-honey", "blighted apple milk"]
+        }
+      },
+      {
+        "label": "Rush half-masked",
+        "next": "drowned_entry",
+        "effects": { "flags": { "disguiseChecked": false, "limbInjury": true }, "addItems": ["grave-honey"] }
+      }
+    ]
+  },
+  "drowned_entry": {
+    "location": "Drowned Village",
+    "speaker": "raincoat",
+    "text": "Water climbs the chapel stairs. One cellar is safe, one is rich with ingredients but watched.",
+    "tags": ["Location 3", "Gathering"],
+    "choices": [
+      {
+        "label": "Take safe cellar",
+        "next": "mirror_chamber",
+        "effects": { "flags": { "extraIngredients": false }, "addItems": ["shell salt"] }
+      },
+      {
+        "label": "Raid rich cellar",
+        "next": "mirror_chamber",
+        "effects": { "flags": { "extraIngredients": true }, "addItems": ["shell salt", "drowned roots", "pale seaweed"] }
+      }
+    ]
+  },
+  "mirror_chamber": {
+    "location": "Glass Refuge",
+    "speaker": "mirror",
+    "text": "Your reflection splits: reveal the true cost to the child, or hide the injuries and fear?",
+    "tags": ["Location 4", "Trust"],
+    "choices": [
+      {
+        "label": "Tell the truth",
+        "next": "kitchen_return",
+        "effects": { "flags": { "sharedTruth": true }, "relation": { "orchard": 1, "mirror": 1 } }
+      },
+      {
+        "label": "Hide the burden",
+        "next": "kitchen_return",
+        "effects": { "flags": { "sharedTruth": false }, "relation": { "raincoat": 1 } }
+      }
+    ]
+  },
+  "kitchen_return": {
+    "location": "Kitchen of Fate",
+    "speaker": "villain",
+    "text": "A bitter guest blocks the stove. \"Feed the baby and keep the machine, or starve the machine and keep your hands clean?\"",
+    "tags": ["Final Choice", "Ending Branch"],
+    "onEnter": { "addBook": ["Kitchen Oath"] },
+    "choices": [
+      {
+        "label": "Feed the baby-sun",
+        "next": "ending_feed",
+        "effects": { "flags": { "choseFeed": true }, "addItems": ["new sun ember"] }
+      },
+      {
+        "label": "Refuse the ritual",
+        "next": "ending_refuse",
+        "effects": { "flags": { "choseFeed": false } }
+      }
+    ]
+  },
+  "ending_feed": {
+    "location": "Quiet Café, Dawn",
+    "speaker": "keeper",
+    "text": "The baby-sun wakes. The village drains, the orchard warms, and the children keep your name in the book margins.",
+    "tags": ["Ending"],
+    "end": true
+  },
+  "ending_refuse": {
+    "location": "Quiet Café, Dusk",
+    "speaker": "keeper",
+    "text": "You deny the ritual. No world heals tonight, but the machine cracks and a new path opens with no recipe commands.",
+    "tags": ["Ending"],
+    "end": true
+  }
+}
