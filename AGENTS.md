@@ -63,3 +63,5 @@ Before finalizing, ensure all are true:
 - Place generated UI assets in `docs/static/img/` and reference them from CSS/HTML only.
 - Preserve existing game IDs and behavior contracts (`scenePanel`, `stats`, `book`, `inventory`, controls) while enabling incremental UI iteration.
 - Do not add or modify dependency manifest lock files for UI-only work (`package.json` and `package-lock.json` must remain unchanged unless explicitly requested).
+
+- UI iteration requirement (2026-05-05): continue implementing the UI and reuse image assets from `docs/static/img/assets`.

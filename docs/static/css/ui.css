@@ -5,6 +5,13 @@
   --ink: #37281b;
   --edge: #7d5b3b;
   --book: #2a1d14;
+  --asset-pit: url("../img/assets/pit-square.png");
+  --asset-journal: url("../img/assets/journal-bkgd.png");
+  --asset-note-large: url("../img/assets/note-large.png");
+  --asset-note-medium: url("../img/assets/note-medium.png");
+  --asset-note-small: url("../img/assets/note-small.png");
+  --asset-note-square: url("../img/assets/note-square.png");
+  --asset-wide-panel: url("../img/assets/wide-panel.png");
 }
 * { box-sizing: border-box; }
 body {
@@ -22,17 +29,30 @@ body {
   align-items: start;
 }
 .desk-intro {
+  position: relative;
   min-height: 820px;
   padding: 22px 16px;
   border: 2px solid #8d6a46;
   border-radius: 2px;
   background: linear-gradient(160deg, #ddcbad, #ccb089);
   box-shadow: inset 0 0 0 2px rgba(249, 231, 203, .35);
+  background-image: linear-gradient(160deg, rgba(221, 203, 173, .95), rgba(204, 176, 137, .94)), var(--asset-pit);
+  background-size: auto, 190px 190px;
 }
 .intro-index { margin: 0; font-size: 4rem; border-bottom: 1px solid rgba(76,52,31,.45); }
 .desk-intro h1 { font-size: 2.8rem; margin: 14px 0; line-height: 1.05; font-weight: 500; }
 .desk-intro p { font-family: "Brush Script MT", "Segoe Script", cursive; font-size: 2rem; line-height: 1.15; margin: 0; }
 .sprig { margin-top: 40px; font-size: 3.2rem; text-align: center; opacity: .6; }
+
+.desk-note {
+  position: absolute;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: .8;
+  pointer-events: none;
+}
+.note-small { width: 120px; height: 120px; right: 12px; top: 18px; background-image: var(--asset-note-small); transform: rotate(7deg); }
+.note-square { width: 132px; height: 132px; right: -4px; bottom: 120px; background-image: var(--asset-note-square); transform: rotate(-4deg); }
 
 .notebook-shell {
   background-image: linear-gradient(180deg, #4a3624, #281c13 60%), repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 2px, transparent 2px 10px);
@@ -53,7 +73,8 @@ body {
   background-size: 100% 28px;
 }
 .panel-paper {
-  background: linear-gradient(180deg, #e9d8bb, #d4b893);
+  background: linear-gradient(180deg, rgba(233,216,187,.95), rgba(212,184,147,.96)), var(--asset-journal);
+  background-size: auto, 420px 420px;
   border: 2px solid var(--edge);
   box-shadow: inset 0 0 0 1px rgba(255,244,220,.45);
 }
@@ -71,7 +92,7 @@ body {
 .settings-btn { border: 2px solid var(--edge); background: #e8d4b3; font-size: 1.1rem; }
 
 .scene-visual { margin-top: 8px; min-height: 300px; position: relative; padding: 14px; overflow: hidden; }
-.scene-glow { position: absolute; inset: 0; background: radial-gradient(circle at 68% 18%, rgba(241,174,96,.45), transparent 30%), linear-gradient(180deg,#342318,#170f0a); }
+.scene-glow { position: absolute; inset: 0; background: radial-gradient(circle at 68% 18%, rgba(241,174,96,.38), transparent 30%), linear-gradient(180deg,#342318,#170f0a), var(--asset-wide-panel); background-size: auto, auto, cover; opacity: .82; }
 .npc-portrait {
   position: relative;
   width: 255px;
@@ -79,15 +100,23 @@ body {
   border: 2px solid rgba(202,168,132,.75);
   background: radial-gradient(circle at 50% 24%, #eacda4 0 18%, #7b5338 20% 34%, #3a2618 56%, #1a120c 84%);
 }
+.portrait-frame {
+  position: absolute;
+  inset: -6px;
+  border: 0;
+  background: var(--asset-note-large) no-repeat center/cover;
+  mix-blend-mode: screen;
+  opacity: .45;
+}
 .special-note {
   position: absolute;
   right: 14px;
   top: 24px;
-  width: 145px;
+  width: 165px;
   min-height: 175px;
-  padding: 12px;
-  border: 2px dashed #8e6a45;
-  background: #e8d3af;
+  padding: 18px 16px;
+  border: 0;
+  background: var(--asset-note-medium) no-repeat center/100% 100%;
   transform: rotate(2deg);
   font-family: "Brush Script MT", "Segoe Script", cursive;
   font-size: 1.8rem;
@@ -99,7 +128,8 @@ body {
   padding: 12px;
   position: relative;
   border-radius: 0 0 14px 14px;
-  background-image: repeating-linear-gradient(0deg, rgba(102,72,42,.04) 0 1px, transparent 1px 21px), repeating-linear-gradient(90deg, rgba(102,72,42,.03) 0 1px, transparent 1px 21px), linear-gradient(180deg, #ead8bd, #d7bb96);
+  background-image: repeating-linear-gradient(0deg, rgba(102,72,42,.04) 0 1px, transparent 1px 21px), repeating-linear-gradient(90deg, rgba(102,72,42,.03) 0 1px, transparent 1px 21px), linear-gradient(180deg, rgba(234,216,189,.95), rgba(215,187,150,.95)), var(--asset-journal);
+  background-size: auto, auto, auto, 380px 380px;
 }
 #scenePanel h2 { display: none; }
 .speaker-label, .dialogue-text, .choice, .tab-btn, .world-hud h3, .objective, .pocket-card summary, .controls button { font-family: "Brush Script MT", "Segoe Script", cursive; }
@@ -111,28 +141,29 @@ body {
 .choice { border: 2px solid #7c5a3c; border-radius: 20px; background: #e7d4b2; text-align: left; padding: 11px 14px; font-size: 1.5rem; }
 
 .bottom-tabs { margin-top: 8px; display: grid; grid-template-columns: repeat(4, 1fr); padding: 0; }
-.tab-btn { min-height: 84px; border: 1px solid #8f6b49; background: #d8bf99; font-size: 1.55rem; }
+.tab-btn { min-height: 84px; border: 1px solid #8f6b49; background: linear-gradient(180deg, rgba(216,191,153,.97), rgba(204,173,133,.96)), var(--asset-pit); background-size: auto, 220px 220px; font-size: 1.55rem; }
 .tab-btn span { display: block; font-size: 1.4rem; }
-.tab-btn.active { background: #ead8b9; }
+.tab-btn.active { background: linear-gradient(180deg, rgba(234,216,185,.98), rgba(216,190,149,.98)), var(--asset-note-large); background-size: auto, cover; }
 
 .world-hud {
   margin-top: 70px;
   min-height: 760px;
   border-radius: 16px 20px 24px 20px;
   padding: 14px;
-  background: linear-gradient(180deg, #e5d1af, #d1b38c);
+  background: linear-gradient(180deg, rgba(229,209,175,.96), rgba(209,179,140,.96)), var(--asset-journal);
+  background-size: auto, 360px 360px;
   position: relative;
 }
 .world-hud h3 { margin: 0 0 8px; text-align: center; font-size: 2rem; }
 .stealth-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.5rem; }
 .world-scene { height: 355px; border: 2px solid #7f5d3e; border-radius: 10px; background: radial-gradient(circle at 68% 72%, rgba(133,188,255,.45), transparent 21%), radial-gradient(circle at 56% 68%, rgba(130,184,249,.45), transparent 18%), linear-gradient(180deg, #132740, #0a111c); }
 .slot-row { margin-top: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
-.inv-slot { min-height: 84px; border: 2px solid #825f3f; border-radius: 12px; background: #b99a73; display:flex; align-items:center; justify-content:center; font-size: 1.7rem; color: #2d2118; }
+.inv-slot { min-height: 84px; border: 2px solid #825f3f; border-radius: 12px; background: linear-gradient(180deg, rgba(185,154,115,.96), rgba(162,132,96,.96)), var(--asset-note-square); background-size: auto, 170px 170px; display:flex; align-items:center; justify-content:center; font-size: 1.7rem; color: #2d2118; }
 .objective { margin: 12px 0 0; text-align: center; font-size: 1.85rem; line-height: 1.15; }
 
 .pockets, .controls { grid-column: 2; }
 .pockets { margin-top: 6px; display: grid; gap: 10px; }
-.pocket-card { border: 2px solid #8a6744; border-radius: 14px; background: #dcc5a2; padding: 8px 12px; box-shadow: 0 8px 18px rgba(0,0,0,.2); }
+.pocket-card { border: 2px solid #8a6744; border-radius: 14px; background: linear-gradient(180deg, rgba(220,197,162,.96), rgba(206,176,136,.96)), var(--asset-note-square); background-size: auto, 180px 180px; padding: 8px 12px; box-shadow: 0 8px 18px rgba(0,0,0,.2); }
 .pocket-card summary { font-size: 2rem; list-style: none; cursor: pointer; }
 .pocket-card summary::-webkit-details-marker { display: none; }
 .pocket-card summary::before { content: "▼ "; }
@@ -140,7 +171,7 @@ body {
 
 .controls { margin-top: 0; background: none; border: 0; box-shadow: none; padding: 0; }
 .control-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.controls button { border: 2px solid #7f5d3e; border-radius: 12px; background: #e6d2b1; padding: 12px; font-size: 1.55rem; }
+.controls button { border: 2px solid #7f5d3e; border-radius: 12px; background: linear-gradient(180deg, rgba(230,210,177,.96), rgba(212,186,146,.96)), var(--asset-note-small); background-size: auto, 130px 130px; padding: 12px; font-size: 1.55rem; }
 .error { display: none; }
 .tab-hidden { display: none !important; }
 
