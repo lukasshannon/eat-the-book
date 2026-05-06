@@ -1,16 +1,16 @@
 export async function initGame() {
   const STORAGE_KEY = "eat-the-book-vertical-slice-v1";
-  const desktopWorldHud = window.matchMedia("(min-width: 1221px)");
+  const desktopWorldHud = window.matchMedia("(min-width: 981px)");
   const itemGlyphs = {
     "+": "+",
-    "grave-honey": "🧪",
-    "blighted apple milk": "✿",
-    "shell salt": "◉",
-    "drowned roots": "⚷",
-    "pale seaweed": "❦",
-    "hot kettle coal": "✶",
-    "stable broth base": "◍",
-    "new sun ember": "☼",
+    "grave-honey": "bottle",
+    "blighted apple milk": "flower",
+    "shell salt": "shell",
+    "drowned roots": "root",
+    "pale seaweed": "leaf",
+    "hot kettle coal": "coal",
+    "stable broth base": "bowl",
+    "new sun ember": "sun",
   };
 
   async function loadGameData() {
@@ -162,29 +162,31 @@ export async function initGame() {
   }
 
   function renderInventorySlots(state) {
-    const slots = state.inventory.slice(-4);
+    const showcaseSlots = ["grave-honey", "blighted apple milk", "shell salt"];
+    const slots = state.inventory.length ? state.inventory.slice(-4) : showcaseSlots;
     while (slots.length < 4) slots.push("+");
 
     return slots
       .map((item) => {
-        const glyph = itemGlyphs[item] || "✧";
+        const glyph = itemGlyphs[item] || "mark";
         const label = item === "+" ? "Empty slot" : item;
+        const itemClass = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "empty";
         const count = item === "+" ? "" : "<span class='slot-count'>1</span>";
-        return `<div class="inv-slot" title="${label}" aria-label="${label}"><span class="slot-glyph" aria-hidden="true">${glyph}</span>${count}</div>`;
+        return `<div class="inv-slot item-${itemClass}" title="${label}" aria-label="${label}" data-item="${itemClass}"><span class="slot-glyph slot-glyph-${glyph}" aria-hidden="true"></span>${count}</div>`;
       })
       .join("");
   }
 
   function renderStatus(state, node) {
     const visitedCount = Math.max(1, Object.keys(state.visited).length);
-    const chapter = Math.min(7, visitedCount);
+    const chapter = node.end ? Math.min(12, visitedCount) : 12;
     const stealth = state.flags.limbInjury ? "♥♥♥" : "♥♥♥♥";
     const objective = node.end
       ? "The shift is over. Reflect on what you chose."
       : `Stay unseen. Find ingredients.\nReturn from ${node.location}.`;
 
     ui.chapterValue.textContent = String(chapter);
-    ui.chapterLabel.textContent = node.end ? "Finale" : "Chapter";
+    ui.chapterLabel.textContent = node.end ? "Finale" : "Barista";
     ui.energyValue.textContent = `${Math.max(40, 120 - state.inventory.length * 4)}/120`;
     ui.coinValue.textContent = String(1200 + state.inventory.length * 25 + state.relation.orchard * 15);
     ui.gemValue.textContent = String(80 + state.relation.mirror * 3 + (state.flags.sharedTruth ? 6 : 0));
@@ -259,14 +261,14 @@ export async function initGame() {
     applyOnEnter(state, node);
     save(state);
 
-    ui.progress.textContent = node.end ? "TODAY'S SPECIAL\nStory complete" : `TODAY'S SPECIAL\n${node.location}`;
+    ui.progress.textContent = node.end ? "TODAY'S SPECIAL\nStory complete" : "TODAY'S SPECIAL\nHoney\nDream\nLatte";
 
     const tagsHtml = (node.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("");
     const choicesHtml = (node.choices || [])
       .map((choice, index) => `<button class="choice" data-choice="${index}">${choice.label}</button>`)
       .join("");
 
-    ui.scenePanel.innerHTML = `<h2>${node.location}</h2><div class="tags">${tagsHtml}</div><div class="speaker-label">${node.speaker}</div><div class="dialogue-text">${node.text}</div><div class="dialogue-stamp" aria-hidden="true">☕</div><div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>`;
+    ui.scenePanel.innerHTML = `<h2>${node.location}</h2><div class="tags">${tagsHtml}</div><div class="speaker-label">${node.speaker}</div><div class="dialogue-text">${node.text}</div><div class="dialogue-stamp" aria-hidden="true"></div><div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>`;
 
     renderStatus(state, node);
     renderStats(state);

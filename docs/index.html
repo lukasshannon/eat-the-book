@@ -3,51 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>eat-the-book — Vintage Notebook Shift</title>
+    <title>eat-the-book — Mockup Notebook UI</title>
     <link rel="stylesheet" href="./static/css/ui.css" />
   </head>
   <body>
     <main id="app" aria-live="polite">
       <aside class="desk-card desk-intro" aria-hidden="true">
-        <div class="desk-note note-small" aria-hidden="true"></div>
+        <div class="intro-corner intro-corner-a"></div>
+        <div class="intro-corner intro-corner-b"></div>
         <p class="intro-index">D1</p>
-        <h1>Vintage Notebook</h1>
-        <p>Spiral-bound pages, torn edges, ink sketches and washi tape.</p>
-        <div class="desk-note note-square" aria-hidden="true"></div>
-        <div class="sprig">❦</div>
+        <h1>Vintage<br />Notebook</h1>
+        <p class="intro-script">Spiral-bound<br />pages, torn edges,<br />ink sketches and<br />washi tape.</p>
+        <div class="botanical-mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
       </aside>
 
       <section class="notebook-shell" aria-label="Game notebook">
-        <div class="spiral" aria-hidden="true"></div>
+        <div class="notebook-page" aria-hidden="true"></div>
 
-        <header class="top-status panel-paper">
+        <header class="top-status">
           <div class="status-block role-block">
             <span class="status-value" id="chapterValue">12</span>
             <span class="status-label" id="chapterLabel">Barista</span>
           </div>
-          <div class="status-block"><span class="icon">☕</span><span id="energyValue">125/120</span></div>
-          <div class="status-block"><span class="icon">🪙</span><span id="coinValue">1240</span></div>
-          <div class="status-block"><span class="icon">🔮</span><span id="gemValue">85</span></div>
-          <button class="settings-btn" id="themeToggle" type="button" aria-label="Toggle notebook contrast" aria-pressed="false">⚙</button>
+          <div class="status-block"><span class="ui-icon icon-cup" aria-hidden="true"></span><span id="energyValue">125/120</span></div>
+          <div class="status-block"><span class="ui-icon icon-coin" aria-hidden="true"></span><span id="coinValue">1240</span></div>
+          <div class="status-block"><span class="ui-icon icon-gem" aria-hidden="true"></span><span id="gemValue">85</span></div>
+          <button class="settings-btn" id="themeToggle" type="button" aria-label="Toggle notebook contrast" aria-pressed="false"><span aria-hidden="true">⚙</span></button>
         </header>
 
-        <div class="scene-visual panel-paper">
-          <div class="scene-glow"></div>
-          <div class="npc-portrait" aria-hidden="true">
-            <div class="portrait-frame"></div>
-            <div class="npc-character">
-              <div class="npc-hair"></div>
-              <div class="npc-face"></div>
-              <div class="npc-body"></div>
-              <div class="npc-bow"></div>
-            </div>
+        <div class="scene-visual" aria-label="Café scene illustration">
+          <div class="cafe-backdrop" aria-hidden="true">
+            <span class="shelf shelf-one"></span>
+            <span class="shelf shelf-two"></span>
+            <span class="shelf shelf-three"></span>
+            <span class="lamp lamp-one"></span>
+            <span class="lamp lamp-two"></span>
+            <span class="lamp lamp-three"></span>
+            <span class="bottle bottle-a"></span>
+            <span class="bottle bottle-b"></span>
+            <span class="bottle bottle-c"></span>
+            <span class="bottle bottle-d"></span>
+            <span class="scene-character">
+              <span class="hair hair-back"></span>
+              <span class="hair hair-left"></span>
+              <span class="hair hair-right"></span>
+              <span class="face"></span>
+              <span class="neck"></span>
+              <span class="blouse"></span>
+              <span class="apron"></span>
+              <span class="bow"></span>
+              <span class="arm arm-left"></span>
+              <span class="arm arm-right"></span>
+            </span>
           </div>
-          <aside class="special-note" id="progress">TODAY'S SPECIAL<br/>Honey Dream Latte</aside>
+          <aside class="special-note" id="progress">TODAY'S SPECIAL<br />Honey Dream Latte</aside>
         </div>
 
-        <article id="scenePanel" class="dialogue-card panel-paper" role="tabpanel" aria-labelledby="tab-cafe"></article>
+        <article id="scenePanel" class="dialogue-card" role="tabpanel" aria-labelledby="tab-cafe"></article>
 
-        <nav class="bottom-tabs panel-paper" aria-label="Notebook tabs" id="tabBar" role="tablist">
+        <nav class="bottom-tabs" aria-label="Notebook tabs" id="tabBar" role="tablist">
           <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span class="tab-icon tab-icon-cafe" aria-hidden="true"></span>Café</button>
           <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span class="tab-icon tab-icon-recipes" aria-hidden="true"></span>Recipes</button>
           <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud"><span class="tab-icon tab-icon-worlds" aria-hidden="true"></span>Worlds</button>
@@ -55,10 +71,11 @@
         </nav>
       </section>
 
-      <aside class="world-hud panel-paper world-companion" aria-label="Exploration HUD companion" aria-hidden="true">
+      <aside class="world-hud world-companion" aria-label="Exploration HUD companion" aria-hidden="true">
         <h3>Exploration HUD (World)</h3>
-        <div class="stealth-row">👁 Stealth <span data-world-stealth>♥♥♥♥</span></div>
+        <div class="stealth-row"><span class="eye-icon" aria-hidden="true"></span><strong>Stealth</strong> <span data-world-stealth>♥♥♥♥</span></div>
         <div class="world-scene" aria-hidden="true">
+          <span class="cave-arch"></span>
           <span class="world-runner"></span>
           <span class="world-spirit spirit-one"></span>
           <span class="world-spirit spirit-two"></span>
@@ -68,10 +85,11 @@
         <p class="objective" data-world-objective>Stay unseen. Find ingredients. Return to the café.</p>
       </aside>
 
-      <aside class="world-hud panel-paper" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
+      <aside class="world-hud" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
         <h3>Exploration HUD (World)</h3>
-        <div class="stealth-row">👁 Stealth <span id="stealthMeter">🖤🖤🖤🖤</span></div>
+        <div class="stealth-row"><span class="eye-icon" aria-hidden="true"></span><strong>Stealth</strong> <span id="stealthMeter">♥♥♥♥</span></div>
         <div class="world-scene" id="worldScene" aria-hidden="true">
+          <span class="cave-arch"></span>
           <span class="world-runner"></span>
           <span class="world-spirit spirit-one"></span>
           <span class="world-spirit spirit-two"></span>
@@ -92,7 +110,7 @@
         </details>
       </section>
 
-      <section class="controls panel-paper">
+      <section class="controls">
         <div class="control-row">
           <button id="startBtn" type="button">Start New</button>
           <button id="continueBtn" type="button">Continue</button>
