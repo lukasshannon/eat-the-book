@@ -35,6 +35,12 @@
           <div class="scene-glow"></div>
           <div class="npc-portrait" aria-hidden="true">
             <div class="portrait-frame"></div>
+            <div class="npc-character">
+              <div class="npc-hair"></div>
+              <div class="npc-face"></div>
+              <div class="npc-body"></div>
+              <div class="npc-bow"></div>
+            </div>
           </div>
           <aside class="special-note" id="progress">TODAY'S SPECIAL<br/>Honey Dream Latte</aside>
         </div>
@@ -42,17 +48,35 @@
         <article id="scenePanel" class="dialogue-card panel-paper" role="tabpanel" aria-labelledby="tab-cafe"></article>
 
         <nav class="bottom-tabs panel-paper" aria-label="Notebook tabs" id="tabBar" role="tablist">
-          <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span>☕</span>Café</button>
-          <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span>📖</span>Recipes</button>
-          <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud"><span>🌐</span>Worlds</button>
-          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel"><span>📘</span>Journal</button>
+          <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span class="tab-icon tab-icon-cafe" aria-hidden="true"></span>Café</button>
+          <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span class="tab-icon tab-icon-recipes" aria-hidden="true"></span>Recipes</button>
+          <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud"><span class="tab-icon tab-icon-worlds" aria-hidden="true"></span>Worlds</button>
+          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel"><span class="tab-icon tab-icon-journal" aria-hidden="true"></span>Journal</button>
         </nav>
       </section>
+
+      <aside class="world-hud panel-paper world-companion" aria-label="Exploration HUD companion" aria-hidden="true">
+        <h3>Exploration HUD (World)</h3>
+        <div class="stealth-row">👁 Stealth <span data-world-stealth>♥♥♥♥</span></div>
+        <div class="world-scene" aria-hidden="true">
+          <span class="world-runner"></span>
+          <span class="world-spirit spirit-one"></span>
+          <span class="world-spirit spirit-two"></span>
+          <span class="world-spirit spirit-three"></span>
+        </div>
+        <div class="slot-row" data-world-inventory></div>
+        <p class="objective" data-world-objective>Stay unseen. Find ingredients. Return to the café.</p>
+      </aside>
 
       <aside class="world-hud panel-paper" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
         <h3>Exploration HUD (World)</h3>
         <div class="stealth-row">👁 Stealth <span id="stealthMeter">🖤🖤🖤🖤</span></div>
-        <div class="world-scene" id="worldScene"></div>
+        <div class="world-scene" id="worldScene" aria-hidden="true">
+          <span class="world-runner"></span>
+          <span class="world-spirit spirit-one"></span>
+          <span class="world-spirit spirit-two"></span>
+          <span class="world-spirit spirit-three"></span>
+        </div>
         <div class="slot-row" id="inventory"></div>
         <p class="objective" id="worldObjective">Stay unseen. Find ingredients. Return to the café.</p>
       </aside>
