@@ -13,6 +13,13 @@ export async function initGame() {
     "new sun ember": "sun",
   };
 
+  const recipeNotes = {
+    "Orchard Porridge": { world: "Ruined Orchard", scar: "pressed clover", cost: "warmth" },
+    "Tide Broth": { world: "Drowned Village", scar: "salt bloom", cost: "breath" },
+    "Scarecrow Stitch": { world: "Hedge Patrol", scar: "black thread", cost: "limb" },
+    "Kitchen Oath": { world: "Fate Stove", scar: "burnt corner", cost: "choice" },
+  };
+
   async function loadGameData() {
     const [charactersResponse, scenesResponse] = await Promise.all([
       fetch("./static/data/characters.json"),
@@ -203,11 +210,25 @@ export async function initGame() {
     const truth = state.flags.sharedTruth ? "Truth Shared" : "Truth Hidden";
     const body = state.flags.limbInjury ? "Injured" : "Whole";
     const inventoryHtml = renderInventorySlots(state);
+    const relationRows = Object.entries(state.relation)
+      .map(([name, value]) => `<span class="relation-chip"><span>${name}</span><strong>${value}</strong></span>`)
+      .join("");
+    const inventoryRows = (state.inventory.length ? state.inventory : ["grave-honey", "blighted apple milk", "shell salt"])
+      .map((item) => {
+        const glyph = itemGlyphs[item] || "mark";
+        return `<li><span class="slot-glyph slot-glyph-${glyph}" aria-hidden="true"></span><span>${item}</span><em>×1</em></li>`;
+      })
+      .join("");
 
-    ui.stats.innerHTML = `<p><strong>Route Tone:</strong> ${tone}</p><p><strong>Plan:</strong> ${risk}</p><p><strong>Trust:</strong> ${truth}</p><p><strong>Body:</strong> <span class="meter">${body}</span></p><p><strong>Relations:</strong> Orchard ${state.relation.orchard}, Raincoat ${state.relation.raincoat}, Mirror ${state.relation.mirror}</p>`;
+    ui.stats.innerHTML = `<div class="journal-grid"><div class="journal-stat"><span>Route Tone</span><strong>${tone}</strong></div><div class="journal-stat"><span>Plan</span><strong>${risk}</strong></div><div class="journal-stat"><span>Trust</span><strong>${truth}</strong></div><div class="journal-stat"><span>Body</span><strong class="meter">${body}</strong></div></div><div class="relation-row" aria-label="Relations">${relationRows}</div><h4>Gathered Ingredients</h4><ul class="inventory-ledger">${inventoryRows}</ul>`;
     ui.inventory.innerHTML = inventoryHtml;
     if (ui.companionInventory) ui.companionInventory.innerHTML = inventoryHtml;
-    ui.book.innerHTML = `<ul>${state.recipeBook.map((recipe) => `<li>${recipe}</li>`).join("")}</ul>`;
+    ui.book.innerHTML = `<div class="recipe-spread">${state.recipeBook
+      .map((recipe, index) => {
+        const note = recipeNotes[recipe] || { world: "Unknown World", scar: "blank margin", cost: "unknown" };
+        return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${recipe}</h4><p>${note.world}</p><dl><dt>Scar</dt><dd>${note.scar}</dd><dt>Cost</dt><dd>${note.cost}</dd></dl></article>`;
+      })
+      .join("")}</div>`;
   }
 
   function setDetailsPanelState(tab) {
@@ -265,10 +286,10 @@ export async function initGame() {
 
     const tagsHtml = (node.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("");
     const choicesHtml = (node.choices || [])
-      .map((choice, index) => `<button class="choice" data-choice="${index}">${choice.label}</button>`)
+      .map((choice, index) => `<button class="choice" data-choice="${index}"><span class="choice-mark" aria-hidden="true"></span><span>${choice.label}</span></button>`)
       .join("");
 
-    ui.scenePanel.innerHTML = `<h2>${node.location}</h2><div class="tags">${tagsHtml}</div><div class="speaker-label">${node.speaker}</div><div class="dialogue-text">${node.text}</div><div class="dialogue-stamp" aria-hidden="true"></div><div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>`;
+    ui.scenePanel.innerHTML = `<div class="scene-meta"><h2>${node.location}</h2><div class="tags">${tagsHtml}</div></div><div class="speaker-label">${node.speaker}</div><div class="dialogue-text">${node.text}</div><div class="dialogue-stamp" aria-hidden="true"></div><div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>`;
 
     renderStatus(state, node);
     renderStats(state);
