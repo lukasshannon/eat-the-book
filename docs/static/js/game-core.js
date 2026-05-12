@@ -37,6 +37,7 @@ export async function initGame() {
         sceneId,
         {
           ...node,
+          speakerId: node.speaker,
           speaker: characters[node.speaker] || node.speaker,
         },
       ]),
@@ -73,6 +74,17 @@ export async function initGame() {
     companionStealth: document.querySelector("[data-world-stealth]"),
     companionInventory: document.querySelector("[data-world-inventory]"),
     companionObjective: document.querySelector("[data-world-objective]"),
+    sceneCharacterAsset: document.getElementById("sceneCharacterAsset"),
+    sceneCharacterName: document.getElementById("sceneCharacterName"),
+  };
+
+  const characterPortraits = {
+    keeper: { asset: "cleric", emotion: "warm" },
+    you: { asset: "trader", emotion: "determined" },
+    orchard: { asset: "healer", emotion: "vulnerable" },
+    raincoat: { asset: "warrior", emotion: "suspicious" },
+    mirror: { asset: "illusionist", emotion: "uncanny" },
+    villain: { asset: "poisoner", emotion: "angry" },
   };
 
   const TAB_LAYOUT = {
@@ -184,6 +196,25 @@ export async function initGame() {
       .join("");
   }
 
+  function getPortraitEmotion(state, node, portrait) {
+    if (node.end && node.speakerId === "keeper") return state.flags.choseFeed ? "happy" : "sad";
+    if (node.speakerId === "raincoat" && state.flags.limbInjury) return "afraid";
+    if (node.speakerId === "mirror" && state.flags.sharedTruth) return "warm";
+    return portrait.emotion;
+  }
+
+  function renderCharacterPortrait(state, node) {
+    if (!ui.sceneCharacterAsset || !ui.sceneCharacterName) return;
+
+    const portrait = characterPortraits[node.speakerId] || characterPortraits.keeper;
+    const emotion = getPortraitEmotion(state, node, portrait);
+    const displayName = node.speaker || "Keeper";
+
+    ui.sceneCharacterAsset.src = `./static/img/assets/characters/${portrait.asset}/${emotion}.png`;
+    ui.sceneCharacterAsset.alt = `${displayName} character portrait`;
+    ui.sceneCharacterName.textContent = displayName;
+  }
+
   function renderStatus(state, node) {
     const visitedCount = Math.max(1, Object.keys(state.visited).length);
     const chapter = node.end ? Math.min(12, visitedCount) : 12;
@@ -283,6 +314,7 @@ export async function initGame() {
     save(state);
 
     ui.progress.textContent = node.end ? "TODAY'S SPECIAL\nStory complete" : "TODAY'S SPECIAL\nHoney\nDream\nLatte";
+    renderCharacterPortrait(state, node);
 
     const tagsHtml = (node.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("");
     const choicesHtml = (node.choices || [])
