@@ -65,4 +65,5 @@ Before finalizing, ensure all are true:
 - Do not add or modify dependency manifest lock files for UI-only work (`package.json` and `package-lock.json` must remain unchanged unless explicitly requested).
 
 - UI iteration requirement (2026-05-05): continue implementing the UI and reuse image assets from `docs/static/img/assets`.
+- Character portrait requirement (2026-05-12): use the prepared pictures under `docs/static/img/assets/characters/<name>` for character portraits.
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.

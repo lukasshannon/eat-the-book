@@ -20,6 +20,18 @@ export async function initGame() {
     "Kitchen Oath": { world: "Fate Stove", scar: "burnt corner", cost: "choice" },
   };
 
+  function normalizeCharacter(characterId, character) {
+    if (typeof character === "string") {
+      return { name: character, portrait: characterId, emotion: "neutral" };
+    }
+
+    return {
+      name: character?.name || characterId,
+      portrait: character?.portrait || characterId,
+      emotion: character?.emotion || "neutral",
+    };
+  }
+
   async function loadGameData() {
     const [charactersResponse, scenesResponse] = await Promise.all([
       fetch("./static/data/characters.json"),
@@ -30,17 +42,29 @@ export async function initGame() {
       throw new Error("Unable to load game data JSON files.");
     }
 
-    const characters = await charactersResponse.json();
+    const rawCharacters = await charactersResponse.json();
+    const characters = Object.fromEntries(
+      Object.entries(rawCharacters).map(([characterId, character]) => [
+        characterId,
+        normalizeCharacter(characterId, character),
+      ]),
+    );
     const rawScenes = await scenesResponse.json();
     const scenes = Object.fromEntries(
-      Object.entries(rawScenes).map(([sceneId, node]) => [
-        sceneId,
-        {
-          ...node,
-          speakerId: node.speaker,
-          speaker: characters[node.speaker] || node.speaker,
-        },
-      ]),
+      Object.entries(rawScenes).map(([sceneId, node]) => {
+        const character = characters[node.speaker] || normalizeCharacter(node.speaker, node.speaker);
+
+        return [
+          sceneId,
+          {
+            ...node,
+            speakerId: node.speaker,
+            speaker: character.name,
+            portrait: character.portrait,
+            portraitEmotion: character.emotion,
+          },
+        ];
+      }),
     );
 
     return { scenes };
@@ -76,15 +100,6 @@ export async function initGame() {
     companionObjective: document.querySelector("[data-world-objective]"),
     sceneCharacterAsset: document.getElementById("sceneCharacterAsset"),
     sceneCharacterName: document.getElementById("sceneCharacterName"),
-  };
-
-  const characterPortraits = {
-    keeper: { asset: "cleric", emotion: "warm" },
-    you: { asset: "trader", emotion: "determined" },
-    orchard: { asset: "healer", emotion: "vulnerable" },
-    raincoat: { asset: "warrior", emotion: "suspicious" },
-    mirror: { asset: "illusionist", emotion: "uncanny" },
-    villain: { asset: "poisoner", emotion: "angry" },
   };
 
   const TAB_LAYOUT = {
@@ -196,21 +211,21 @@ export async function initGame() {
       .join("");
   }
 
-  function getPortraitEmotion(state, node, portrait) {
+  function getPortraitEmotion(state, node) {
     if (node.end && node.speakerId === "keeper") return state.flags.choseFeed ? "happy" : "sad";
     if (node.speakerId === "raincoat" && state.flags.limbInjury) return "afraid";
     if (node.speakerId === "mirror" && state.flags.sharedTruth) return "warm";
-    return portrait.emotion;
+    return node.portraitEmotion || "neutral";
   }
 
   function renderCharacterPortrait(state, node) {
     if (!ui.sceneCharacterAsset || !ui.sceneCharacterName) return;
 
-    const portrait = characterPortraits[node.speakerId] || characterPortraits.keeper;
-    const emotion = getPortraitEmotion(state, node, portrait);
+    const emotion = getPortraitEmotion(state, node);
     const displayName = node.speaker || "Keeper";
+    const portraitName = node.portrait || node.speakerId;
 
-    ui.sceneCharacterAsset.src = `./static/img/assets/characters/${portrait.asset}/${emotion}.png`;
+    ui.sceneCharacterAsset.src = `./static/img/assets/characters/${portraitName}/${emotion}.png`;
     ui.sceneCharacterAsset.alt = `${displayName} character portrait`;
     ui.sceneCharacterName.textContent = displayName;
   }
