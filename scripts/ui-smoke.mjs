@@ -38,6 +38,18 @@ try {
 
   assert.equal(await page.locator('#scenePanel').isVisible(), true, 'scene panel should be visible on load');
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'cafe tab should be selected');
+  assert.match(
+    await page.getAttribute('#sceneCharacterAsset', 'src'),
+    /\/static\/img\/assets\/characters\/cleric\/warm\.png$/,
+    'keeper portrait should use the configured character asset folder',
+  );
+
+  await page.locator('.choice', { hasText: 'Begin shift' }).click();
+  assert.match(
+    await page.getAttribute('#sceneCharacterAsset', 'src'),
+    /\/static\/img\/assets\/characters\/trader\/determined\.png$/,
+    'player portrait should use the configured character asset folder after scene changes',
+  );
 
   await page.locator('[data-tab="cafe"]').focus();
   await page.keyboard.press('ArrowRight');
@@ -50,7 +62,7 @@ try {
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'Home should jump to first tab');
 
   await page.locator('[data-tab="recipes"]').click();
-  assert.equal(await page.locator('#recipePanel .recipe-card').count(), 1, 'recipe tab should render recipe cards');
+  assert.equal(await page.locator('#recipePanel .recipe-card').count(), 2, 'recipe tab should render recipe cards');
 
   await page.locator('[data-tab="journal"]').click();
   assert.equal(await page.locator('#journalPanel .journal-stat').count(), 4, 'journal tab should render state cards');
