@@ -136,7 +136,7 @@ summary { font: inherit; color: inherit; }
   min-width: 0;
   min-height: 0;
   margin: 0;
-  padding: 8px 12px 10px;
+  padding: 8px var(--viewport-padding) 10px;
   position: relative;
   display: grid;
   grid-template-columns: var(--intro-panel-width) var(--notebook-width) var(--side-panel-width);
@@ -648,6 +648,10 @@ summary { font: inherit; color: inherit; }
   min-height: 0;
   width: auto;
   margin: 0 11px 0 2px;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: min(var(--controls-width), 100%);
+  margin: 0 auto;
   padding: 8px 12px;
   border-radius: var(--radius-panel);
   background: rgba(22, 18, 14, .7);
@@ -678,7 +682,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .world-hud { width: min(330px, 100%); margin: 0 auto; }
   .world-companion { display: none; }
   .pockets { grid-column: 1; grid-row: auto; width: min(430px, 100%); margin: -198px auto 110px; }
-  .controls { grid-column: 1; grid-row: auto; }
+  .controls { grid-column: 1 / -1; grid-row: 2; }
 }
 
 .bottom-tabs { z-index: 8; }
@@ -1306,11 +1310,14 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 }
 
 /* Responsive layout strategy:
+   The fixed full composition needs 1126px total width:
+   var(--intro-panel-width) + var(--notebook-width) + var(--side-panel-width)
+   + two var(--panel-gap) gutters + two var(--viewport-padding) #app padding edges.
    Base styles above render the desktop/fullscreen composition.
    Medium collapses the side panels into the notebook flow.
    Small prioritizes a single-column notebook.
    Very small trims typography and tap targets. */
-@media (max-width: 1120px) {
+@media (max-width: 1126px) {
   :root {
     --viewport-padding: 11px;
     --panel-gap: 18px;
@@ -1337,8 +1344,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .notebook-shell,
   .world-hud,
-  .pockets,
-  .controls {
+  .pockets {
     grid-column: auto;
     grid-row: auto;
   }
@@ -1357,6 +1363,11 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     margin-right: auto;
   }
 
+  .controls {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
   #worldHud {
     margin-top: 0;
   }
@@ -1369,8 +1380,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 }
 
 /* Final wide-viewport fit: keep the complete reference composition visible on
-   browser widths that can support it instead of dropping the side panels early. */
-@media (min-width: 981px) and (max-width: 1120px) {
+   browser widths that can support it instead of dropping the side panels early.
+   The fixed desktop composition needs 1126px: 166px + 546px + 330px
+   + two 30px gaps + two 12px #app padding edges. */
+@media (min-width: 981px) and (max-width: 1126px) {
   #app {
     display: grid;
     width: var(--viewport-width);
@@ -1454,7 +1467,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .controls {
-    margin-top: 0;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: min(var(--controls-width), 100%);
+    margin: 0 auto;
   }
 }
 
@@ -1463,7 +1479,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     --viewport-padding: 8px;
     --panel-gap: 14px;
     --notebook-radius: 30px 28px 22px 22px;
-    --notebook-padding: 18px 13px 116px 48px;
+    --notebook-padding: 18px 13px 12px 48px;
     --tab-height: 82px;
     --notebook-tab-reserve: var(--tab-height-mobile);
     --notebook-content-gap: 7px;
@@ -1492,7 +1508,14 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     width: min(100%, var(--content-panel-width));
     height: min(708px, calc(var(--viewport-height) - 20px));
     min-height: 0;
+    min-height: min(560px, calc(100dvh - 20px));
+    max-height: calc(100dvh - 20px);
+    height: auto;
     box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+    row-gap: 8px;
     padding: var(--notebook-padding);
     border-width: 4px;
     border-radius: var(--radius-notebook-mobile);
@@ -1523,6 +1546,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .scene-visual {
     height: auto;
+    height: clamp(176px, 28dvh, 282px);
+    min-height: 0;
     margin: 0 4px 0 0;
   }
 
@@ -1554,8 +1579,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   #scenePanel.dialogue-card {
     min-height: 0;
+    max-height: none;
     margin: 0 4px 0 -6px;
-    padding: 29px 27px 22px 30px;
+    padding: 22px 24px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .dialogue-card::before {
@@ -1563,8 +1592,16 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     right: 28px;
   }
 
+  .speaker-label {
+    margin-bottom: 6px;
+  }
+
   .dialogue-text {
     max-width: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
     font-size: var(--mobile-dialogue-scale);
     line-height: 1.48;
   }
@@ -1581,8 +1618,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .choices {
+    flex: 0 0 auto;
+    max-height: none;
     gap: 7px;
-    margin-top: 11px;
+    margin-top: 8px;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .choice {
@@ -1595,7 +1636,13 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     right: auto;
     bottom: auto;
     height: var(--tab-height);
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
     height: var(--tab-height-mobile);
+    margin: 0;
     padding: 10px 10px 12px;
   }
 
@@ -1615,6 +1662,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     width: min(100%, var(--content-panel-width));
   }
 
+  .controls {
+    margin-bottom: 4px;
+  }
+
   #worldHud {
     height: auto;
     min-height: 0;
@@ -1623,6 +1674,21 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .pockets {
     margin: 0 auto;
+  }
+
+  .controls {
+    width: 100%;
+    margin: 0;
+    padding: 7px 8px;
+  }
+
+  .control-row {
+    gap: 6px;
+  }
+
+  .controls button {
+    padding: 6px 9px;
+    font-size: .84rem;
   }
 
   .pocket-card {
@@ -1645,7 +1711,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 @media (max-width: 360px) {
   :root {
-    --notebook-padding: 18px 10px 116px 42px;
+    --notebook-padding: 18px 10px 12px 42px;
     --tab-height: 76px;
   }
 
