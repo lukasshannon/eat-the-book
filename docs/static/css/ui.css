@@ -1099,6 +1099,57 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   margin-right: 0;
 }
 
+
+/* Bounded content scrolling: keep lengthy generated content inside the
+   notebook and side cards so the fixed tab bar remains visible. */
+#scenePanel.dialogue-card {
+  max-height: clamp(145px, calc(100dvh - 535px), 172px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.choices {
+  max-height: clamp(52px, calc(100dvh - 620px), 94px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.world-hud {
+  max-height: clamp(360px, calc(100dvh - 120px), 476px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#inventory {
+  max-height: clamp(64px, calc(100dvh - 430px), 136px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.pocket-card {
+  max-height: clamp(180px, calc(100dvh - 390px), 300px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#book,
+#stats {
+  max-height: clamp(96px, calc(100dvh - 480px), 220px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.notebook-shell {
+  overflow: hidden;
+}
+
+.bottom-tabs {
+  position: absolute;
+}
+
 /* Character asset pass: use the prepared portrait sprites instead of CSS-drawn stand-ins. */
 .scene-character {
   left: 40px;
@@ -1296,8 +1347,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .notebook-shell {
     width: min(100%, 430px);
-    height: auto;
-    min-height: 708px;
+    height: min(708px, calc(100dvh - 20px));
+    min-height: 0;
     box-sizing: border-box;
     padding: 18px 13px 116px 48px;
     border-width: 4px;
@@ -1357,8 +1408,9 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     font-size: .86rem;
   }
 
-  .dialogue-card {
-    min-height: 174px;
+  #scenePanel.dialogue-card {
+    min-height: 0;
+    max-height: clamp(110px, calc(100dvh - 510px), 184px);
     margin: 0 4px 0 -6px;
     padding: 29px 27px 22px 30px;
   }
@@ -1386,6 +1438,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .choices {
+    max-height: clamp(48px, calc(100dvh - 610px), 86px);
     gap: 7px;
     margin-top: 11px;
   }
@@ -1421,7 +1474,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   #worldHud {
     height: auto;
-    min-height: 460px;
+    min-height: 0;
+    max-height: clamp(360px, calc(100dvh - 30px), 460px);
   }
 
   .pockets {
@@ -1430,7 +1484,17 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .pocket-card {
     min-height: 0;
+    max-height: clamp(190px, calc(100dvh - 60px), 300px);
     padding-inline: 34px;
+  }
+
+  #book,
+  #stats {
+    max-height: clamp(112px, calc(100dvh - 180px), 220px);
+  }
+
+  #inventory {
+    max-height: clamp(64px, calc(100dvh - 315px), 136px);
   }
 
   .recipe-spread,
