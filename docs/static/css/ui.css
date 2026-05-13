@@ -1471,3 +1471,227 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     right: 10px;
   }
 }
+
+/* Notebook viewport anchor pass: keep the play notebook centered while side
+   pieces become decorative context instead of structural grid columns. */
+#app {
+  width: min(760px, calc(100vw - 24px));
+  min-height: 646px;
+  display: grid;
+  grid-template-columns: minmax(0, 546px);
+  grid-template-rows: auto;
+  justify-content: center;
+  column-gap: 0;
+  overflow: visible;
+}
+
+.notebook-shell {
+  grid-column: 1;
+  grid-row: 1;
+  width: min(546px, 100%);
+  justify-self: center;
+}
+
+.desk-intro {
+  grid-column: auto;
+  grid-row: auto;
+  position: absolute;
+  left: -122px;
+  top: 42px;
+  width: 118px;
+  height: auto;
+  min-height: 184px;
+  margin: 0;
+  padding: 18px 13px 22px;
+  z-index: 1;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+.intro-index {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  font-size: 2.15rem;
+}
+
+.desk-intro h1 {
+  margin-bottom: 13px;
+  font-size: 1.05rem;
+}
+
+.intro-script {
+  max-width: 78px;
+  font-size: .74rem;
+  line-height: 1.28;
+}
+
+.botanical-mark {
+  left: 42px;
+  bottom: 20px;
+  width: 36px;
+  height: 48px;
+  opacity: .34;
+  transform: scale(.64);
+  transform-origin: bottom center;
+}
+
+.world-companion {
+  grid-column: auto;
+  grid-row: auto;
+  position: absolute;
+  right: -174px;
+  top: 92px;
+  width: 232px;
+  height: 344px;
+  margin: 0;
+  padding: 22px 18px 16px;
+  z-index: 1;
+  opacity: .92;
+  transform: rotate(2deg);
+  pointer-events: none;
+}
+
+.world-companion h3 {
+  max-width: 138px;
+  margin-left: 13px;
+  font-size: .78rem;
+}
+
+.world-companion .stealth-row {
+  width: 136px;
+  font-size: .78rem;
+}
+
+.world-companion .world-scene {
+  height: 112px;
+  margin: 0 2px 11px;
+}
+
+.world-companion .slot-row {
+  gap: 5px;
+}
+
+.world-companion .inv-slot {
+  height: 42px;
+  border-radius: 10px;
+}
+
+.world-companion .objective {
+  margin: 10px 7px 0;
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+#worldHud,
+.pockets {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.controls {
+  position: absolute;
+  right: 31px;
+  top: 84px;
+  width: auto;
+  max-width: calc(100% - 104px);
+  margin: 0;
+  padding: 5px;
+  border: 1px solid rgba(139, 99, 57, .58);
+  border-radius: 999px;
+  background: rgba(30, 22, 16, .82);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 235, 190, .18);
+}
+
+.control-row {
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+.controls button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: .72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.error {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: min(320px, calc(100vw - 40px));
+  max-width: 360px;
+  margin-top: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 170, 140, .42);
+  border-radius: 10px;
+  background: rgba(53, 27, 22, .94);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .35);
+}
+
+@media (max-width: 1120px) {
+  #app {
+    display: grid;
+    width: min(760px, calc(100vw - 22px));
+    grid-template-columns: minmax(0, 546px);
+    grid-template-rows: auto;
+    justify-content: center;
+  }
+
+  .desk-intro,
+  .world-companion {
+    display: none;
+  }
+
+  .notebook-shell,
+  #worldHud,
+  .pockets {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .controls {
+    grid-column: auto;
+    grid-row: auto;
+    width: auto;
+    margin: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  #app {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controls {
+    top: 76px;
+    right: 18px;
+    max-width: calc(100% - 76px);
+    padding: 4px;
+  }
+
+  .control-row {
+    gap: 4px;
+  }
+
+  .controls button {
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: .65rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .controls {
+    right: 15px;
+    max-width: calc(100% - 66px);
+  }
+
+  .controls button {
+    padding-inline: 6px;
+    font-size: .6rem;
+  }
+}
