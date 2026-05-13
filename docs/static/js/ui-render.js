@@ -78,9 +78,6 @@ export function renderStatus(ui, state, node) {
   ui.gemValue.textContent = String(80 + state.relation.mirror * 3 + (state.flags.sharedTruth ? 6 : 0));
   ui.stealthMeter.textContent = stealth;
   ui.worldObjective.textContent = objective;
-
-  if (ui.companionStealth) ui.companionStealth.textContent = stealth;
-  if (ui.companionObjective) ui.companionObjective.textContent = objective;
 }
 
 function renderRelationRows(relation) {
@@ -130,7 +127,6 @@ export function renderStats(ui, state) {
     `<h4>Gathered Ingredients</h4><ul class="inventory-ledger">${inventoryRows}</ul>`,
   ].join("");
   ui.inventory.innerHTML = inventoryHtml;
-  if (ui.companionInventory) ui.companionInventory.innerHTML = inventoryHtml;
   ui.book.innerHTML = [`<div class="recipe-spread">`, recipeCards, `</div>`].join("");
 }
 
@@ -165,8 +161,19 @@ function setPanelVisibility(section, isVisible) {
 }
 
 export function syncWorldCompanionVisibility(ui, desktopWorldHud, state) {
-  if (!ui.worldCompanion) return;
-  ui.worldCompanion.hidden = !(desktopWorldHud.matches && state.activeTab !== "worlds");
+  const isCompanion = desktopWorldHud.matches && state.activeTab !== "worlds";
+
+  ui.worldHud.classList.toggle("world-hud-companion", isCompanion);
+  if (isCompanion) {
+    setPanelVisibility(ui.worldHud, true);
+    ui.worldHud.setAttribute("role", "complementary");
+    ui.worldHud.setAttribute("aria-label", "Exploration HUD companion");
+    ui.worldHud.removeAttribute("aria-labelledby");
+  } else {
+    ui.worldHud.setAttribute("role", "tabpanel");
+    ui.worldHud.setAttribute("aria-labelledby", "tab-worlds");
+    ui.worldHud.removeAttribute("aria-label");
+  }
 }
 
 export function setActiveTab(ui, tabLayout, desktopWorldHud, state, tabName, onPersist, shouldPersist = true) {

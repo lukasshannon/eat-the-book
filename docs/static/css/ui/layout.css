@@ -519,8 +519,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
   .desk-intro { display: none; }
   .notebook-shell { width: min(546px, 100%); height: min(var(--notebook-height), calc(var(--viewport-height) - 16px)); margin: 0 auto; }
-  .world-hud { width: min(330px, 100%); margin: 0 auto; }
-  .world-companion { display: none; }
+  .world-hud { grid-column: 1; grid-row: auto; width: min(330px, 100%); margin: 0 auto; }
   .pockets { grid-column: 1; grid-row: auto; width: min(430px, 100%); margin: 0 auto; }
   .controls { grid-column: 1; grid-row: auto; }
 }

@@ -27,8 +27,7 @@
     overflow: hidden auto;
   }
 
-  .desk-intro,
-  .world-companion {
+  .desk-intro {
     display: none;
   }
 
@@ -45,7 +44,7 @@
     margin: 0 auto;
   }
 
-  #worldHud,
+  .world-hud,
   .pockets,
   .controls {
     width: min(var(--content-panel-width), 100%);
@@ -58,7 +57,7 @@
     margin-bottom: 0;
   }
 
-  #worldHud {
+  .world-hud {
     margin-top: 0;
   }
 
@@ -87,8 +86,7 @@
     column-gap: var(--panel-gap-wide-fit);
   }
 
-  .desk-intro,
-  .world-companion {
+  .desk-intro {
     display: block;
   }
 
@@ -124,31 +122,33 @@
     min-width: 0;
   }
 
-  .world-companion {
-    grid-column: 3;
+  .world-hud,
+  .pockets {
+    grid-column: 2;
     grid-row: 1;
+  }
+
+  .world-hud {
     min-width: 0;
+  }
+
+  .world-hud.world-hud-companion {
+    grid-column: 3;
     height: min(476px, 74vw);
     padding-inline: clamp(16px, 2vw, 23px);
   }
 
-  .world-companion .slot-row {
+  .world-hud .slot-row {
     gap: clamp(5px, .85vw, 9px);
   }
 
-  .world-companion .inv-slot {
+  .world-hud .inv-slot {
     height: clamp(48px, 5.2vw, 58px);
   }
 
-  .world-companion .objective {
+  .world-hud .objective {
     margin-inline: clamp(8px, 1.2vw, 15px);
     font-size: clamp(.82rem, 1.25vw, .95rem);
-  }
-
-  #worldHud,
-  .pockets {
-    grid-column: 2;
-    grid-row: 1;
   }
 
   .pockets {
@@ -349,7 +349,7 @@
     height: 25px;
   }
 
-  #worldHud,
+  .world-hud,
   .pockets,
   .controls {
     width: min(100%, var(--content-panel-width));
@@ -359,7 +359,7 @@
     margin-bottom: 4px;
   }
 
-  #worldHud {
+  .world-hud {
     height: auto;
     min-height: 0;
     max-height: clamp(360px, calc(100dvh - 30px), 460px);
