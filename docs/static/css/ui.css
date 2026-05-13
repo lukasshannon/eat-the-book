@@ -61,14 +61,38 @@
   --asset-note-small: url("../img/assets/note-small.png");
   --asset-note-square: url("../img/assets/note-square.png");
   --asset-wide-panel: url("../img/assets/wide-panel.png");
+  --viewport-width: 100vw;
+  --viewport-height: 100vh;
 }
 
 * { box-sizing: border-box; }
 
-html { min-height: 100%; background: var(--desk); }
+html,
+body {
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@supports (width: 100dvw) and (height: 100dvh) {
+  :root {
+    --viewport-width: 100dvw;
+    --viewport-height: 100dvh;
+  }
+
+  html,
+  body,
+  #app {
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+  }
+}
+
+html { background: var(--desk); }
 
 body {
-  min-height: 100%;
   margin: 0;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
@@ -76,7 +100,6 @@ body {
     radial-gradient(circle at 91% -8%, rgba(196, 157, 92, .16), transparent 22%),
     radial-gradient(circle at 14% 106%, rgba(98, 70, 42, .24), transparent 26%),
     linear-gradient(180deg, #1b1b19 0%, #0e0f0e 100%);
-  overflow-x: hidden;
 }
 
 body::before {
@@ -103,7 +126,22 @@ summary { font: inherit; color: inherit; }
   grid-template-columns: 166px 546px 330px;
   grid-template-rows: 646px auto;
   column-gap: var(--panel-gap);
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 12px 10px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 166px 546px 330px;
+  grid-template-rows: minmax(0, 646px) auto;
+  column-gap: 30px;
+  row-gap: 10px;
+  align-content: start;
   align-items: start;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .desk-intro {
@@ -192,14 +230,16 @@ summary { font: inherit; color: inherit; }
 .notebook-shell {
   grid-column: 2;
   grid-row: 1;
-  height: 646px;
+  height: min(646px, max(520px, calc(var(--viewport-height) - 76px)));
+  min-height: 0;
   position: relative;
   padding: 22px 25px 26px 74px;
   border: 5px solid #15120f;
   border-radius: var(--radius-notebook);
   background: linear-gradient(180deg, #4a3322, #241912 78%);
   box-shadow: var(--shadow), inset 0 0 0 2px rgba(178, 124, 70, .5);
-  overflow: visible;
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 
 .notebook-page {
@@ -450,13 +490,16 @@ summary { font: inherit; color: inherit; }
 .world-hud {
   grid-column: 3;
   grid-row: 1;
-  height: 476px;
+  height: min(476px, max(360px, calc(var(--viewport-height) - 118px)));
+  min-height: 0;
   margin-top: 72px;
   position: relative;
   padding: 27px 23px 20px;
   color: var(--paper-warm);
   background: var(--asset-pit) center / 100% 100% no-repeat;
   filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .48));
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 .world-hud::before {
   content: "";
@@ -546,13 +589,18 @@ summary { font: inherit; color: inherit; }
   position: relative;
   z-index: 5;
   pointer-events: none;
+  max-height: max(170px, calc(var(--viewport-height) - 392px));
 }
 .pocket-card {
   min-height: 170px;
+  max-height: inherit;
   padding: 24px 36px;
   pointer-events: auto;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-pocket);
+  filter: drop-shadow(0 7px 8px rgba(59, 36, 18, .28));
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 .pocket-card summary { cursor: pointer; font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
 .pocket-card ul { margin: 8px 0 0; padding-left: 22px; }
@@ -585,6 +633,13 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     gap: var(--panel-gap-tablet);
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    min-height: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 18px;
+    overflow: hidden auto;
   }
   .desk-intro { display: none; }
   .notebook-shell { width: min(546px, 100%); margin: 0 auto; }
@@ -1145,6 +1200,57 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   margin-right: 0;
 }
 
+
+/* Bounded content scrolling: keep lengthy generated content inside the
+   notebook and side cards so the fixed tab bar remains visible. */
+#scenePanel.dialogue-card {
+  max-height: clamp(145px, calc(100dvh - 535px), 172px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.choices {
+  max-height: clamp(52px, calc(100dvh - 620px), 94px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.world-hud {
+  max-height: clamp(360px, calc(100dvh - 120px), 476px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#inventory {
+  max-height: clamp(64px, calc(100dvh - 430px), 136px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+
+.pocket-card {
+  max-height: clamp(180px, calc(100dvh - 390px), 300px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+#book,
+#stats {
+  max-height: clamp(96px, calc(100dvh - 480px), 220px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.notebook-shell {
+  overflow: hidden;
+}
+
+.bottom-tabs {
+  position: absolute;
+}
+
 /* Character asset pass: use the prepared portrait sprites instead of CSS-drawn stand-ins. */
 .scene-character {
   left: 40px;
@@ -1196,6 +1302,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     flex-direction: column;
     align-items: center;
     width: min(760px, calc(100vw - (var(--viewport-padding-tablet) * 2)));
+    justify-content: flex-start;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    overflow: hidden auto;
   }
 
   .desk-intro,
@@ -1239,6 +1349,9 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   #app {
     display: grid;
     width: calc(100vw - (var(--viewport-padding) * 2));
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    overflow: hidden;
     grid-template-columns:
       clamp(126px, 15vw, 166px)
       minmax(500px, 546px)
@@ -1333,17 +1446,21 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   #app {
-    width: 100%;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
     margin: 0;
     padding: var(--viewport-padding-mobile-block) var(--viewport-padding-mobile-inline);
     gap: var(--panel-gap-mobile);
     overflow-x: hidden;
+    padding: 10px 8px 18px;
+    gap: 14px;
+    overflow: hidden auto;
   }
 
   .notebook-shell {
     width: min(100%, 430px);
-    height: auto;
-    min-height: 708px;
+    height: min(708px, calc(100dvh - 20px));
+    min-height: 0;
     box-sizing: border-box;
     padding: 18px 13px 116px 48px;
     border-width: 4px;
@@ -1403,8 +1520,9 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     font-size: .86rem;
   }
 
-  .dialogue-card {
-    min-height: 174px;
+  #scenePanel.dialogue-card {
+    min-height: 0;
+    max-height: clamp(110px, calc(100dvh - 510px), 184px);
     margin: 0 4px 0 -6px;
     padding: 29px 27px 22px 30px;
   }
@@ -1432,6 +1550,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .choices {
+    max-height: clamp(48px, calc(100dvh - 610px), 86px);
     gap: 7px;
     margin-top: 11px;
   }
@@ -1467,7 +1586,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   #worldHud {
     height: auto;
-    min-height: 460px;
+    min-height: 0;
+    max-height: clamp(360px, calc(100dvh - 30px), 460px);
   }
 
   .pockets {
@@ -1476,7 +1596,17 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .pocket-card {
     min-height: 0;
+    max-height: clamp(190px, calc(100dvh - 60px), 300px);
     padding-inline: 34px;
+  }
+
+  #book,
+  #stats {
+    max-height: clamp(112px, calc(100dvh - 180px), 220px);
+  }
+
+  #inventory {
+    max-height: clamp(64px, calc(100dvh - 315px), 136px);
   }
 
   .recipe-spread,
@@ -1515,5 +1645,229 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .bottom-tabs {
     left: 37px;
     right: 10px;
+  }
+}
+
+/* Notebook viewport anchor pass: keep the play notebook centered while side
+   pieces become decorative context instead of structural grid columns. */
+#app {
+  width: min(760px, calc(100vw - 24px));
+  min-height: 646px;
+  display: grid;
+  grid-template-columns: minmax(0, 546px);
+  grid-template-rows: auto;
+  justify-content: center;
+  column-gap: 0;
+  overflow: visible;
+}
+
+.notebook-shell {
+  grid-column: 1;
+  grid-row: 1;
+  width: min(546px, 100%);
+  justify-self: center;
+}
+
+.desk-intro {
+  grid-column: auto;
+  grid-row: auto;
+  position: absolute;
+  left: -122px;
+  top: 42px;
+  width: 118px;
+  height: auto;
+  min-height: 184px;
+  margin: 0;
+  padding: 18px 13px 22px;
+  z-index: 1;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+.intro-index {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  font-size: 2.15rem;
+}
+
+.desk-intro h1 {
+  margin-bottom: 13px;
+  font-size: 1.05rem;
+}
+
+.intro-script {
+  max-width: 78px;
+  font-size: .74rem;
+  line-height: 1.28;
+}
+
+.botanical-mark {
+  left: 42px;
+  bottom: 20px;
+  width: 36px;
+  height: 48px;
+  opacity: .34;
+  transform: scale(.64);
+  transform-origin: bottom center;
+}
+
+.world-companion {
+  grid-column: auto;
+  grid-row: auto;
+  position: absolute;
+  right: -174px;
+  top: 92px;
+  width: 232px;
+  height: 344px;
+  margin: 0;
+  padding: 22px 18px 16px;
+  z-index: 1;
+  opacity: .92;
+  transform: rotate(2deg);
+  pointer-events: none;
+}
+
+.world-companion h3 {
+  max-width: 138px;
+  margin-left: 13px;
+  font-size: .78rem;
+}
+
+.world-companion .stealth-row {
+  width: 136px;
+  font-size: .78rem;
+}
+
+.world-companion .world-scene {
+  height: 112px;
+  margin: 0 2px 11px;
+}
+
+.world-companion .slot-row {
+  gap: 5px;
+}
+
+.world-companion .inv-slot {
+  height: 42px;
+  border-radius: 10px;
+}
+
+.world-companion .objective {
+  margin: 10px 7px 0;
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+#worldHud,
+.pockets {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.controls {
+  position: absolute;
+  right: 31px;
+  top: 84px;
+  width: auto;
+  max-width: calc(100% - 104px);
+  margin: 0;
+  padding: 5px;
+  border: 1px solid rgba(139, 99, 57, .58);
+  border-radius: 999px;
+  background: rgba(30, 22, 16, .82);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 235, 190, .18);
+}
+
+.control-row {
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+.controls button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: .72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.error {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: min(320px, calc(100vw - 40px));
+  max-width: 360px;
+  margin-top: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 170, 140, .42);
+  border-radius: 10px;
+  background: rgba(53, 27, 22, .94);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .35);
+}
+
+@media (max-width: 1120px) {
+  #app {
+    display: grid;
+    width: min(760px, calc(100vw - 22px));
+    grid-template-columns: minmax(0, 546px);
+    grid-template-rows: auto;
+    justify-content: center;
+  }
+
+  .desk-intro,
+  .world-companion {
+    display: none;
+  }
+
+  .notebook-shell,
+  #worldHud,
+  .pockets {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .controls {
+    grid-column: auto;
+    grid-row: auto;
+    width: auto;
+    margin: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  #app {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controls {
+    top: 76px;
+    right: 18px;
+    max-width: calc(100% - 76px);
+    padding: 4px;
+  }
+
+  .control-row {
+    gap: 4px;
+  }
+
+  .controls button {
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: .65rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .controls {
+    right: 15px;
+    max-width: calc(100% - 66px);
+  }
+
+  .controls button {
+    padding-inline: 6px;
+    font-size: .6rem;
   }
 }
