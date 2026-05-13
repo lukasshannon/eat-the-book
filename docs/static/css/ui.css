@@ -230,17 +230,15 @@ summary { font: inherit; color: inherit; }
 .notebook-shell {
   grid-column: 2;
   grid-row: 1;
-  height: var(--notebook-height);
+  position: relative;
   height: min(646px, max(520px, calc(var(--viewport-height) - 76px)));
   min-height: 0;
-  position: relative;
   padding: var(--notebook-padding);
   border: 5px solid #15120f;
-  border-radius: var(--notebook-radius);
   border-radius: var(--radius-notebook);
   background: linear-gradient(180deg, #4a3322, #241912 78%);
   box-shadow: var(--shadow), inset 0 0 0 2px rgba(178, 124, 70, .5);
-  overflow: hidden auto;
+  overflow: hidden;
   scrollbar-gutter: stable;
 }
 
@@ -370,46 +368,28 @@ summary { font: inherit; color: inherit; }
 
 .scene-character {
   position: absolute;
-  left: 96px;
-  bottom: 0;
-  width: 192px;
-  height: 246px;
-  background:
-    radial-gradient(ellipse at 31% 77%, #d9b48f 0 15px, transparent 16px),
-    radial-gradient(ellipse at 69% 77%, #d9b48f 0 15px, transparent 16px),
-    linear-gradient(90deg, transparent 0 70px, #3f2618 71px 78px, transparent 79px 88px, #3f2618 89px 96px, transparent 97px),
-    radial-gradient(ellipse at 50% 83%, #d8b38c 0 55px, transparent 56px),
-    radial-gradient(ellipse at 50% 61%, #eadbc6 0 48px, transparent 49px);
-  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, .55));
+  left: 40px;
+  bottom: -25px;
+  width: 270px;
+  height: 285px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: none;
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, .58));
 }
-.scene-character::before {
-  content: "";
-  position: absolute;
-  left: 51px;
-  top: 48px;
-  width: 64px;
-  height: 74px;
-  z-index: 3;
-  border-radius: 44% 44% 48% 48%;
-  background:
-    radial-gradient(circle at 34% 42%, #2d2018 0 3px, transparent 4px),
-    radial-gradient(circle at 65% 42%, #2d2018 0 3px, transparent 4px),
-    radial-gradient(ellipse at 50% 67%, rgba(113, 59, 42, .55) 0 5px, transparent 6px),
-    #edcfad;
-  border: 1px solid rgba(85, 53, 29, .38);
-}
+.scene-character::before,
 .scene-character::after {
-  content: "";
-  position: absolute;
-  left: 38px;
-  top: 23px;
-  width: 91px;
-  height: 86px;
-  z-index: 2;
-  border-radius: 46% 48% 35% 35%;
-  background: radial-gradient(ellipse at 50% 20%, #8c5a36, #5a3825 70%);
-  -webkit-mask: radial-gradient(circle at 50% 76%, transparent 0 30px, #000 31px);
-  mask: radial-gradient(circle at 50% 76%, transparent 0 30px, #000 31px);
+  content: none;
+}
+
+.scene-character img {
+  width: auto;
+  height: min(285px, 108%);
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  transform: translateY(3px);
 }
 
 .special-note {
@@ -433,9 +413,15 @@ summary { font: inherit; color: inherit; }
 .dialogue-card {
   min-height: 145px;
   margin: -2px 11px 9px 2px;
-  padding: 28px 42px 18px 42px;
+  padding: 28px 42px 18px;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-soft);
+}
+
+#scenePanel.dialogue-card {
+  max-height: clamp(145px, calc(100dvh - 535px), 172px);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 .dialogue-card h2 { display: none; }
 .speaker-label { margin-bottom: 10px; font-size: 1.18rem; font-style: italic; font-weight: 700; }
@@ -444,7 +430,18 @@ summary { font: inherit; color: inherit; }
 .dialogue-stamp { position: absolute; right: 52px; bottom: 24px; width: 44px; height: 30px; opacity: .52; }
 .dialogue-stamp::before { content: ""; position: absolute; left: 4px; top: 9px; width: 24px; height: 16px; border: 2px solid var(--ink-soft); border-top: 0; border-radius: 0 0 14px 14px; }
 .dialogue-stamp::after { content: ""; position: absolute; left: 31px; top: 11px; width: 10px; height: 9px; border: 2px solid var(--ink-soft); border-left: 0; border-radius: 0 9px 9px 0; }
-.choices { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.choices {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: clamp(52px, calc(100dvh - 620px), 94px);
+  margin-top: 14px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
 .choice {
   border: 1px solid rgba(94, 61, 35, .6);
   border-radius: var(--radius-paper-card);
@@ -460,15 +457,12 @@ summary { font: inherit; color: inherit; }
   left: 60px;
   right: 30px;
   bottom: 17px;
-  height: var(--tab-height);
-  margin-right: 0;
   z-index: 8;
-  height: var(--tab-height);
-  margin-right: 8px;
-  padding: 10px 20px 12px 20px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
+  height: var(--tab-height);
+  padding: 10px 20px 12px;
   background: var(--asset-wide-panel) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-panel);
 }
@@ -601,14 +595,14 @@ summary { font: inherit; color: inherit; }
   max-height: max(170px, calc(var(--viewport-height) - 392px));
 }
 .pocket-card {
-  min-height: 170px;
-  max-height: inherit;
-  padding: 24px 36px;
+  min-height: 224px;
+  max-height: clamp(180px, calc(100dvh - 390px), 300px);
+  padding: 34px 42px 30px;
   pointer-events: auto;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-pocket);
-  filter: drop-shadow(0 7px 8px rgba(59, 36, 18, .28));
-  overflow: hidden auto;
+  overflow: auto;
+  overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
 .pocket-card summary { cursor: pointer; font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
@@ -653,7 +647,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .controls { grid-column: 1; grid-row: auto; }
 }
 
-.bottom-tabs { z-index: 8; }
 .pockets { z-index: 6; }
 
 /* Corrective fidelity pass: rely on the real notebook asset and replace the rough silhouette scene. */
@@ -719,17 +712,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 .bottle-b { left: 205px; top: 44px; transform: scale(.82); }
 .bottle-c { left: 314px; top: 126px; transform: scale(.9); }
 .bottle-d { left: 382px; top: 126px; transform: scale(.78); }
-
-.scene-character {
-  left: 78px;
-  bottom: -7px;
-  width: 208px;
-  height: 250px;
-  background: none;
-  filter: drop-shadow(0 13px 15px rgba(0, 0, 0, .56));
-}
-.scene-character::before,
-.scene-character::after { content: none; }
 
 .scene-character > span { position: absolute; display: block; }
 .hair-back {
@@ -975,8 +957,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 }
 
 .speaker-label,
-.dialogue-text,
-.choices {
+.dialogue-text {
   position: relative;
   z-index: 1;
 }
@@ -1008,10 +989,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   box-shadow: inset 0 0 0 2px rgba(250, 232, 196, .42);
 }
 
-.pocket-card {
-  min-height: 224px;
-  padding: 34px 42px 30px;
-}
 
 .pocket-card::before {
   content: "";
@@ -1184,29 +1161,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   font-weight: 700;
 }
 
-.bottom-tabs {
-  position: absolute;
-  left: 60px;
-  right: 30px;
-  bottom: 17px;
-  margin-right: 0;
-}
-
-
 /* Bounded content scrolling: keep lengthy generated content inside the
    notebook and side cards so the fixed tab bar remains visible. */
-#scenePanel.dialogue-card {
-  max-height: clamp(145px, calc(100dvh - 535px), 172px);
-  overflow: auto;
-  overscroll-behavior: contain;
-}
-
-.choices {
-  max-height: clamp(52px, calc(100dvh - 620px), 94px);
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding-right: 4px;
-}
 
 .world-hud {
   max-height: clamp(360px, calc(100dvh - 120px), 476px);
@@ -1221,11 +1177,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   padding-right: 2px;
 }
 
-.pocket-card {
-  max-height: clamp(180px, calc(100dvh - 390px), 300px);
-  overflow: auto;
-  overscroll-behavior: contain;
-}
 
 #book,
 #stats {
@@ -1235,36 +1186,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   padding-right: 4px;
 }
 
-.notebook-shell {
-  overflow: hidden;
-}
-
-.bottom-tabs {
-  position: absolute;
-}
 
 /* Character asset pass: use the prepared portrait sprites instead of CSS-drawn stand-ins. */
-.scene-character {
-  left: 40px;
-  bottom: -25px;
-  width: 270px;
-  height: 285px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: none;
-  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, .58));
-}
-
-.scene-character img {
-  width: auto;
-  height: min(285px, 108%);
-  max-width: 100%;
-  object-fit: contain;
-  object-position: bottom center;
-  transform: translateY(3px);
-}
-
 .scene-character-name {
   position: absolute;
   left: 42px;
@@ -1572,7 +1495,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     left: 42px;
     right: 13px;
     bottom: 18px;
-    height: var(--tab-height);
     height: var(--tab-height-mobile);
     padding: 10px 10px 12px;
   }
