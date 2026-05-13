@@ -61,15 +61,12 @@
   --asset-note-small: url("../img/assets/note-small.png");
   --asset-note-square: url("../img/assets/note-square.png");
   --asset-wide-panel: url("../img/assets/wide-panel.png");
-  --viewport-padding: 12px;
-  --panel-gap: 30px;
   --side-panel-width: 330px;
   --intro-panel-width: 166px;
   --notebook-width: 546px;
   --notebook-height: 646px;
   --notebook-radius: 45px 42px 30px 30px;
   --notebook-padding: 22px 25px 26px 56px;
-  --tab-height: 83px;
   --content-panel-width: 430px;
   --controls-width: 560px;
   --viewport-width: 100vw;
@@ -129,23 +126,6 @@ button,
 summary { font: inherit; color: inherit; }
 
 #app {
-  width: 100vw;
-  height: 100vh;
-  height: 100dvh;
-  margin: 0;
-  padding-top: 8px;
-  width: min(1120px, calc(100vw - (var(--viewport-padding) * 2)));
-  min-height: 704px;
-  margin: 8px auto 32px;
-  position: relative;
-  display: grid;
-  grid-template-columns: var(--intro-panel-width) var(--notebook-width) var(--side-panel-width);
-  grid-template-rows: var(--notebook-height) auto;
-  column-gap: var(--panel-gap);
-  grid-template-columns: 166px 546px 330px;
-  grid-template-rows: 646px auto;
-  justify-content: center;
-  column-gap: var(--panel-gap);
   width: var(--viewport-width);
   height: var(--viewport-height);
   min-width: 0;
@@ -154,14 +134,12 @@ summary { font: inherit; color: inherit; }
   padding: 8px 12px 10px;
   position: relative;
   display: grid;
-  grid-template-columns: 166px 546px 330px;
-  grid-template-rows: minmax(0, 646px) auto;
-  column-gap: 30px;
+  grid-template-columns: var(--intro-panel-width) var(--notebook-width) var(--side-panel-width);
+  grid-template-rows: minmax(0, var(--notebook-height)) auto;
+  column-gap: var(--panel-gap);
   row-gap: 10px;
   align-content: start;
   align-items: start;
-  overflow-x: hidden;
-  overflow-y: auto;
   justify-content: center;
   overflow: hidden;
 }
@@ -659,17 +637,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 @media (max-width: 980px) {
   #app {
-    width: min(760px, calc(100vw - (var(--viewport-padding-tablet) * 2)));
-    min-height: auto;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    gap: var(--panel-gap-tablet);
     width: var(--viewport-width);
     height: var(--viewport-height);
     min-height: 0;
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    gap: 18px;
+    gap: var(--panel-gap-tablet);
     overflow: hidden auto;
   }
   .desk-intro { display: none; }
@@ -1329,17 +1302,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-    padding: 8px 11px 0;
-    width: min(760px, calc(100vw - (var(--viewport-padding) * 2)));
-    min-height: auto;
-    gap: var(--panel-gap);
-    width: min(760px, calc(100vw - (var(--viewport-padding-tablet) * 2)));
-    justify-content: flex-start;
     width: var(--viewport-width);
     height: var(--viewport-height);
+    min-height: 0;
+    padding: 8px 11px 0;
+    gap: var(--panel-gap);
+    justify-content: flex-start;
     overflow: hidden auto;
   }
 
@@ -1386,8 +1354,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 @media (min-width: 981px) and (max-width: 1120px) {
   #app {
     display: grid;
-    width: 100vw;
-    width: calc(100vw - (var(--viewport-padding) * 2));
     width: var(--viewport-width);
     height: var(--viewport-height);
     overflow: hidden;
@@ -1489,9 +1455,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   #app {
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
     width: var(--viewport-width);
     height: var(--viewport-height);
     margin: 0;
@@ -1503,24 +1466,13 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .notebook-shell {
     width: min(100%, var(--content-panel-width));
-    height: auto;
-    min-height: 708px;
-    padding: var(--viewport-padding-mobile-block) var(--viewport-padding-mobile-inline);
-    gap: var(--panel-gap-mobile);
-    overflow-x: hidden;
-    padding: 10px 8px 18px;
-    gap: 14px;
-    overflow: hidden auto;
-  }
-
-  .notebook-shell {
-    width: min(100%, 430px);
     height: min(708px, calc(100dvh - 20px));
     min-height: 0;
     box-sizing: border-box;
     padding: var(--notebook-padding);
     border-width: 4px;
     border-radius: var(--radius-notebook-mobile);
+    overflow: hidden auto;
   }
 
   .notebook-page {
@@ -1698,229 +1650,5 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .bottom-tabs {
     left: 37px;
     right: 10px;
-  }
-}
-
-/* Notebook viewport anchor pass: keep the play notebook centered while side
-   pieces become decorative context instead of structural grid columns. */
-#app {
-  width: min(760px, calc(100vw - 24px));
-  min-height: 646px;
-  display: grid;
-  grid-template-columns: minmax(0, 546px);
-  grid-template-rows: auto;
-  justify-content: center;
-  column-gap: 0;
-  overflow: visible;
-}
-
-.notebook-shell {
-  grid-column: 1;
-  grid-row: 1;
-  width: min(546px, 100%);
-  justify-self: center;
-}
-
-.desk-intro {
-  grid-column: auto;
-  grid-row: auto;
-  position: absolute;
-  left: -122px;
-  top: 42px;
-  width: 118px;
-  height: auto;
-  min-height: 184px;
-  margin: 0;
-  padding: 18px 13px 22px;
-  z-index: 1;
-  transform: rotate(-3deg);
-  pointer-events: none;
-}
-
-.intro-index {
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  font-size: 2.15rem;
-}
-
-.desk-intro h1 {
-  margin-bottom: 13px;
-  font-size: 1.05rem;
-}
-
-.intro-script {
-  max-width: 78px;
-  font-size: .74rem;
-  line-height: 1.28;
-}
-
-.botanical-mark {
-  left: 42px;
-  bottom: 20px;
-  width: 36px;
-  height: 48px;
-  opacity: .34;
-  transform: scale(.64);
-  transform-origin: bottom center;
-}
-
-.world-companion {
-  grid-column: auto;
-  grid-row: auto;
-  position: absolute;
-  right: -174px;
-  top: 92px;
-  width: 232px;
-  height: 344px;
-  margin: 0;
-  padding: 22px 18px 16px;
-  z-index: 1;
-  opacity: .92;
-  transform: rotate(2deg);
-  pointer-events: none;
-}
-
-.world-companion h3 {
-  max-width: 138px;
-  margin-left: 13px;
-  font-size: .78rem;
-}
-
-.world-companion .stealth-row {
-  width: 136px;
-  font-size: .78rem;
-}
-
-.world-companion .world-scene {
-  height: 112px;
-  margin: 0 2px 11px;
-}
-
-.world-companion .slot-row {
-  gap: 5px;
-}
-
-.world-companion .inv-slot {
-  height: 42px;
-  border-radius: 10px;
-}
-
-.world-companion .objective {
-  margin: 10px 7px 0;
-  font-size: .72rem;
-  line-height: 1.35;
-}
-
-#worldHud,
-.pockets {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.controls {
-  position: absolute;
-  right: 31px;
-  top: 84px;
-  width: auto;
-  max-width: calc(100% - 104px);
-  margin: 0;
-  padding: 5px;
-  border: 1px solid rgba(139, 99, 57, .58);
-  border-radius: 999px;
-  background: rgba(30, 22, 16, .82);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 235, 190, .18);
-}
-
-.control-row {
-  justify-content: flex-end;
-  gap: 5px;
-  flex-wrap: nowrap;
-}
-
-.controls button {
-  min-height: 28px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: .72rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.error {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  min-width: min(320px, calc(100vw - 40px));
-  max-width: 360px;
-  margin-top: 0;
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 170, 140, .42);
-  border-radius: 10px;
-  background: rgba(53, 27, 22, .94);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, .35);
-}
-
-@media (max-width: 1120px) {
-  #app {
-    display: grid;
-    width: min(760px, calc(100vw - 22px));
-    grid-template-columns: minmax(0, 546px);
-    grid-template-rows: auto;
-    justify-content: center;
-  }
-
-  .desk-intro,
-  .world-companion {
-    display: none;
-  }
-
-  .notebook-shell,
-  #worldHud,
-  .pockets {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .controls {
-    grid-column: auto;
-    grid-row: auto;
-    width: auto;
-    margin: 0;
-  }
-}
-
-@media (max-width: 620px) {
-  #app {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .controls {
-    top: 76px;
-    right: 18px;
-    max-width: calc(100% - 76px);
-    padding: 4px;
-  }
-
-  .control-row {
-    gap: 4px;
-  }
-
-  .controls button {
-    min-height: 26px;
-    padding: 4px 7px;
-    font-size: .65rem;
-  }
-}
-
-@media (max-width: 390px) {
-  .controls {
-    right: 15px;
-    max-width: calc(100% - 66px);
-  }
-
-  .controls button {
-    padding-inline: 6px;
-    font-size: .6rem;
   }
 }
