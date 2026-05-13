@@ -55,6 +55,15 @@
 
         <article id="scenePanel" class="dialogue-card" role="tabpanel" aria-labelledby="tab-cafe"></article>
 
+        <section class="controls" aria-label="Save controls">
+          <div class="control-row">
+            <button id="startBtn" type="button">Start New</button>
+            <button id="continueBtn" type="button">Continue</button>
+            <button id="resetBtn" type="button">Reset Save</button>
+          </div>
+          <div id="errorBox" class="error" role="alert"></div>
+        </section>
+
         <nav class="bottom-tabs" aria-label="Notebook tabs" id="tabBar" role="tablist">
           <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span class="tab-icon tab-icon-cafe" aria-hidden="true"></span>Café</button>
           <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span class="tab-icon tab-icon-recipes" aria-hidden="true"></span>Recipes</button>
@@ -63,14 +72,6 @@
         </nav>
       </section>
 
-      <section class="controls" aria-label="Save controls">
-        <div class="control-row">
-          <button id="startBtn" type="button">Start New</button>
-          <button id="continueBtn" type="button">Continue</button>
-          <button id="resetBtn" type="button">Reset Save</button>
-        </div>
-        <div id="errorBox" class="error" role="alert"></div>
-      </section>
 
       <aside class="world-hud world-companion" aria-label="Exploration HUD companion" aria-hidden="true">
         <h3>Exploration HUD (World)</h3>
