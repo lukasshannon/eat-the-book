@@ -15,14 +15,38 @@
   --asset-note-small: url("../img/assets/note-small.png");
   --asset-note-square: url("../img/assets/note-square.png");
   --asset-wide-panel: url("../img/assets/wide-panel.png");
+  --viewport-width: 100vw;
+  --viewport-height: 100vh;
 }
 
 * { box-sizing: border-box; }
 
-html { min-height: 100%; background: var(--desk); }
+html,
+body {
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@supports (width: 100dvw) and (height: 100dvh) {
+  :root {
+    --viewport-width: 100dvw;
+    --viewport-height: 100dvh;
+  }
+
+  html,
+  body,
+  #app {
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+  }
+}
+
+html { background: var(--desk); }
 
 body {
-  min-height: 100%;
   margin: 0;
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
@@ -30,7 +54,6 @@ body {
     radial-gradient(circle at 91% -8%, rgba(196, 157, 92, .16), transparent 22%),
     radial-gradient(circle at 14% 106%, rgba(98, 70, 42, .24), transparent 26%),
     linear-gradient(180deg, #1b1b19 0%, #0e0f0e 100%);
-  overflow-x: hidden;
 }
 
 body::before {
@@ -49,15 +72,22 @@ button,
 summary { font: inherit; color: inherit; }
 
 #app {
-  width: min(1120px, calc(100vw - 24px));
-  min-height: 704px;
-  margin: 8px auto 32px;
+  width: var(--viewport-width);
+  height: var(--viewport-height);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 8px 12px 10px;
   position: relative;
   display: grid;
   grid-template-columns: 166px 546px 330px;
-  grid-template-rows: 646px auto;
+  grid-template-rows: minmax(0, 646px) auto;
   column-gap: 30px;
+  row-gap: 10px;
+  align-content: start;
   align-items: start;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .desk-intro {
@@ -146,14 +176,16 @@ summary { font: inherit; color: inherit; }
 .notebook-shell {
   grid-column: 2;
   grid-row: 1;
-  height: 646px;
+  height: min(646px, max(520px, calc(var(--viewport-height) - 76px)));
+  min-height: 0;
   position: relative;
   padding: 22px 25px 26px 74px;
   border: 5px solid #15120f;
   border-radius: 45px 42px 30px 30px;
   background: linear-gradient(180deg, #4a3322, #241912 78%);
   box-shadow: var(--shadow), inset 0 0 0 2px rgba(178, 124, 70, .5);
-  overflow: visible;
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 
 .notebook-page {
@@ -404,13 +436,16 @@ summary { font: inherit; color: inherit; }
 .world-hud {
   grid-column: 3;
   grid-row: 1;
-  height: 476px;
+  height: min(476px, max(360px, calc(var(--viewport-height) - 118px)));
+  min-height: 0;
   margin-top: 72px;
   position: relative;
   padding: 27px 23px 20px;
   color: #e3caa0;
   background: var(--asset-pit) center / 100% 100% no-repeat;
   filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .48));
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 .world-hud::before {
   content: "";
@@ -500,13 +535,17 @@ summary { font: inherit; color: inherit; }
   position: relative;
   z-index: 5;
   pointer-events: none;
+  max-height: max(170px, calc(var(--viewport-height) - 392px));
 }
 .pocket-card {
   min-height: 170px;
+  max-height: inherit;
   padding: 24px 36px;
   pointer-events: auto;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: drop-shadow(0 7px 8px rgba(59, 36, 18, .28));
+  overflow: hidden auto;
+  scrollbar-gutter: stable;
 }
 .pocket-card summary { cursor: pointer; font-weight: 700; font-size: 1.2rem; margin-bottom: 8px; }
 .pocket-card ul { margin: 8px 0 0; padding-left: 22px; }
@@ -534,11 +573,13 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 @media (max-width: 980px) {
   #app {
-    width: min(760px, calc(100vw - 22px));
-    min-height: auto;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    min-height: 0;
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     gap: 18px;
+    overflow: hidden auto;
   }
   .desk-intro { display: none; }
   .notebook-shell { width: min(546px, 100%); margin: 0 auto; }
@@ -1149,7 +1190,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: min(760px, calc(100vw - 22px));
+    justify-content: flex-start;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    overflow: hidden auto;
   }
 
   .desk-intro,
@@ -1192,7 +1236,9 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 @media (min-width: 981px) and (max-width: 1120px) {
   #app {
     display: grid;
-    width: calc(100vw - 24px);
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    overflow: hidden;
     grid-template-columns:
       clamp(126px, 15vw, 166px)
       minmax(500px, 546px)
@@ -1287,11 +1333,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   #app {
-    width: 100%;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
     margin: 0;
     padding: 10px 8px 18px;
     gap: 14px;
-    overflow-x: hidden;
+    overflow: hidden auto;
   }
 
   .notebook-shell {
