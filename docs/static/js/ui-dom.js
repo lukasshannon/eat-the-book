@@ -31,15 +31,7 @@ function requireElement(id) {
 }
 
 export function collectUi() {
-  const ui = Object.fromEntries(requiredElementIds.map((id) => [id, requireElement(id)]));
-
-  return {
-    ...ui,
-    worldCompanion: document.querySelector(".world-companion"),
-    companionStealth: document.querySelector("[data-world-stealth]"),
-    companionInventory: document.querySelector("[data-world-inventory]"),
-    companionObjective: document.querySelector("[data-world-objective]"),
-  };
+  return Object.fromEntries(requiredElementIds.map((id) => [id, requireElement(id)]));
 }
 
 export function showError(ui, message) {
