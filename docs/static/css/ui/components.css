@@ -1,17 +1,14 @@
 /* Decorative notebook art, rendered panels, choices, recipes, journal, and portraits. */
-/* Corrective fidelity pass: rely on the real notebook asset and replace the rough silhouette scene. */
 .notebook-page {
-  inset: 8px 9px 8px 18px;
-  background-size: 100% 100%;
-}
-
-.notebook-shell::before {
-  content: none;
+  background: var(--asset-journal) left center / 100% 100% no-repeat;
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .55));
 }
 
 .scene-visual {
-  margin-left: 4px;
-  height: auto;
+  border: 2px solid var(--edge-panel);
+  border-radius: calc(var(--radius-page) / 2);
+  background: #15110e;
+  box-shadow: var(--shadow-scene-panel);
 }
 
 .cafe-backdrop {
@@ -21,6 +18,17 @@
     radial-gradient(circle at 76% 24%, rgba(255, 178, 76, .5), transparent 18%),
     linear-gradient(90deg, rgba(33, 21, 13, .12), rgba(22, 14, 10, .34)),
     linear-gradient(180deg, #4a2d18 0%, #26180f 56%, #120d09 100%);
+}
+
+.cafe-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(130, 77, 34, .45) 0 3px, transparent 3px 46px),
+    repeating-linear-gradient(0deg, transparent 0 41px, rgba(139, 85, 39, .54) 42px 45px),
+    radial-gradient(circle at 66% 5%, rgba(249, 210, 151, .28), transparent 22%);
+  opacity: .85;
 }
 
 .cafe-backdrop::after {
@@ -36,17 +44,16 @@
 }
 
 .shelf {
-  height: 7px;
   background: linear-gradient(180deg, #b07034 0%, #7c471f 42%, #321b0d 100%);
   box-shadow: 0 -19px 0 rgba(69, 40, 20, .55), 0 17px 0 rgba(23, 15, 10, .42);
 }
-
-.shelf-one { top: 70px; }
-.shelf-two { top: 151px; opacity: .9; }
-.shelf-three { top: 211px; opacity: .62; }
-.lamp-one { left: 134px; }
-.lamp-two { left: 260px; }
-.lamp-three { left: 330px; height: 48px; }
+.shelf-two { opacity: .9; }
+.shelf-three { opacity: .62; }
+.lamp { background: rgba(210, 154, 77, .5); }
+.lamp::after {
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd88a 0 15%, rgba(241, 141, 49, .48) 42%, transparent 72%);
+}
 
 .bottle {
   position: absolute;
