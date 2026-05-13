@@ -488,10 +488,6 @@
   min-height: 0;
   width: auto;
   margin: 0 11px 0 2px;
-  grid-column: 1 / -1;
-  grid-row: 2;
-  width: min(var(--controls-width), 100%);
-  margin: 0 auto;
   padding: 8px 12px;
   border-radius: var(--radius-panel);
   background: rgba(22, 18, 14, .7);
@@ -522,7 +518,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .world-hud { width: min(330px, 100%); margin: 0 auto; }
   .world-companion { display: none; }
   .pockets { grid-column: 1; grid-row: auto; width: min(430px, 100%); margin: 0 auto; }
-  .controls { grid-column: 1; grid-row: auto; }
 }
 
 .pockets { z-index: 6; }

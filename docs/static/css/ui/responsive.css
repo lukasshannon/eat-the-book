@@ -46,16 +46,10 @@
   }
 
   #worldHud,
-  .pockets,
-  .controls {
+  .pockets {
     width: min(var(--content-panel-width), 100%);
     margin-left: auto;
     margin-right: auto;
-  }
-
-  .controls {
-    margin-top: 0;
-    margin-bottom: 0;
   }
 
   #worldHud {
@@ -111,8 +105,7 @@
 
   .notebook-shell,
   .world-hud,
-  .pockets,
-  .controls {
+  .pockets {
     width: auto;
     margin-left: 0;
     margin-right: 0;
@@ -154,13 +147,6 @@
   .pockets {
     width: 415px;
     margin: 0 0 102px 86px;
-  }
-
-  .controls {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: min(var(--controls-width), 100%);
-    margin: 0 auto;
   }
 }
 
@@ -350,13 +336,8 @@
   }
 
   #worldHud,
-  .pockets,
-  .controls {
+  .pockets {
     width: min(100%, var(--content-panel-width));
-  }
-
-  .controls {
-    margin-bottom: 4px;
   }
 
   #worldHud {
@@ -370,8 +351,8 @@
   }
 
   .controls {
-    width: 100%;
-    margin: 0;
+    width: auto;
+    margin: 0 4px 0 -6px;
     padding: 7px 8px;
   }
 
@@ -428,19 +409,5 @@
   .bottom-tabs {
     left: auto;
     right: auto;
-  }
-}
-
-/* Keep save controls in the notebook grid across responsive overrides. */
-.notebook-shell > .controls {
-  grid-area: controls;
-  min-height: 0;
-  width: auto;
-  margin: 0 11px 0 2px;
-}
-
-@media (max-width: 620px) {
-  .notebook-shell > .controls {
-    margin: 0 4px 0 -6px;
   }
 }
