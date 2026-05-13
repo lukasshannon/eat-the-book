@@ -129,6 +129,11 @@ button,
 summary { font: inherit; color: inherit; }
 
 #app {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+  padding-top: 8px;
   width: min(1120px, calc(100vw - (var(--viewport-padding) * 2)));
   min-height: 704px;
   margin: 8px auto 32px;
@@ -139,6 +144,7 @@ summary { font: inherit; color: inherit; }
   column-gap: var(--panel-gap);
   grid-template-columns: 166px 546px 330px;
   grid-template-rows: 646px auto;
+  justify-content: center;
   column-gap: var(--panel-gap);
   width: var(--viewport-width);
   height: var(--viewport-height);
@@ -154,6 +160,8 @@ summary { font: inherit; color: inherit; }
   row-gap: 10px;
   align-content: start;
   align-items: start;
+  overflow-x: hidden;
+  overflow-y: auto;
   justify-content: center;
   overflow: hidden;
 }
@@ -1321,6 +1329,10 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    padding: 8px 11px 0;
     width: min(760px, calc(100vw - (var(--viewport-padding) * 2)));
     min-height: auto;
     gap: var(--panel-gap);
@@ -1374,6 +1386,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 @media (min-width: 981px) and (max-width: 1120px) {
   #app {
     display: grid;
+    width: 100vw;
     width: calc(100vw - (var(--viewport-padding) * 2));
     width: var(--viewport-width);
     height: var(--viewport-height);
@@ -1476,12 +1489,16 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   #app {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
     width: var(--viewport-width);
     height: var(--viewport-height);
     margin: 0;
     padding: 10px var(--viewport-padding) 18px;
     gap: var(--panel-gap);
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .notebook-shell {
