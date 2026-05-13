@@ -35,6 +35,7 @@ Selectors may appear in both `layout.css` and `components.css` only when their d
 ## Safety notes
 
 - Rendered scene, choice, inventory, relation, and recipe strings are HTML-escaped before insertion. Continue this pattern for any future JSON-backed UI.
+- New JSON-backed render helpers must call the centralized `escapeHtml()` before interpolating data-backed strings into HTML.
 - UI-only work must not change `package.json` or `package-lock.json` unless explicitly requested.
 - Do not commit binary assets; reuse existing files under `docs/static/img/assets`.
 

@@ -83,43 +83,69 @@ export function renderStatus(ui, state, node) {
   if (ui.companionObjective) ui.companionObjective.textContent = objective;
 }
 
+function renderRelationRows(relation) {
+  return Object.entries(relation)
+    .map(([name, value]) => `<span class="relation-chip"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></span>`)
+    .join("");
+}
+
+function renderInventoryLedger(items) {
+  return items
+    .map((item) => {
+      const glyph = ITEM_GLYPHS[item] || "mark";
+      return `<li><span class="slot-glyph slot-glyph-${glyph}" aria-hidden="true"></span><span>${escapeHtml(item)}</span><em>×1</em></li>`;
+    })
+    .join("");
+}
+
+function renderRecipeCard(recipe, index) {
+  const note = RECIPE_NOTES[recipe] || { world: "Unknown World", scar: "blank margin", cost: "unknown" };
+  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Scar</dt><dd>${escapeHtml(note.scar)}</dd><dt>Cost</dt><dd>${escapeHtml(note.cost)}</dd></dl></article>`;
+}
+
+function renderChoiceButton(choice, index) {
+  return `<button class="choice" data-choice="${index}"><span class="choice-mark" aria-hidden="true"></span><span>${escapeHtml(choice.label)}</span></button>`;
+}
+
+function renderSceneTags(tags) {
+  return tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
+}
+
 export function renderStats(ui, state) {
   const tone = state.flags.protective ? "Protective" : "Balanced";
   const risk = state.flags.riskyPlan ? "Risky Brew" : "Careful Brew";
   const truth = state.flags.sharedTruth ? "Truth Shared" : "Truth Hidden";
   const body = state.flags.limbInjury ? "Injured" : "Whole";
   const inventoryHtml = renderInventorySlots(state);
-  const relationRows = Object.entries(state.relation)
-    .map(([name, value]) => `<span class="relation-chip"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}</strong></span>`)
-    .join("");
-  const inventoryRows = (state.inventory.length ? state.inventory : SHOWCASE_SLOTS)
-    .map((item) => {
-      const glyph = ITEM_GLYPHS[item] || "mark";
-      return `<li><span class="slot-glyph slot-glyph-${glyph}" aria-hidden="true"></span><span>${escapeHtml(item)}</span><em>×1</em></li>`;
-    })
-    .join("");
+  const relationRows = renderRelationRows(state.relation);
+  const inventoryRows = renderInventoryLedger(state.inventory.length ? state.inventory : SHOWCASE_SLOTS);
+  const recipeCards = state.recipeBook.map(renderRecipeCard).join("");
 
-  ui.stats.innerHTML = `<div class="journal-grid"><div class="journal-stat"><span>Route Tone</span><strong>${tone}</strong></div><div class="journal-stat"><span>Plan</span><strong>${risk}</strong></div><div class="journal-stat"><span>Trust</span><strong>${truth}</strong></div><div class="journal-stat"><span>Body</span><strong class="meter">${body}</strong></div></div><div class="relation-row" aria-label="Relations">${relationRows}</div><h4>Gathered Ingredients</h4><ul class="inventory-ledger">${inventoryRows}</ul>`;
+  ui.stats.innerHTML = [
+    `<div class="journal-grid"><div class="journal-stat"><span>Route Tone</span><strong>${tone}</strong></div>`,
+    `<div class="journal-stat"><span>Plan</span><strong>${risk}</strong></div>`,
+    `<div class="journal-stat"><span>Trust</span><strong>${truth}</strong></div>`,
+    `<div class="journal-stat"><span>Body</span><strong class="meter">${body}</strong></div></div>`,
+    `<div class="relation-row" aria-label="Relations">${relationRows}</div>`,
+    `<h4>Gathered Ingredients</h4><ul class="inventory-ledger">${inventoryRows}</ul>`,
+  ].join("");
   ui.inventory.innerHTML = inventoryHtml;
   if (ui.companionInventory) ui.companionInventory.innerHTML = inventoryHtml;
-  ui.book.innerHTML = `<div class="recipe-spread">${state.recipeBook
-    .map((recipe, index) => {
-      const note = RECIPE_NOTES[recipe] || { world: "Unknown World", scar: "blank margin", cost: "unknown" };
-      return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Scar</dt><dd>${escapeHtml(note.scar)}</dd><dt>Cost</dt><dd>${escapeHtml(note.cost)}</dd></dl></article>`;
-    })
-    .join("")}</div>`;
+  ui.book.innerHTML = [`<div class="recipe-spread">`, recipeCards, `</div>`].join("");
 }
 
 export function renderSceneContent(ui, node) {
-  const tagsHtml = (node.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
-  const choicesHtml = (node.choices || [])
-    .map(
-      (choice, index) =>
-        `<button class="choice" data-choice="${index}"><span class="choice-mark" aria-hidden="true"></span><span>${escapeHtml(choice.label)}</span></button>`,
-    )
-    .join("");
+  const tagsHtml = renderSceneTags(node.tags || []);
+  const choicesHtml = (node.choices || []).map(renderChoiceButton).join("");
+  const fallbackChoice = "<div class='mini'>The shift is over. Use Start New to replay.</div>";
 
-  ui.scenePanel.innerHTML = `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2><div class="tags">${tagsHtml}</div></div><div class="speaker-label">${escapeHtml(node.speaker)}</div><div class="dialogue-text">${escapeHtml(node.text)}</div><div class="dialogue-stamp" aria-hidden="true"></div><div class="choices">${choicesHtml || "<div class='mini'>The shift is over. Use Start New to replay.</div>"}</div>`;
+  ui.scenePanel.innerHTML = [
+    `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2><div class="tags">${tagsHtml}</div></div>`,
+    `<div class="speaker-label">${escapeHtml(node.speaker)}</div>`,
+    `<div class="dialogue-text">${escapeHtml(node.text)}</div>`,
+    `<div class="dialogue-stamp" aria-hidden="true"></div>`,
+    `<div class="choices">${choicesHtml || fallbackChoice}</div>`,
+  ].join("");
 }
 
 function setDetailsPanelState(ui, tab) {
