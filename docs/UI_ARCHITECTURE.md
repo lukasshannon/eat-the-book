@@ -45,3 +45,35 @@ node scripts/ui-smoke.mjs
 ```
 
 The smoke test serves `docs/`, opens the app at mobile through desktop viewport sizes, verifies all primary controls remain visible, verifies each tab panel can be activated, and exercises choice progression plus theme toggling.
+
+## Scene data contract
+
+Narrative content lives in `docs/static/data/characters.json` and `docs/static/data/scenes.json`. The loader validates these files before normalizing data for rendering, so schema issues fail early with an actionable error in the UI.
+
+### Characters
+
+`characters.json` must be an object keyed by character ID. Each entry can be either a string display name or an object. After normalization, every character must have non-empty string values for:
+
+- `name` — display name shown in the speaker label.
+- `portrait` — portrait folder name under `docs/static/img/assets/characters/<portrait>/`.
+- `emotion` — default portrait image basename, such as `neutral`, `warm`, or `angry`.
+
+### Scenes
+
+`scenes.json` must be an object keyed by scene ID. Every scene object must include:
+
+- `location` — non-empty string rendered as the scene heading.
+- `speaker` — character ID that exists in `characters.json`.
+- `text` — non-empty string rendered as dialogue.
+- `choices` — optional array. Omit this for terminal scenes; when present it must be an array.
+
+Each choice object must include:
+
+- `label` — non-empty string rendered on the choice button.
+- `next` — scene ID that exists in `scenes.json`.
+- `effects` — optional object. When present, it can only contain supported effect keys:
+  - `flags` — object keyed by flag name with non-empty string keys.
+  - `relation` — object keyed by character ID with finite numeric deltas.
+  - `addItems` — array of non-empty inventory item strings.
+
+Unsupported effect keys, missing scene targets, unknown speakers, blank required strings, and malformed choice/effect values cause `loadGameData()` to throw an `Error` that names the scene ID, choice index, or character ID that failed validation.
