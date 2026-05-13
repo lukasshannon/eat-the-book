@@ -15,16 +15,17 @@
   }
 
   #app {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
     width: var(--viewport-width);
     height: var(--viewport-height);
     min-height: 0;
-    padding: 8px 11px 0;
-    gap: var(--panel-gap);
-    justify-content: flex-start;
-    overflow: hidden auto;
+    padding: 8px 11px 10px;
+    gap: clamp(6px, 1.6dvh, var(--panel-gap));
+    justify-content: center;
+    overflow: hidden;
   }
 
   .desk-intro,
@@ -40,15 +41,27 @@
   }
 
   .notebook-shell {
-    flex: 0 0 auto;
     width: min(var(--notebook-width), 100%);
+    height: min(var(--notebook-height), 100%);
     margin: 0 auto;
   }
 
   #worldHud,
-  .pockets,
-  .controls {
+  .pockets {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
     width: min(var(--content-panel-width), 100%);
+    max-height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .controls {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    width: min(var(--controls-width), 100%);
     margin-left: auto;
     margin-right: auto;
   }
@@ -128,7 +141,7 @@
     grid-column: 3;
     grid-row: 1;
     min-width: 0;
-    height: clamp(300px, min(74vw, calc(100dvh - 118px)), 476px);
+    height: clamp(280px, calc(var(--viewport-height) - 104px), 476px);
     padding-inline: clamp(16px, 2vw, 23px);
   }
 
@@ -152,8 +165,9 @@
   }
 
   .pockets {
-    width: 415px;
-    margin: 0 0 102px 86px;
+    width: min(415px, 100%);
+    max-height: min(300px, 48dvh);
+    margin: auto auto 102px;
   }
 
   .controls {
@@ -231,7 +245,7 @@
   }
 
   .scene-visual {
-    height: auto;
+    height: clamp(176px, 28dvh, 282px);
     min-height: 0;
     margin: 0 4px 0 0;
   }
@@ -317,17 +331,6 @@
   }
 
   .bottom-tabs {
-    left: 42px;
-    right: 13px;
-    bottom: 18px;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    height: var(--tab-height);
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     width: 100%;
     height: var(--tab-height-mobile);
     margin: 0;
@@ -345,22 +348,19 @@
   }
 
   #worldHud,
-  .pockets,
-  .controls {
+  .pockets {
     width: min(100%, var(--content-panel-width));
-  }
-
-  .controls {
-    margin-bottom: 4px;
   }
 
   #worldHud {
     height: clamp(260px, calc(100dvh - 30px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 460px);
     min-height: 0;
-    max-height: none;
+    max-height: 100%;
   }
 
   .pockets {
+    max-height: 100%;
+    overflow: hidden;
     margin: 0 auto;
   }
 
@@ -381,7 +381,7 @@
 
   .pocket-card {
     min-height: 0;
-    max-height: clamp(190px, calc(100dvh - 60px), 300px);
+    max-height: 100%;
     padding-inline: 34px;
   }
 
