@@ -24,7 +24,7 @@
   align-self: start;
   height: min(596px, calc(var(--viewport-height) - 96px));
   min-height: 0;
-  margin-top: clamp(16px, 5dvh, 38px);
+  margin-top: clamp(16px, calc(var(--viewport-block-unit) * 5), 38px);
   position: relative;
   padding: 30px 21px;
   border: 2px solid rgba(116, 85, 54, .72);
@@ -106,7 +106,7 @@
   grid-column: 2;
   grid-row: 1;
   position: relative;
-  height: clamp(360px, calc(100dvh - 76px), var(--notebook-height));
+  height: clamp(360px, calc(var(--viewport-height) - 76px), var(--notebook-height));
   min-height: 0;
   padding: var(--notebook-padding);
   display: grid;
@@ -118,7 +118,7 @@
     "tabs";
   grid-template-rows:
     auto
-    minmax(0, clamp(var(--notebook-visual-min), 32dvh, var(--notebook-visual-max)))
+    minmax(0, clamp(var(--notebook-visual-min), calc(var(--viewport-block-unit) * 32), var(--notebook-visual-max)))
     minmax(0, 1fr)
     auto
     auto;
@@ -230,21 +230,16 @@
   left: 40px;
   bottom: -25px;
   width: 270px;
-  height: clamp(188px, 36dvh, 285px);
+  height: clamp(188px, calc(var(--viewport-block-unit) * 36), 285px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   background: none;
   filter: drop-shadow(0 16px 18px rgba(0, 0, 0, .58));
 }
-.scene-character::before,
-.scene-character::after {
-  content: none;
-}
-
 .scene-character img {
   width: auto;
-  height: clamp(188px, 36dvh, 285px);
+  height: clamp(188px, calc(var(--viewport-block-unit) * 36), 285px);
   max-width: 100%;
   object-fit: contain;
   object-position: bottom center;
@@ -254,10 +249,10 @@
 .special-note {
   position: absolute;
   right: 20px;
-  top: clamp(18px, 4dvh, 32px);
+  top: clamp(18px, calc(var(--viewport-block-unit) * 4), 32px);
   width: 96px;
-  min-height: clamp(92px, 18dvh, 136px);
-  padding: clamp(14px, 3dvh, 22px) 13px 12px;
+  min-height: clamp(92px, calc(var(--viewport-block-unit) * 18), 136px);
+  padding: clamp(14px, calc(var(--viewport-block-unit) * 3), 22px) 13px 12px;
   text-align: center;
   font-size: .9rem;
   line-height: 1.28;
@@ -298,7 +293,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  max-height: clamp(52px, calc(100dvh - 620px), 94px);
+  max-height: clamp(52px, calc(var(--viewport-height) - 620px), 94px);
   margin-top: 14px;
   overflow: auto;
   overscroll-behavior: contain;
@@ -391,7 +386,7 @@
 .eye-icon { width: 25px; height: 15px; border: 2px solid currentColor; border-radius: 100% 0 100% 0; transform: rotate(45deg); }
 .eye-icon::after { content: ""; display: block; width: 7px; height: 7px; margin: 2px auto; border-radius: 50%; background: currentColor; }
 .world-scene {
-  height: clamp(112px, 22dvh, 175px);
+  height: clamp(112px, calc(var(--viewport-block-unit) * 22), 175px);
   margin: 3px 4px 15px;
   position: relative;
   overflow: hidden;
@@ -460,7 +455,7 @@
 }
 .pocket-card {
   min-height: 0;
-  max-height: clamp(140px, calc(100dvh - 390px), 300px);
+  max-height: clamp(140px, calc(var(--viewport-height) - 390px), 300px);
   padding: 34px 42px 30px;
   pointer-events: auto;
   box-sizing: border-box;
@@ -476,12 +471,10 @@
 
 .controls {
   grid-area: controls;
-  grid-column: 1 / -1;
-  grid-row: 2;
   min-height: 0;
-  width: min(var(--controls-width), 100%);
-  margin: 0 auto;
-  max-height: clamp(42px, 12dvh, 78px);
+  width: auto;
+  margin: 0 11px 0 2px;
+  max-height: clamp(42px, calc(var(--viewport-block-unit) * 12), 78px);
   padding: 8px 12px;
   overflow: auto;
   border-radius: var(--radius-panel);
@@ -509,11 +502,9 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     overflow: hidden;
   }
   .desk-intro { display: none; }
-  .notebook-shell { width: min(546px, 100%); height: clamp(360px, calc(100dvh - 16px), var(--notebook-height)); margin: 0 auto; }
+  .notebook-shell { width: min(546px, 100%); height: clamp(360px, calc(var(--viewport-height) - 16px), var(--notebook-height)); margin: 0 auto; }
   .world-hud { width: min(330px, 100%); margin: 0 auto; }
-  .world-companion { display: none; }
   .pockets { grid-column: 1; grid-row: 1; width: min(430px, 100%); max-height: 100%; margin: 0 auto; }
-  .controls { grid-column: 1; grid-row: 2; }
 }
 
 .pockets { z-index: 6; }
