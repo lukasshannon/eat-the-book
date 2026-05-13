@@ -63,16 +63,36 @@ export function renderCharacterPortrait(ui, state, node) {
   ui.sceneCharacterName.textContent = displayName;
 }
 
+function getSceneOrdinal(state) {
+  return Math.max(1, Object.keys(state.visited).length);
+}
+
+function getRecipeForScene(state, node) {
+  const sceneRecipes = node.onEnter?.addBook || [];
+  return sceneRecipes.at(-1) || state.recipeBook.at(-1) || "Recipe pending";
+}
+
+function getProgressTitle(node) {
+  const primaryTag = node.tags?.[0];
+  if (node.end) return primaryTag || "Ending";
+  return primaryTag || node.location || "Current Scene";
+}
+
+export function renderProgressNote(ui, state, node) {
+  const progressTitle = getProgressTitle(node);
+  const progressDetail = node.end ? node.location : getRecipeForScene(state, node);
+  ui.progress.textContent = `${progressTitle}\n${progressDetail}`;
+}
+
 export function renderStatus(ui, state, node) {
-  const visitedCount = Math.max(1, Object.keys(state.visited).length);
-  const chapter = node.end ? Math.min(12, visitedCount) : 12;
+  const chapter = getSceneOrdinal(state);
   const stealth = state.flags.limbInjury ? "♥♥♥" : "♥♥♥♥";
   const objective = node.end
-    ? "The shift is over. Reflect on what you chose."
-    : `Stay unseen. Find ingredients.\nReturn from ${node.location}.`;
+    ? `Reflect on ${node.location}.`
+    : `Gather ingredients in ${node.location}.\nReturn to the Quiet Café.`;
 
   ui.chapterValue.textContent = String(chapter);
-  ui.chapterLabel.textContent = node.end ? "Finale" : "Barista";
+  ui.chapterLabel.textContent = node.end ? "Ending" : node.location;
   ui.energyValue.textContent = `${Math.max(40, 120 - state.inventory.length * 4)}/120`;
   ui.coinValue.textContent = String(1200 + state.inventory.length * 25 + state.relation.orchard * 15);
   ui.gemValue.textContent = String(80 + state.relation.mirror * 3 + (state.flags.sharedTruth ? 6 : 0));
