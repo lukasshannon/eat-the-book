@@ -61,6 +61,17 @@
   --asset-note-small: url("../img/assets/note-small.png");
   --asset-note-square: url("../img/assets/note-square.png");
   --asset-wide-panel: url("../img/assets/wide-panel.png");
+  --viewport-padding: 12px;
+  --panel-gap: 30px;
+  --side-panel-width: 330px;
+  --intro-panel-width: 166px;
+  --notebook-width: 546px;
+  --notebook-height: 646px;
+  --notebook-radius: 45px 42px 30px 30px;
+  --notebook-padding: 22px 25px 26px 56px;
+  --tab-height: 83px;
+  --content-panel-width: 430px;
+  --controls-width: 560px;
   --viewport-width: 100vw;
   --viewport-height: 100vh;
 }
@@ -123,6 +134,9 @@ summary { font: inherit; color: inherit; }
   margin: 8px auto 32px;
   position: relative;
   display: grid;
+  grid-template-columns: var(--intro-panel-width) var(--notebook-width) var(--side-panel-width);
+  grid-template-rows: var(--notebook-height) auto;
+  column-gap: var(--panel-gap);
   grid-template-columns: 166px 546px 330px;
   grid-template-rows: 646px auto;
   column-gap: var(--panel-gap);
@@ -230,11 +244,13 @@ summary { font: inherit; color: inherit; }
 .notebook-shell {
   grid-column: 2;
   grid-row: 1;
+  height: var(--notebook-height);
   height: min(646px, max(520px, calc(var(--viewport-height) - 76px)));
   min-height: 0;
   position: relative;
-  padding: 22px 25px 26px 74px;
+  padding: var(--notebook-padding);
   border: 5px solid #15120f;
+  border-radius: var(--notebook-radius);
   border-radius: var(--radius-notebook);
   background: linear-gradient(180deg, #4a3322, #241912 78%);
   box-shadow: var(--shadow), inset 0 0 0 2px rgba(178, 124, 70, .5);
@@ -454,6 +470,13 @@ summary { font: inherit; color: inherit; }
 .choice:hover { background: #f4dfba; transform: translateY(-1px); }
 
 .bottom-tabs {
+  position: absolute;
+  left: 60px;
+  right: 30px;
+  bottom: 17px;
+  height: var(--tab-height);
+  margin-right: 0;
+  z-index: 8;
   height: var(--tab-height);
   margin-right: 8px;
   padding: 10px 20px 12px 20px;
@@ -585,9 +608,9 @@ summary { font: inherit; color: inherit; }
   grid-row: 1;
   align-self: end;
   width: 415px;
-  margin: 0 0 119px 86px;
+  margin: 0 0 102px 86px;
   position: relative;
-  z-index: 5;
+  z-index: 6;
   pointer-events: none;
   max-height: max(170px, calc(var(--viewport-height) - 392px));
 }
@@ -609,8 +632,8 @@ summary { font: inherit; color: inherit; }
 .controls {
   grid-column: 1 / -1;
   grid-row: 2;
-  width: min(560px, 100%);
-  margin: 12px auto 0;
+  width: min(var(--controls-width), 100%);
+  margin: 38px auto 0;
   padding: 8px 12px;
   border-radius: var(--radius-panel);
   background: rgba(22, 18, 14, .7);
@@ -660,10 +683,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 .notebook-shell::before {
   content: none;
-}
-
-.notebook-shell {
-  padding-left: 56px;
 }
 
 .scene-visual {
@@ -903,10 +922,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   opacity: .78;
 }
 
-.controls {
-  margin-top: 38px;
-}
-
 .world-hud::before { z-index: 1; }
 .world-hud > * { position: relative; z-index: 2; }
 .world-hud h3 { margin-bottom: 8px; }
@@ -1010,10 +1025,6 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   border-radius: 50%;
   background: radial-gradient(circle at 50% 50%, rgba(85, 57, 35, .82) 0 3px, transparent 4px);
   box-shadow: inset 0 0 0 2px rgba(250, 232, 196, .42);
-}
-
-.pockets {
-  margin-bottom: 102px;
 }
 
 .pocket-card {
@@ -1294,13 +1305,25 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   display: none;
 }
 
-/* Ship-ready responsive layout pass: collapse the desktop grid cleanly instead of
-   letting fixed desktop grid columns create off-screen notebook panes. */
+/* Responsive layout strategy:
+   Base styles above render the desktop/fullscreen composition.
+   Medium collapses the side panels into the notebook flow.
+   Small prioritizes a single-column notebook.
+   Very small trims typography and tap targets. */
 @media (max-width: 1120px) {
+  :root {
+    --viewport-padding: 11px;
+    --panel-gap: 18px;
+    --content-panel-width: 430px;
+  }
+
   #app {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: min(760px, calc(100vw - (var(--viewport-padding) * 2)));
+    min-height: auto;
+    gap: var(--panel-gap);
     width: min(760px, calc(100vw - (var(--viewport-padding-tablet) * 2)));
     justify-content: flex-start;
     width: var(--viewport-width);
@@ -1323,13 +1346,14 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .notebook-shell {
     flex: 0 0 auto;
-    width: min(546px, 100%);
+    width: min(var(--notebook-width), 100%);
+    margin: 0 auto;
   }
 
   #worldHud,
   .pockets,
   .controls {
-    width: min(430px, 100%);
+    width: min(var(--content-panel-width), 100%);
     margin-left: auto;
     margin-right: auto;
   }
@@ -1340,6 +1364,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .pockets {
     align-self: center;
+    margin-top: -198px;
+    margin-bottom: 110px;
   }
 }
 
@@ -1430,16 +1456,20 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .controls {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: min(560px, 100%);
-    margin: 38px auto 0;
+    margin-top: 0;
   }
 }
 
-/* Consolidated mobile notebook layout rules. Keep these near the end so
-   small-screen notebook sizing, tab reservation, and panel flow are explicit. */
 @media (max-width: 620px) {
+  :root {
+    --viewport-padding: 8px;
+    --panel-gap: 14px;
+    --notebook-radius: 30px 28px 22px 22px;
+    --notebook-padding: 18px 13px 116px 48px;
+    --tab-height: 82px;
+    --content-panel-width: 390px;
+  }
+
   html,
   body {
     min-width: 0;
@@ -1449,6 +1479,15 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     width: var(--viewport-width);
     height: var(--viewport-height);
     margin: 0;
+    padding: 10px var(--viewport-padding) 18px;
+    gap: var(--panel-gap);
+    overflow-x: hidden;
+  }
+
+  .notebook-shell {
+    width: min(100%, var(--content-panel-width));
+    height: auto;
+    min-height: 708px;
     padding: var(--viewport-padding-mobile-block) var(--viewport-padding-mobile-inline);
     gap: var(--panel-gap-mobile);
     overflow-x: hidden;
@@ -1462,7 +1501,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     height: min(708px, calc(100dvh - 20px));
     min-height: 0;
     box-sizing: border-box;
-    padding: 18px 13px 116px 48px;
+    padding: var(--notebook-padding);
     border-width: 4px;
     border-radius: var(--radius-notebook-mobile);
   }
@@ -1564,6 +1603,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     left: 42px;
     right: 13px;
     bottom: 18px;
+    height: var(--tab-height);
     height: var(--tab-height-mobile);
     padding: 10px 10px 12px;
   }
@@ -1581,7 +1621,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   #worldHud,
   .pockets,
   .controls {
-    width: min(100%, 390px);
+    width: min(100%, var(--content-panel-width));
   }
 
   #worldHud {
@@ -1613,16 +1653,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   .journal-grid {
     grid-template-columns: 1fr;
   }
-
-  .controls {
-    margin-top: 0;
-  }
 }
 
 @media (max-width: 360px) {
-  .notebook-shell {
-    padding-left: 42px;
-    padding-right: 10px;
+  :root {
+    --notebook-padding: 18px 10px 116px 42px;
+    --tab-height: 76px;
   }
 
   .top-status {
