@@ -16,7 +16,9 @@ const contentTypes = {
 
 const viewportSizes = [
   { name: 'mobile', width: 390, height: 844 },
+  { name: 'small-responsive-edge', width: 621, height: 900 },
   { name: 'tablet', width: 768, height: 1024 },
+  { name: 'wide-responsive-edge', width: 980, height: 900 },
   { name: 'laptop', width: 1366, height: 768 },
   { name: 'desktop', width: 1920, height: 1080 },
 ];
