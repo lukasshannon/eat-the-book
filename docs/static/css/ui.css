@@ -1456,7 +1456,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     --viewport-padding: 8px;
     --panel-gap: 14px;
     --notebook-radius: 30px 28px 22px 22px;
-    --notebook-padding: 18px 13px 116px 48px;
+    --notebook-padding: 18px 13px 12px 48px;
     --tab-height: 82px;
     --content-panel-width: 390px;
   }
@@ -1478,13 +1478,18 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   .notebook-shell {
     width: min(100%, var(--content-panel-width));
-    height: min(708px, calc(100dvh - 20px));
-    min-height: 0;
+    min-height: min(560px, calc(100dvh - 20px));
+    max-height: calc(100dvh - 20px);
+    height: auto;
     box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+    row-gap: 8px;
     padding: var(--notebook-padding);
     border-width: 4px;
     border-radius: var(--radius-notebook-mobile);
-    overflow: hidden auto;
+    overflow: hidden;
   }
 
   .notebook-page {
@@ -1510,7 +1515,8 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .scene-visual {
-    height: 282px;
+    height: clamp(176px, 28dvh, 282px);
+    min-height: 0;
     margin: 0 4px 0 0;
   }
 
@@ -1542,9 +1548,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
   #scenePanel.dialogue-card {
     min-height: 0;
-    max-height: clamp(110px, calc(100dvh - 510px), 184px);
+    max-height: none;
     margin: 0 4px 0 -6px;
-    padding: 29px 27px 22px 30px;
+    padding: 22px 24px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .dialogue-card::before {
@@ -1552,8 +1561,16 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     right: 28px;
   }
 
+  .speaker-label {
+    margin-bottom: 6px;
+  }
+
   .dialogue-text {
     max-width: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
     font-size: var(--mobile-dialogue-scale);
     line-height: 1.48;
   }
@@ -1570,9 +1587,12 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .choices {
-    max-height: clamp(48px, calc(100dvh - 610px), 86px);
+    flex: 0 0 auto;
+    max-height: none;
     gap: 7px;
-    margin-top: 11px;
+    margin-top: 8px;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .choice {
@@ -1581,11 +1601,13 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .bottom-tabs {
-    left: 42px;
-    right: 13px;
-    bottom: 18px;
-    height: var(--tab-height);
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
     height: var(--tab-height-mobile);
+    margin: 0;
     padding: 10px 10px 12px;
   }
 
@@ -1619,6 +1641,21 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     margin: 0 auto;
   }
 
+  .controls {
+    width: 100%;
+    margin: 0;
+    padding: 7px 8px;
+  }
+
+  .control-row {
+    gap: 6px;
+  }
+
+  .controls button {
+    padding: 6px 9px;
+    font-size: .84rem;
+  }
+
   .pocket-card {
     min-height: 0;
     max-height: clamp(190px, calc(100dvh - 60px), 300px);
@@ -1642,7 +1679,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 @media (max-width: 360px) {
   :root {
-    --notebook-padding: 18px 10px 116px 42px;
+    --notebook-padding: 18px 10px 12px 42px;
     --tab-height: 76px;
   }
 
@@ -1664,7 +1701,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   }
 
   .bottom-tabs {
-    left: 37px;
-    right: 10px;
+    left: auto;
+    right: auto;
   }
 }
