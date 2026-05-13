@@ -20,6 +20,8 @@ The playable mockup is intentionally split by responsibility so visual iteration
 
 When fixing layout bugs, prefer token changes first, then component-local changes, then breakpoint changes. Avoid placing new base rules in responsive files unless the rule is only valid at that breakpoint.
 
+Selectors may appear in both `layout.css` and `components.css` only when their declarations remain split by responsibility: `layout.css` owns sizing, grid placement, offsets, positioning, stacking, and overflow; `components.css` owns backgrounds, gradients, borders, shadows, filters, decorative pseudo-element artwork, and other asset fidelity styling.
+
 ## JavaScript modules
 
 - `docs/static/js/main.js` is only the boot wrapper and top-level error presenter.
