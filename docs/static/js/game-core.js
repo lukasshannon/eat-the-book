@@ -4,6 +4,7 @@ import { clearError, collectUi, showError } from "./ui-dom.js";
 import {
   createTabLayout,
   renderCharacterPortrait,
+  renderProgressNote,
   renderSceneContent,
   renderStats,
   renderStatus,
@@ -41,7 +42,7 @@ export async function initGame() {
     applyOnEnter(state, node);
     persist(state);
 
-    ui.progress.textContent = node.end ? "TODAY'S SPECIAL\nStory complete" : "TODAY'S SPECIAL\nHoney\nDream\nLatte";
+    renderProgressNote(ui, state, node);
     renderCharacterPortrait(ui, state, node);
     renderSceneContent(ui, node);
     renderStatus(ui, state, node);
