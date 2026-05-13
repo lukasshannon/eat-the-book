@@ -196,11 +196,9 @@
 
   .notebook-shell {
     width: min(100%, var(--content-panel-width));
-    height: min(708px, calc(var(--viewport-height) - 20px));
-    min-height: 0;
+    height: auto;
     min-height: min(560px, calc(100dvh - 20px));
     max-height: calc(100dvh - 20px);
-    height: auto;
     box-sizing: border-box;
     display: grid;
     grid-template-rows: auto auto minmax(0, 1fr) auto auto;
@@ -235,7 +233,6 @@
   }
 
   .scene-visual {
-    height: auto;
     height: clamp(176px, 28dvh, 282px);
     min-height: 0;
     margin: 0 4px 0 0;
@@ -322,17 +319,6 @@
   }
 
   .bottom-tabs {
-    left: 42px;
-    right: 13px;
-    bottom: 18px;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    height: var(--tab-height);
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     width: 100%;
     height: var(--tab-height-mobile);
     margin: 0;
@@ -350,13 +336,8 @@
   }
 
   #worldHud,
-  .pockets,
-  .controls {
+  .pockets {
     width: min(100%, var(--content-panel-width));
-  }
-
-  .controls {
-    margin-bottom: 4px;
   }
 
   #worldHud {
@@ -425,22 +406,4 @@
     padding-inline: 24px 20px;
   }
 
-  .bottom-tabs {
-    left: auto;
-    right: auto;
-  }
-}
-
-/* Keep save controls in the notebook grid across responsive overrides. */
-.notebook-shell > .controls {
-  grid-area: controls;
-  min-height: 0;
-  width: auto;
-  margin: 0 11px 0 2px;
-}
-
-@media (max-width: 620px) {
-  .notebook-shell > .controls {
-    margin: 0 4px 0 -6px;
-  }
 }

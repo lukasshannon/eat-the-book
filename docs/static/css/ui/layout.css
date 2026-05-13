@@ -269,16 +269,13 @@
 .special-note::after { content: ""; display: block; width: 31px; height: 18px; margin: 8px auto 0; border: 2px solid rgba(98, 68, 39, .62); border-top: 0; border-radius: 0 0 14px 14px; }
 
 .dialogue-card {
-  min-height: 145px;
-  margin: -2px 11px 9px 2px;
-  padding: 28px 42px 18px;
   grid-area: dialogue;
   min-height: 0;
   margin: 0 11px 0 2px;
+  padding: 28px 42px 18px;
   display: grid;
   grid-template-rows: auto auto minmax(1.4em, 1fr) auto;
   align-content: stretch;
-  padding: 28px 42px 18px 42px;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-soft);
 }
@@ -318,24 +315,16 @@
 .choice:hover { background: #f4dfba; transform: translateY(-1px); }
 
 .bottom-tabs {
-  position: absolute;
-  left: 60px;
-  right: 30px;
-  bottom: 17px;
   grid-area: tabs;
   align-self: end;
   min-height: 0;
   position: relative;
-  left: auto;
-  right: auto;
-  bottom: auto;
   height: var(--tab-height);
   margin-right: 0;
   z-index: 8;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
-  height: var(--tab-height);
   padding: 10px 20px 12px;
   background: var(--asset-wide-panel) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-panel);
@@ -484,12 +473,9 @@
 #stats p { margin: 6px 0; }
 
 .controls {
-  grid-area: controls;
-  min-height: 0;
-  width: auto;
-  margin: 0 11px 0 2px;
   grid-column: 1 / -1;
   grid-row: 2;
+  min-height: 0;
   width: min(var(--controls-width), 100%);
   margin: 0 auto;
   padding: 8px 12px;
