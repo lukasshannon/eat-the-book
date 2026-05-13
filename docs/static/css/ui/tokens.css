@@ -76,5 +76,5 @@
   --content-panel-width: 430px;
   --controls-width: 560px;
   --viewport-width: 100vw;
-  --viewport-height: 100vh;
+  --viewport-height: 100dvh;
 }

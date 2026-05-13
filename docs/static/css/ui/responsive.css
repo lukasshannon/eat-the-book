@@ -15,16 +15,17 @@
   }
 
   #app {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
     width: var(--viewport-width);
     height: var(--viewport-height);
     min-height: 0;
-    padding: 8px 11px 0;
-    gap: var(--panel-gap);
-    justify-content: flex-start;
-    overflow: hidden auto;
+    padding: 8px 11px 10px;
+    gap: clamp(6px, 1.6dvh, var(--panel-gap));
+    justify-content: center;
+    overflow: hidden;
   }
 
   .desk-intro,
@@ -40,14 +41,27 @@
   }
 
   .notebook-shell {
-    flex: 0 0 auto;
     width: min(var(--notebook-width), 100%);
+    height: min(var(--notebook-height), 100%);
     margin: 0 auto;
   }
 
   #worldHud,
   .pockets {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
     width: min(var(--content-panel-width), 100%);
+    max-height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .controls {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    width: min(var(--controls-width), 100%);
     margin-left: auto;
     margin-right: auto;
   }
@@ -77,7 +91,7 @@
       clamp(126px, 15vw, 166px)
       minmax(500px, 546px)
       clamp(268px, 29vw, 330px);
-    grid-template-rows: 646px auto;
+    grid-template-rows: minmax(0, clamp(360px, calc(100dvh - 76px), 646px)) auto;
     column-gap: var(--panel-gap-wide-fit);
   }
 
@@ -121,7 +135,7 @@
     grid-column: 3;
     grid-row: 1;
     min-width: 0;
-    height: min(476px, 74vw);
+    height: clamp(280px, calc(var(--viewport-height) - 104px), 476px);
     padding-inline: clamp(16px, 2vw, 23px);
   }
 
@@ -145,8 +159,9 @@
   }
 
   .pockets {
-    width: 415px;
-    margin: 0 0 102px 86px;
+    width: min(415px, 100%);
+    max-height: min(300px, 48dvh);
+    margin: auto auto 102px;
   }
 }
 
@@ -159,9 +174,9 @@
     --tab-height: 82px;
     --notebook-tab-reserve: var(--tab-height-mobile);
     --notebook-content-gap: 7px;
-    --notebook-visual-min: 200px;
-    --notebook-visual-max: 250px;
-    --notebook-dialogue-min: 160px;
+    --notebook-visual-min: clamp(96px, 30dvh, 200px);
+    --notebook-visual-max: clamp(140px, 34dvh, 250px);
+    --notebook-dialogue-min: clamp(112px, 32dvh, 160px);
     --content-panel-width: 390px;
   }
 
@@ -176,20 +191,16 @@
     margin: 0;
     padding: 10px var(--viewport-padding) 18px;
     gap: var(--panel-gap);
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .notebook-shell {
     width: min(100%, var(--content-panel-width));
-    height: min(708px, calc(var(--viewport-height) - 20px));
+    height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     min-height: 0;
-    min-height: min(560px, calc(100dvh - 20px));
-    max-height: calc(100dvh - 20px);
-    height: auto;
     box-sizing: border-box;
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto minmax(0, .95fr) minmax(0, 1.15fr) auto auto;
     align-content: stretch;
     row-gap: 8px;
     padding: var(--notebook-padding);
@@ -221,7 +232,6 @@
   }
 
   .scene-visual {
-    height: auto;
     height: clamp(176px, 28dvh, 282px);
     min-height: 0;
     margin: 0 4px 0 0;
@@ -231,12 +241,12 @@
     left: clamp(-10px, 2vw, 18px);
     bottom: -21px;
     width: min(245px, 76%);
-    height: 266px;
+    height: clamp(132px, 30dvh, 266px);
     transform: none;
   }
 
   .scene-character img {
-    height: 266px;
+    height: clamp(132px, 30dvh, 266px);
   }
 
   .scene-character-name {
@@ -246,9 +256,9 @@
 
   .special-note {
     right: 6px;
-    top: 29px;
+    top: clamp(12px, 4dvh, 29px);
     width: min(96px, 34%);
-    min-height: 136px;
+    min-height: clamp(72px, 20dvh, 136px);
     padding-inline: 10px;
     font-size: .86rem;
   }
@@ -308,17 +318,6 @@
   }
 
   .bottom-tabs {
-    left: 42px;
-    right: 13px;
-    bottom: 18px;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    height: var(--tab-height);
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     width: 100%;
     height: var(--tab-height-mobile);
     margin: 0;
@@ -341,12 +340,14 @@
   }
 
   #worldHud {
-    height: auto;
+    height: clamp(260px, calc(100dvh - 30px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 460px);
     min-height: 0;
-    max-height: clamp(360px, calc(100dvh - 30px), 460px);
+    max-height: 100%;
   }
 
   .pockets {
+    max-height: 100%;
+    overflow: hidden;
     margin: 0 auto;
   }
 
@@ -367,7 +368,7 @@
 
   .pocket-card {
     min-height: 0;
-    max-height: clamp(190px, calc(100dvh - 60px), 300px);
+    max-height: 100%;
     padding-inline: 34px;
   }
 
@@ -409,5 +410,94 @@
   .bottom-tabs {
     left: auto;
     right: auto;
+  }
+}
+@media (max-height: 480px) {
+  :root {
+    --notebook-padding: clamp(10px, 3dvh, 18px) 10px clamp(8px, 2dvh, 12px) 38px;
+    --tab-height: clamp(48px, 15dvh, 83px);
+    --tab-height-mobile: clamp(48px, 16dvh, 82px);
+    --notebook-content-gap: 6px;
+  }
+
+  #app {
+    overflow: hidden;
+  }
+
+  .top-status {
+    height: auto;
+    min-height: 0;
+    padding-block: 4px;
+  }
+
+  .scene-character,
+  .scene-character img {
+    height: clamp(110px, 34dvh, 188px);
+  }
+
+  .special-note {
+    top: clamp(10px, 3dvh, 18px);
+    min-height: clamp(62px, 18dvh, 92px);
+    padding-top: clamp(10px, 2.5dvh, 14px);
+  }
+
+  #scenePanel.dialogue-card {
+    padding: 10px 18px 12px 22px;
+  }
+
+  .scene-meta,
+  .dialogue-stamp {
+    display: none;
+  }
+
+  .speaker-label {
+    min-width: 0;
+    margin-bottom: 2px;
+    font-size: clamp(.9rem, 4dvh, 1rem);
+  }
+
+  .dialogue-text {
+    flex-basis: 24px;
+    min-height: 24px;
+    line-height: 1.35;
+  }
+
+  .choices {
+    max-height: clamp(30px, 12dvh, 52px);
+    margin-top: 4px;
+  }
+
+  .choice {
+    min-height: 28px;
+    padding: 4px 8px;
+  }
+
+  .bottom-tabs {
+    padding: 6px 10px 8px;
+  }
+
+  .tab-btn {
+    gap: 2px;
+    font-size: clamp(.64rem, 2.8dvh, .82rem);
+  }
+
+  .tab-icon {
+    width: clamp(20px, 6dvh, 27px);
+    height: clamp(18px, 5dvh, 25px);
+  }
+}
+
+
+/* Keep save controls in the notebook grid across responsive overrides. */
+.notebook-shell > .controls {
+  grid-area: controls;
+  min-height: 0;
+  width: auto;
+  margin: 0 11px 0 2px;
+}
+
+@media (max-width: 620px) {
+  .notebook-shell > .controls {
+    margin: 0 4px 0 -6px;
   }
 }
