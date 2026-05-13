@@ -66,11 +66,6 @@
     margin-right: auto;
   }
 
-  .controls {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
   #worldHud {
     margin-top: 0;
   }
@@ -124,8 +119,7 @@
 
   .notebook-shell,
   .world-hud,
-  .pockets,
-  .controls {
+  .pockets {
     width: auto;
     margin-left: 0;
     margin-right: 0;
@@ -168,13 +162,6 @@
     width: min(415px, 100%);
     max-height: min(300px, 48dvh);
     margin: auto auto 102px;
-  }
-
-  .controls {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: min(var(--controls-width), 100%);
-    margin: 0 auto;
   }
 }
 
@@ -365,8 +352,8 @@
   }
 
   .controls {
-    width: 100%;
-    margin: 0;
+    width: auto;
+    margin: 0 4px 0 -6px;
     padding: 7px 8px;
   }
 

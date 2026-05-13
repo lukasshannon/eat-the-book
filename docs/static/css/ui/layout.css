@@ -475,6 +475,7 @@
 #stats p { margin: 6px 0; }
 
 .controls {
+  grid-area: controls;
   grid-column: 1 / -1;
   grid-row: 2;
   min-height: 0;
