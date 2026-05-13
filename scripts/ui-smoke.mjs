@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 
 const docsRoot = join(process.cwd(), 'docs');
+const storageKey = 'eat-the-book-vertical-slice-v1';
 const contentTypes = {
   '.css': 'text/css',
   '.html': 'text/html',
@@ -87,6 +88,42 @@ async function assertActivePanelUsable(page, tabName, viewportName) {
   assert.equal(panelUsability.isReachable, true, `${viewportName}: ${tabName} panel should be reachable in the viewport`);
 }
 
+async function assertMalformedSaveFallsBack(browser, persistedValue, expectedState, message, directExpectedState = expectedState) {
+  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  try {
+    await page.addInitScript(
+      ({ key, value }) => {
+        localStorage.setItem(key, value);
+      },
+      { key: storageKey, value: persistedValue },
+    );
+    await page.goto(`http://127.0.0.1:${port}/index.html`);
+    await page.locator('#scenePanel').waitFor();
+
+    const state = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey);
+    for (const [key, value] of Object.entries(expectedState)) {
+      assert.deepEqual(state[key], value, `${message}: ${key} should fall back to a safe value`);
+    }
+
+    const directLoad = await page.evaluate(
+      async ({ key, value }) => {
+        localStorage.setItem(key, value);
+        const { loadState } = await import('/static/js/game-state.js');
+        let corruptCalls = 0;
+        const loadedState = loadState({ onCorrupt: () => { corruptCalls += 1; } });
+        return { corruptCalls, loadedState };
+      },
+      { key: storageKey, value: persistedValue },
+    );
+    assert.equal(directLoad.corruptCalls, 1, `${message}: onCorrupt should run when a field falls back`);
+    for (const [key, value] of Object.entries(directExpectedState)) {
+      assert.deepEqual(directLoad.loadedState[key], value, `${message}: direct load ${key} should fall back safely`);
+    }
+  } finally {
+    await page.close();
+  }
+}
+
 async function assertFullscreenLayout(page, viewport) {
   const viewportName = describeViewport(viewport);
 
@@ -150,6 +187,40 @@ try {
     } finally {
       await viewportPage.close();
     }
+  }
+
+  const malformedSaveCases = [
+    {
+      name: 'null save root',
+      persistedValue: 'null',
+      expectedState: { current: 'title', activeTab: 'cafe', inventory: [], recipeBook: ['Orchard Porridge'] },
+    },
+    {
+      name: 'null visited map',
+      persistedValue: '{"visited":null}',
+      expectedState: { visited: { title: true } },
+      directExpectedState: { visited: {} },
+    },
+    {
+      name: 'string inventory',
+      persistedValue: '{"inventory":"bad"}',
+      expectedState: { inventory: [] },
+    },
+    {
+      name: 'unknown active tab',
+      persistedValue: '{"activeTab":"bad"}',
+      expectedState: { activeTab: 'cafe' },
+    },
+  ];
+
+  for (const saveCase of malformedSaveCases) {
+    await assertMalformedSaveFallsBack(
+      browser,
+      saveCase.persistedValue,
+      saveCase.expectedState,
+      saveCase.name,
+      saveCase.directExpectedState,
+    );
   }
 
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
