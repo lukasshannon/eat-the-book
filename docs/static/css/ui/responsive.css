@@ -1,0 +1,446 @@
+/* Breakpoint rules that preserve the full-screen contract across devices. */
+/* Responsive layout strategy:
+   The fixed full composition needs 1126px total width:
+   var(--intro-panel-width) + var(--notebook-width) + var(--side-panel-width)
+   + two var(--panel-gap) gutters + two var(--viewport-padding) #app padding edges.
+   Base styles above render the desktop/fullscreen composition.
+   Medium collapses the side panels into the notebook flow.
+   Small prioritizes a single-column notebook.
+   Very small trims typography and tap targets. */
+@media (max-width: 1126px) {
+  :root {
+    --viewport-padding: 11px;
+    --panel-gap: 18px;
+    --content-panel-width: 430px;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    min-height: 0;
+    padding: 8px 11px 0;
+    gap: var(--panel-gap);
+    justify-content: flex-start;
+    overflow: hidden auto;
+  }
+
+  .desk-intro,
+  .world-companion {
+    display: none;
+  }
+
+  .notebook-shell,
+  .world-hud,
+  .pockets {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .notebook-shell {
+    flex: 0 0 auto;
+    width: min(var(--notebook-width), 100%);
+    margin: 0 auto;
+  }
+
+  #worldHud,
+  .pockets,
+  .controls {
+    width: min(var(--content-panel-width), 100%);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .controls {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  #worldHud {
+    margin-top: 0;
+  }
+
+  .pockets {
+    align-self: center;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* Final wide-viewport fit: keep the complete reference composition visible on
+   browser widths that can support it instead of dropping the side panels early.
+   The fixed desktop composition needs 1126px: 166px + 546px + 330px
+   + two 30px gaps + two 12px #app padding edges. */
+@media (min-width: 981px) and (max-width: 1126px) {
+  #app {
+    display: grid;
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    overflow: hidden;
+    grid-template-columns:
+      clamp(126px, 15vw, 166px)
+      minmax(500px, 546px)
+      clamp(268px, 29vw, 330px);
+    grid-template-rows: 646px auto;
+    column-gap: var(--panel-gap-wide-fit);
+  }
+
+  .desk-intro,
+  .world-companion {
+    display: block;
+  }
+
+  .desk-intro {
+    width: 100%;
+    padding-inline: clamp(14px, 1.8vw, 21px);
+  }
+
+  .intro-index {
+    font-size: clamp(2.7rem, 4.6vw, 3.35rem);
+  }
+
+  .desk-intro h1 {
+    font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+  }
+
+  .intro-script {
+    font-size: clamp(.9rem, 1.55vw, 1.08rem);
+  }
+
+  .notebook-shell,
+  .world-hud,
+  .pockets,
+  .controls {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .notebook-shell {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .world-companion {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+    height: min(476px, 74vw);
+    padding-inline: clamp(16px, 2vw, 23px);
+  }
+
+  .world-companion .slot-row {
+    gap: clamp(5px, .85vw, 9px);
+  }
+
+  .world-companion .inv-slot {
+    height: clamp(48px, 5.2vw, 58px);
+  }
+
+  .world-companion .objective {
+    margin-inline: clamp(8px, 1.2vw, 15px);
+    font-size: clamp(.82rem, 1.25vw, .95rem);
+  }
+
+  #worldHud,
+  .pockets {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .pockets {
+    width: 415px;
+    margin: 0 0 102px 86px;
+  }
+
+  .controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: min(var(--controls-width), 100%);
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 620px) {
+  :root {
+    --viewport-padding: 8px;
+    --panel-gap: 14px;
+    --notebook-radius: 30px 28px 22px 22px;
+    --notebook-padding: 18px 13px 12px 48px;
+    --tab-height: 82px;
+    --notebook-tab-reserve: var(--tab-height-mobile);
+    --notebook-content-gap: 7px;
+    --notebook-visual-min: 200px;
+    --notebook-visual-max: 250px;
+    --notebook-dialogue-min: 160px;
+    --content-panel-width: 390px;
+  }
+
+  html,
+  body {
+    min-width: 0;
+  }
+
+  #app {
+    width: var(--viewport-width);
+    height: var(--viewport-height);
+    margin: 0;
+    padding: 10px var(--viewport-padding) 18px;
+    gap: var(--panel-gap);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .notebook-shell {
+    width: min(100%, var(--content-panel-width));
+    height: min(708px, calc(var(--viewport-height) - 20px));
+    min-height: 0;
+    min-height: min(560px, calc(100dvh - 20px));
+    max-height: calc(100dvh - 20px);
+    height: auto;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+    align-content: stretch;
+    row-gap: 8px;
+    padding: var(--notebook-padding);
+    border-width: 4px;
+    border-radius: var(--radius-notebook-mobile);
+    overflow: hidden;
+  }
+
+  .notebook-page {
+    inset: 7px 5px 7px 16px;
+  }
+
+  .top-status {
+    grid-template-columns: 58px minmax(88px, 1fr) minmax(70px, .8fr) 32px;
+    height: auto;
+    gap: 5px;
+    margin: 0 4px 8px 0;
+    padding: 5px;
+    font-size: var(--mobile-font-scale);
+  }
+
+  .top-status .status-block:nth-child(4) {
+    display: none;
+  }
+
+  .settings-btn {
+    grid-column: auto;
+    justify-self: end;
+  }
+
+  .scene-visual {
+    height: auto;
+    height: clamp(176px, 28dvh, 282px);
+    min-height: 0;
+    margin: 0 4px 0 0;
+  }
+
+  .scene-character {
+    left: clamp(-10px, 2vw, 18px);
+    bottom: -21px;
+    width: min(245px, 76%);
+    height: 266px;
+    transform: none;
+  }
+
+  .scene-character img {
+    height: 266px;
+  }
+
+  .scene-character-name {
+    left: clamp(22px, 10vw, 38px);
+    bottom: 16px;
+  }
+
+  .special-note {
+    right: 6px;
+    top: 29px;
+    width: min(96px, 34%);
+    min-height: 136px;
+    padding-inline: 10px;
+    font-size: .86rem;
+  }
+
+  #scenePanel.dialogue-card {
+    min-height: 0;
+    max-height: none;
+    margin: 0 4px 0 -6px;
+    padding: 22px 24px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .dialogue-card::before {
+    left: 28px;
+    right: 28px;
+  }
+
+  .speaker-label {
+    margin-bottom: 6px;
+  }
+
+  .dialogue-text {
+    max-width: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+    font-size: var(--mobile-dialogue-scale);
+    line-height: 1.48;
+  }
+
+  .scene-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .dialogue-card .tags {
+    max-width: 270px;
+    flex-wrap: wrap;
+  }
+
+  .choices {
+    flex: 0 0 auto;
+    max-height: none;
+    gap: 7px;
+    margin-top: 8px;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .choice {
+    min-height: 34px;
+    padding: 6px 10px;
+  }
+
+  .bottom-tabs {
+    left: 42px;
+    right: 13px;
+    bottom: 18px;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    height: var(--tab-height);
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: var(--tab-height-mobile);
+    margin: 0;
+    padding: 10px 10px 12px;
+  }
+
+  .tab-btn {
+    min-width: 0;
+    font-size: clamp(.68rem, 3.1vw, .84rem);
+  }
+
+  .tab-icon {
+    width: 27px;
+    height: 25px;
+  }
+
+  #worldHud,
+  .pockets,
+  .controls {
+    width: min(100%, var(--content-panel-width));
+  }
+
+  .controls {
+    margin-bottom: 4px;
+  }
+
+  #worldHud {
+    height: auto;
+    min-height: 0;
+    max-height: clamp(360px, calc(100dvh - 30px), 460px);
+  }
+
+  .pockets {
+    margin: 0 auto;
+  }
+
+  .controls {
+    width: 100%;
+    margin: 0;
+    padding: 7px 8px;
+  }
+
+  .control-row {
+    gap: 6px;
+  }
+
+  .controls button {
+    padding: 6px 9px;
+    font-size: .84rem;
+  }
+
+  .pocket-card {
+    min-height: 0;
+    max-height: clamp(190px, calc(100dvh - 60px), 300px);
+    padding-inline: 34px;
+  }
+
+  #book,
+  #stats,
+  #inventory {
+    max-height: none;
+  }
+
+  .recipe-spread,
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --notebook-padding: 18px 10px 12px 42px;
+    --tab-height: 76px;
+  }
+
+  .top-status {
+    grid-template-columns: 52px minmax(82px, 1fr) minmax(62px, .7fr) 30px;
+    font-size: var(--mobile-font-scale-small);
+  }
+
+  .status-value {
+    font-size: 1.25rem;
+  }
+
+  .status-label {
+    font-size: .56rem;
+  }
+
+  .dialogue-card {
+    padding-inline: 24px 20px;
+  }
+
+  .bottom-tabs {
+    left: auto;
+    right: auto;
+  }
+}
+
+/* Keep save controls in the notebook grid across responsive overrides. */
+.notebook-shell > .controls {
+  grid-area: controls;
+  min-height: 0;
+  width: auto;
+  margin: 0 11px 0 2px;
+}
+
+@media (max-width: 620px) {
+  .notebook-shell > .controls {
+    margin: 0 4px 0 -6px;
+  }
+}
