@@ -230,7 +230,7 @@
   left: 40px;
   bottom: -25px;
   width: 270px;
-  height: clamp(188px, calc(var(--viewport-block-unit) * 36), 285px);
+  height: clamp(180px, calc(var(--viewport-block-unit) * 30.5), 245px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -239,7 +239,7 @@
 }
 .scene-character img {
   width: auto;
-  height: clamp(188px, calc(var(--viewport-block-unit) * 36), 285px);
+  height: clamp(180px, calc(var(--viewport-block-unit) * 30.5), 245px);
   max-width: 100%;
   object-fit: contain;
   object-position: bottom center;
@@ -267,10 +267,9 @@
 .dialogue-card {
   grid-area: dialogue;
   margin: 0 11px 0 2px;
-  padding: 28px 42px 18px;
-  display: grid;
-  grid-template-rows: auto auto minmax(1.4em, 1fr) auto;
-  align-content: stretch;
+  padding: 20px 42px 10px;
+  display: flex;
+  flex-direction: column;
   background: var(--asset-note-large) center / 100% 100% no-repeat;
   filter: var(--shadow-paper-soft);
 }
@@ -281,9 +280,9 @@
   overscroll-behavior: contain;
 }
 .dialogue-card h2 { display: none; }
-.speaker-label { margin-bottom: 10px; font-size: 1.18rem; font-style: italic; font-weight: 700; }
+.speaker-label { margin-bottom: 4px; font-size: 1.18rem; font-style: italic; font-weight: 700; }
 .tags { display: none; }
-.dialogue-text { min-height: 0; max-width: 320px; overflow: auto; font-size: .98rem; line-height: 1.6; font-style: italic; }
+.dialogue-text { min-height: 0; max-width: 320px; flex: 1 1 auto; overflow: auto; font-size: .98rem; line-height: 1.6; font-style: italic; }
 .dialogue-stamp { position: absolute; right: 52px; bottom: 24px; width: 44px; height: 30px; opacity: .52; }
 .dialogue-stamp::before { content: ""; position: absolute; left: 4px; top: 9px; width: 24px; height: 16px; border: 2px solid var(--ink-soft); border-top: 0; border-radius: 0 0 14px 14px; }
 .dialogue-stamp::after { content: ""; position: absolute; left: 31px; top: 11px; width: 10px; height: 9px; border: 2px solid var(--ink-soft); border-left: 0; border-radius: 0 9px 9px 0; }
@@ -293,8 +292,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  flex: 0 0 auto;
   max-height: clamp(52px, calc(var(--viewport-height) - 620px), 94px);
-  margin-top: 14px;
+  margin-top: 6px;
   overflow: auto;
   overscroll-behavior: contain;
   padding-right: 4px;
