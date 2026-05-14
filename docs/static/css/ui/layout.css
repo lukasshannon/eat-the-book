@@ -133,7 +133,7 @@
 
 .notebook-page {
   position: absolute;
-  inset: 8px 9px 8px -4%;
+  inset: 8px -4% 8px -4%;
 }
 
 .top-status,
