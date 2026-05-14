@@ -122,6 +122,8 @@ function validateStoryData(rawStory) {
     if (!isNonEmptyString(scene.emotionKey)) errors.push(`scene '${sceneId}' emotionKey must be a non-empty string.`);
     if (!isNonEmptyString(scene.dialogueText)) errors.push(`scene '${sceneId}' dialogueText must be a non-empty string.`);
     if (!Array.isArray(scene.labels)) errors.push(`scene '${sceneId}' labels must be an array.`);
+    if (!Array.isArray(scene.conditions)) errors.push(`scene '${sceneId}' conditions must be an array.`);
+    if (!isRecord(scene.effects)) errors.push(`scene '${sceneId}' effects must be an object.`);
     if (!Array.isArray(scene.choices)) errors.push(`scene '${sceneId}' choices must be an array.`);
     else scene.choices.forEach((choice, choiceIndex) => validateChoice(choice, choiceIndex, sceneId, sceneIds, errors));
   });
@@ -144,6 +146,8 @@ function normalizeScenes(rawStory, rawCharacters) {
           speaker: scene.speakerName,
           text: scene.dialogueText,
           tags,
+          conditions: scene.conditions || [],
+          effects: scene.effects || {},
           worldTags: scene.worldTags || [],
           chapterTags: scene.chapterTags || [],
           onEnter: scene.onEnter,

@@ -1,4 +1,28 @@
-# eat-the-book
+# Eat the Book
+
+## Current runnable UI
+
+The web build in `docs/` opens on a closed book cover. The cover owns the meta menu (`Start`, `Continue / Load`, and `Settings`) so those controls do not appear inside the in-game page. Choosing `Start` resets to the sample opening scene; choosing `Continue / Load` reads local storage; both paths animate the cover open and reveal the notebook interface.
+
+The in-game notebook uses right-edge cardstock tabs instead of a bottom menu. The tab list lives in `docs/index.html` as `#tabBar`, while `docs/static/css/ui/layout.css` and `docs/static/css/ui/responsive.css` keep the tabs inside phone viewports and sized as touch targets. Tab changes call `setActiveTab()` in `docs/static/js/ui-render.js`, which swaps the visible panel and applies a short page-turn animation. The animation is skipped automatically when `prefers-reduced-motion: reduce` is active.
+
+Runtime dialogue is JSON-driven. Story data lives in `docs/static/data/story/dialogue.json`, and character portrait defaults live in `docs/static/data/characters.json`. `docs/static/js/game-data.js` fetches, validates, and normalizes the JSON into renderable scene nodes. To add a scene, add an object to the `scenes` array with `sceneId`, `characterId`, `speakerName`, `emotionKey`, `dialogueText`, `labels`, `conditions`, `effects`, optional `worldTags`/`chapterTags`, and `choices`. Each choice needs `label`, `nextNodeId`, `conditions`, and `effects` such as `flags`, `relationship` deltas, or `addItems`. Keep placeholder copy minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes.
+
+Run locally with:
+
+```bash
+python3 -m http.server 8000 --directory docs
+```
+
+Then open `http://127.0.0.1:8000/`. For automated layout and interaction checks, run:
+
+```bash
+node scripts/ui-smoke.mjs
+```
+
+Deploy by publishing the `docs/` directory through GitHub Pages. This project intentionally uses plain HTML, CSS, JavaScript modules, and JSON for the current UI slice.
+
+## Core concept
 
 A game where you run a quiet café outside time, serving ghosts, failed heroes, and other survivors of broken worlds. Each recipe is more than food: when cooked and eaten, it sends you into a corrupted version of a lost world to gather ingredients, uncover memories, and restore what fate ruined.
 
@@ -6,22 +30,6 @@ A game where you run a quiet café outside time, serving ghosts, failed heroes, 
 
 The browser mockup lives under `docs/`. Its structure, styles, rendering modules, state modules, and verification workflow are documented in [`docs/UI_ARCHITECTURE.md`](docs/UI_ARCHITECTURE.md).
 
-
-## Current web build workflow
-
-The playable static build lives in `docs/` for GitHub Pages. The current UI starts on a closed front cover with `Start`, `Continue / Load`, and `Settings` actions. Starting or loading opens the book and reveals a right-edge stack of cardstock tabs: Café, Recipes, Worlds, Characters, Journal, and Settings. Tab changes are handled by `setActiveTab()` in `docs/static/js/ui-render.js`; it updates ARIA tab state, swaps the active panel, and triggers a short page-turn animation unless the device asks for reduced motion.
-
-Dialogue samples are JSON-driven. Add or edit scene nodes in `docs/static/data/story/dialogue.json`. Each scene should include `sceneId`, `characterId`, `speakerName`, `emotionKey`, `dialogueText`, `choices`, `labels`, and optional `worldTags`, `chapterTags`, and `onEnter`. Each choice should include `label`, `nextNodeId`, `conditions`, and `effects`; supported effects are flag updates, relationship changes, and item additions. `docs/static/js/game-data.js` validates this file and normalizes it for the renderer, so visible dialogue and branches should come from JSON instead of hardcoded strings.
-
-Character portrait metadata remains in `docs/static/data/characters.json` and points at prepared images under `docs/static/img/assets/characters/<name>/`. The tab/page structure is in `docs/index.html`; visual rules are split across `docs/static/css/ui/*.css`; gameplay state and rendering are in `docs/static/js/*.js`.
-
-To run locally, serve the `docs/` directory from an HTTP server (ES modules and JSON fetches require HTTP rather than `file://`). To verify the responsive build, run:
-
-```sh
-npm exec --package playwright@1.60.0 -- node scripts/ui-smoke.mjs
-```
-
-To deploy, commit the `docs/` changes and push the branch used by GitHub Pages. Do not commit generated binary assets or dependency lock files for UI-only work.
 
 ## High Concept
 

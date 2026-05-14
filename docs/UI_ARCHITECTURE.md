@@ -49,34 +49,47 @@ node scripts/ui-smoke.mjs
 
 The smoke test serves `docs/`, opens the app at mobile through desktop viewport sizes, verifies all primary controls remain visible, verifies each tab panel can be activated, and exercises choice progression plus theme toggling.
 
+## Cover, tabs, and page motion
+
+The first page is the closed front cover in `docs/index.html`. `syncBookMode()` keeps `#bookPages` and `#tabBar` hidden and inert until the player chooses `Start`, `Continue / Load`, or cover `Settings`. `animateBookOpen()` briefly shows the cover while the book opens, then leaves only the in-game tabbed interface visible.
+
+The in-game navigation is the right-edge `#tabBar`. The labels are Café, Recipes, Worlds, Characters, Journal, and Settings. Layout rules in `layout.css` create the cardstock tab shape, and mobile overrides in `responsive.css` keep the tabs inside the phone viewport with minimum tap sizes. `setActiveTab()` updates ARIA state, shows the matching tab panel, persists the active tab after the game has started, and triggers a lightweight page-turn animation. The `prefers-reduced-motion: reduce` rule disables both cover and page-turn animations.
+
 ## Scene data contract
 
-Narrative content lives in `docs/static/data/characters.json` and `docs/static/data/scenes.json`. The loader validates these files before normalizing data for rendering, so schema issues fail early with an actionable error in the UI.
+Runtime narrative content lives in `docs/static/data/story/dialogue.json`. Character display names and portrait folders live in `docs/static/data/characters.json`. The legacy `docs/static/data/scenes.json` file is not used by the runtime and remains only as a compatibility note for older tooling. The loader validates JSON before normalizing data for rendering, so schema issues fail early with an actionable error in the UI.
 
 ### Characters
 
-`characters.json` must be an object keyed by character ID. Each entry can be either a string display name or an object. After normalization, every character must have non-empty string values for:
+`characters.json` must be an object keyed by character ID. Each entry should include:
 
 - `name` — display name shown in the speaker label.
 - `portrait` — portrait folder name under `docs/static/img/assets/characters/<portrait>/`.
 - `emotion` — default portrait image basename, such as `neutral`, `warm`, or `angry`.
 
-### Scenes
+### Story scenes
 
-`scenes.json` must be an object keyed by scene ID. Every scene object must include:
+`dialogue.json` must contain a top-level `scenes` array. Every scene object must include:
 
-- `location` — non-empty string rendered as the scene heading.
-- `speaker` — character ID that exists in `characters.json`.
-- `text` — non-empty string rendered as dialogue.
-- `choices` — optional array. Omit this for terminal scenes; when present it must be an array.
+- `sceneId` — stable scene/node ID.
+- `characterId` — character key from `characters.json`.
+- `speakerName` — speaker label rendered in the dialogue card.
+- `emotionKey` — portrait image basename used for the scene.
+- `dialogueText` — text rendered from JSON, not hardcoded in JavaScript.
+- `labels` — tab/page labels shown as scene tags.
+- `conditions` — scene-level condition objects for future gating.
+- `effects` — scene-level effect object for future hooks. Runtime one-time effects currently use `onEnter`.
+- `worldTags` / `chapterTags` — optional tags.
+- `choices` — array of branch options.
 
 Each choice object must include:
 
 - `label` — non-empty string rendered on the choice button.
-- `next` — scene ID that exists in `scenes.json`.
-- `effects` — optional object. When present, it can only contain supported effect keys:
-  - `flags` — object keyed by flag name with non-empty string keys.
-  - `relation` — object keyed by character ID with finite numeric deltas.
-  - `addItems` — array of non-empty inventory item strings.
+- `nextNodeId` — scene ID that exists in `dialogue.json`.
+- `conditions` — array reserved for branch gating.
+- `effects` — optional object. Supported runtime effect keys are:
+  - `flags` — object keyed by flag name.
+  - `relation` or `relationship` — object keyed by character ID with finite numeric deltas.
+  - `addItems` — array of inventory item strings.
 
-Unsupported effect keys, missing scene targets, unknown speakers, blank required strings, and malformed choice/effect values cause `loadGameData()` to throw an `Error` that names the scene ID, choice index, or character ID that failed validation.
+Unsupported choice effect keys, missing scene targets, blank required strings, and malformed choice/effect values cause `loadGameData()` to throw an `Error` that names the scene ID or choice index that failed validation. Keep sample prose minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes.

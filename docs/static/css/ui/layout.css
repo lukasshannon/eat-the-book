@@ -663,7 +663,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 .side-tabs .tab-btn {
   min-width: 46px;
   min-height: 48px;
-  padding: 6px 4px 6px 8px;
+  padding: 6px 5px 6px 8px;
   border: 1px solid rgba(98, 68, 39, .64);
   border-right: 0;
   border-radius: 12px 0 0 12px;
@@ -671,7 +671,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     linear-gradient(180deg, rgba(246, 224, 184, .96), rgba(213, 174, 111, .96));
   box-shadow: -3px 3px 5px rgba(36, 22, 12, .26), inset 0 1px 0 rgba(255, 250, 226, .55);
   color: var(--ink);
-  font-size: clamp(.66rem, 1.8vw, .86rem);
+  font-size: clamp(.74rem, 1.8vw, .86rem);
   line-height: 1.05;
   writing-mode: horizontal-tb;
   overflow-wrap: anywhere;

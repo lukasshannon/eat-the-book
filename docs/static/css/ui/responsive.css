@@ -572,16 +572,16 @@
 
   .side-tabs {
     top: 54px;
-    right: 6px;
-    width: 50px;
+    right: 5px;
+    width: 54px;
     gap: 5px;
   }
 
   .side-tabs .tab-btn {
-    min-width: 44px;
+    min-width: 48px;
     min-height: 52px;
-    padding: 6px 3px 6px 7px;
-    font-size: clamp(.58rem, 2.55vw, .72rem);
+    padding: 6px 4px 6px 7px;
+    font-size: clamp(.69rem, 2.9vw, .76rem);
   }
 
   .side-tabs .tab-btn.active {
@@ -625,15 +625,15 @@
   }
 
   .side-tabs {
-    right: 5px;
-    width: 48px;
+    right: 4px;
+    width: 52px;
     gap: 4px;
   }
 
   .side-tabs .tab-btn {
-    min-width: 42px;
+    min-width: 46px;
     min-height: 50px;
-    font-size: .58rem;
+    font-size: .66rem;
   }
 }
 
@@ -645,7 +645,7 @@
 
   .side-tabs .tab-btn {
     min-height: 44px;
-    font-size: .56rem;
+    font-size: .64rem;
   }
 
   .book-pages {
