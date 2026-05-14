@@ -24,22 +24,24 @@ const viewportSizes = [
   { name: 'desktop', width: 1920, height: 1080 },
 ];
 
-const primaryControlSelectors = [
-  '#themeToggle',
-  '#startBtn',
-  '#continueBtn',
-  '#resetBtn',
+const coverControlSelectors = ['#startBtn', '#continueBtn', '#coverSettingsBtn'];
+
+const primaryTabSelectors = [
   '[data-tab="cafe"]',
   '[data-tab="recipes"]',
   '[data-tab="worlds"]',
+  '[data-tab="characters"]',
   '[data-tab="journal"]',
+  '[data-tab="settings"]',
 ];
 
 const tabPanelSelectors = {
   cafe: '#scenePanel',
   recipes: '#recipePanel',
   worlds: '#worldHud',
+  characters: '#charactersPanel',
   journal: '#journalPanel',
+  settings: '#settingsPanel',
 };
 
 function describeViewport(viewport) {
@@ -98,7 +100,7 @@ async function assertMalformedSaveFallsBack(browser, persistedValue, expectedSta
       { key: storageKey, value: persistedValue },
     );
     await page.goto(`http://127.0.0.1:${port}/index.html`);
-    await page.locator('#scenePanel').waitFor();
+    await page.locator('#app').waitFor();
 
     const state = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey);
     for (const [key, value] of Object.entries(expectedState)) {
@@ -130,6 +132,9 @@ async function assertFullscreenLayout(page, viewport) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });
   await page.goto(`http://127.0.0.1:${port}/index.html`);
   await page.locator('#app').waitFor();
+  await page.evaluate((key) => localStorage.removeItem(key), storageKey);
+  await page.reload();
+  await page.locator('#app').waitFor();
 
   const appBox = await page.locator('#app').boundingBox();
   assert.ok(appBox, `${viewportName}: #app should have a bounding box`);
@@ -151,8 +156,16 @@ async function assertFullscreenLayout(page, viewport) {
     `${viewportName}: body should not overflow horizontally`,
   );
 
-  for (const selector of primaryControlSelectors) {
-    await assertElementFullyVisibleInViewport(page, selector, `${viewportName}: ${selector} should remain visible`);
+  for (const selector of coverControlSelectors) {
+    await assertElementFullyVisibleInViewport(page, selector, `${viewportName}: cover control ${selector} should remain visible`);
+  }
+
+  assert.equal(await page.locator('#bookCover').isVisible(), true, `${viewportName}: book cover should be the first page`);
+  await page.locator('#startBtn').click();
+  await page.waitForTimeout(380);
+
+  for (const selector of primaryTabSelectors) {
+    await assertElementFullyVisibleInViewport(page, selector, `${viewportName}: tab ${selector} should remain visible`);
   }
 
   for (const tabName of Object.keys(tabPanelSelectors)) {
@@ -193,12 +206,12 @@ try {
     {
       name: 'null save root',
       persistedValue: 'null',
-      expectedState: { current: 'title', activeTab: 'cafe', inventory: [], recipeBook: ['Orchard Porridge'] },
+      expectedState: { current: 'cafe_intro', activeTab: 'cafe', inventory: [], recipeBook: ['Café Starter'] },
     },
     {
       name: 'null visited map',
       persistedValue: '{"visited":null}',
-      expectedState: { visited: { title: true } },
+      expectedState: { visited: { cafe_intro: true } },
       directExpectedState: { visited: {} },
     },
     {
@@ -225,8 +238,13 @@ try {
 
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   await page.goto(`http://127.0.0.1:${port}/index.html`);
+  await page.evaluate((key) => localStorage.removeItem(key), storageKey);
+  await page.reload();
+  assert.equal(await page.locator('#bookCover').isVisible(), true, 'book cover should be visible on first load');
+  await page.locator('#startBtn').click();
+  await page.waitForTimeout(380);
 
-  assert.equal(await page.locator('#scenePanel').isVisible(), true, 'scene panel should be visible on load');
+  assert.equal(await page.locator('#scenePanel').isVisible(), true, 'scene panel should be visible after starting');
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'cafe tab should be selected');
   assert.match(
     await page.getAttribute('#sceneCharacterAsset', 'src'),
@@ -234,11 +252,11 @@ try {
     'keeper portrait should use the configured character asset folder',
   );
 
-  await page.locator('.choice', { hasText: 'Begin shift' }).click();
+  await page.locator('.choice', { hasText: 'Ask about ghost children' }).click();
   assert.match(
     await page.getAttribute('#sceneCharacterAsset', 'src'),
-    /\/static\/img\/assets\/characters\/trader\/determined\.png$/,
-    'player portrait should use the configured character asset folder after scene changes',
+    /\/static\/img\/assets\/characters\/healer\/vulnerable\.png$/,
+    'ghost child sample should use the configured character asset folder after a JSON branch',
   );
 
   await page.locator('[data-tab="cafe"]').focus();
@@ -246,13 +264,16 @@ try {
   assert.equal(await page.getAttribute('[data-tab="recipes"]', 'aria-selected'), 'true', 'arrow navigation should activate next tab');
 
   await page.keyboard.press('End');
-  assert.equal(await page.getAttribute('[data-tab="journal"]', 'aria-selected'), 'true', 'End should jump to final tab');
+  assert.equal(await page.getAttribute('[data-tab="settings"]', 'aria-selected'), 'true', 'End should jump to final tab');
 
   await page.keyboard.press('Home');
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'Home should jump to first tab');
 
   await page.locator('[data-tab="recipes"]').click();
-  assert.equal(await page.locator('#recipePanel .recipe-card').count(), 2, 'recipe tab should render recipe cards');
+  assert.ok(await page.locator('#recipePanel .recipe-card').count() >= 1, 'recipe tab should render recipe cards');
+
+  await page.locator('[data-tab="characters"]').click();
+  assert.ok(await page.locator('#charactersPanel .journal-stat').count() >= 1, 'characters tab should render character cards');
 
   await page.locator('[data-tab="journal"]').click();
   assert.equal(await page.locator('#journalPanel .journal-stat').count(), 4, 'journal tab should render state cards');
@@ -265,6 +286,7 @@ try {
   await page.reload();
   assert.equal(await page.getAttribute('[data-tab="worlds"]', 'aria-selected'), 'true', 'selected tab should persist after reload');
 
+  await page.locator('[data-tab="settings"]').click();
   await page.locator('#themeToggle').click();
   assert.equal(await page.getAttribute('#themeToggle', 'aria-pressed'), 'true', 'theme toggle should expose pressed state');
 

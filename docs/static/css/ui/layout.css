@@ -509,3 +509,231 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 
 .pockets { z-index: 6; }
 
+
+/* Cover-first book layout and right-edge cardstock tabs. */
+.notebook-shell {
+  grid-template-areas: "book";
+  grid-template-rows: minmax(0, 1fr);
+  padding: 22px 78px 24px 54px;
+  overflow: hidden;
+}
+
+.book-pages {
+  grid-area: book;
+  min-height: 0;
+  display: grid;
+  grid-template-areas:
+    "status"
+    "visual"
+    "dialogue";
+  grid-template-rows:
+    auto
+    minmax(0, clamp(var(--notebook-visual-min), calc(var(--viewport-block-unit) * 31), var(--notebook-visual-max)))
+    minmax(0, 1fr);
+  gap: var(--notebook-content-gap);
+  position: relative;
+  z-index: 3;
+}
+
+.book-cover {
+  grid-area: book;
+  z-index: 12;
+  position: relative;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: clamp(24px, 7vw, 54px);
+  border: 2px solid rgba(38, 24, 14, .82);
+  border-radius: calc(var(--radius-page) * 2);
+  color: #f2dfb8;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(235, 197, 121, .22), transparent 28%),
+    linear-gradient(90deg, rgba(20, 12, 8, .55) 0 10px, transparent 10px 100%),
+    linear-gradient(145deg, #6e4123 0%, #422515 52%, #24140d 100%);
+  box-shadow: inset 0 0 0 2px rgba(239, 200, 128, .2), inset 13px 0 18px rgba(0, 0, 0, .32);
+  text-align: center;
+  transform-origin: left center;
+}
+
+.book-cover h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 9vw, 4.4rem);
+  line-height: .95;
+  letter-spacing: -.04em;
+}
+
+.cover-kicker,
+.cover-copy {
+  margin: 0 auto;
+  max-width: 28rem;
+}
+
+.cover-kicker {
+  color: var(--gold-soft);
+  font-size: .9rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.cover-copy {
+  font-size: clamp(1rem, 3.7vw, 1.2rem);
+  line-height: 1.45;
+}
+
+.cover-actions,
+.settings-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.cover-actions {
+  width: min(100%, 280px);
+  margin: 4px auto 0;
+}
+
+.cover-actions button,
+.settings-actions button {
+  min-height: 48px;
+  border: 1px solid var(--gold-panel);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #2d2118;
+  color: var(--paper-bright);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, .28);
+  cursor: pointer;
+}
+
+.cover-active .book-pages,
+.cover-active .side-tabs {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.cover-active .book-cover {
+  visibility: visible;
+}
+
+.book-open .book-cover {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.book-opening .book-cover {
+  animation: open-cover .34s ease-out both;
+  visibility: visible;
+}
+
+.book-pages.page-turning {
+  animation: quick-page-turn .22s ease-out both;
+}
+
+@keyframes open-cover {
+  from { transform: perspective(900px) rotateY(0deg); opacity: 1; }
+  to { transform: perspective(900px) rotateY(-68deg); opacity: 0; }
+}
+
+@keyframes quick-page-turn {
+  0% { transform: translateX(12px) scaleX(.985); opacity: .72; }
+  100% { transform: translateX(0) scaleX(1); opacity: 1; }
+}
+
+.top-status,
+.scene-visual,
+.dialogue-card,
+.pocket-card,
+.controls,
+.world-hud {
+  position: relative;
+  z-index: 3;
+}
+
+.side-tabs {
+  position: absolute;
+  z-index: 9;
+  top: clamp(42px, 11%, 76px);
+  right: 10px;
+  width: clamp(48px, 10vw, 70px);
+  display: grid;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.side-tabs .tab-btn {
+  min-width: 46px;
+  min-height: 48px;
+  padding: 6px 4px 6px 8px;
+  border: 1px solid rgba(98, 68, 39, .64);
+  border-right: 0;
+  border-radius: 12px 0 0 12px;
+  background:
+    linear-gradient(180deg, rgba(246, 224, 184, .96), rgba(213, 174, 111, .96));
+  box-shadow: -3px 3px 5px rgba(36, 22, 12, .26), inset 0 1px 0 rgba(255, 250, 226, .55);
+  color: var(--ink);
+  font-size: clamp(.66rem, 1.8vw, .86rem);
+  line-height: 1.05;
+  writing-mode: horizontal-tb;
+  overflow-wrap: anywhere;
+}
+
+.side-tabs .tab-btn.active {
+  background:
+    linear-gradient(180deg, rgba(255, 238, 205, .98), rgba(229, 194, 133, .98));
+  transform: translateX(-4px);
+}
+
+.side-tabs .tab-icon { display: none; }
+
+.bottom-tabs { display: none; }
+
+.settings-panel h2 { margin: 0 0 8px; }
+.settings-panel p { margin: 0 0 12px; line-height: 1.45; }
+.settings-panel .settings-btn {
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  background: #2d2118;
+}
+
+.book-pages > .world-hud,
+.book-pages > .pockets {
+  grid-column: 1;
+  grid-row: 2 / 4;
+  align-self: stretch;
+  justify-self: stretch;
+  width: auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.book-pages > .world-hud {
+  padding: 27px 23px 20px;
+  overflow: auto;
+}
+
+.book-pages > .pockets {
+  pointer-events: none;
+}
+
+.book-pages .pocket-card,
+.book-pages .settings-panel {
+  height: 100%;
+  max-height: none;
+  pointer-events: auto;
+}
+
+.book-pages #scenePanel {
+  grid-area: dialogue;
+}
+
+.book-pages .scene-visual {
+  grid-area: visual;
+}
+
+.book-pages .top-status {
+  grid-area: status;
+}

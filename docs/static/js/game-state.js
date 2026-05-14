@@ -2,7 +2,7 @@ import { STORAGE_KEY, TAB_ORDER } from "./constants.js";
 
 export function defaultState() {
   return {
-    current: "title",
+    current: "cafe_intro",
     started: false,
     flags: {
       protective: false,
@@ -11,11 +11,12 @@ export function defaultState() {
       disguiseChecked: false,
       extraIngredients: false,
       limbInjury: false,
-      choseFeed: false,
+      openedRecipeBook: false,
+      choseRouteQuestion: false,
     },
-    relation: { orchard: 0, raincoat: 0, mirror: 0 },
+    relation: { keeper: 0, ghostChild: 0 },
     inventory: [],
-    recipeBook: ["Orchard Porridge"],
+    recipeBook: ["Café Starter"],
     visited: {},
     uiTheme: "default",
     activeTab: "cafe",
@@ -129,8 +130,10 @@ export function applyEffects(state, effects = {}) {
     });
   }
 
-  if (effects.relation) {
-    Object.entries(effects.relation).forEach(([key, value]) => {
+  const relationEffects = effects.relation || effects.relationship;
+
+  if (relationEffects) {
+    Object.entries(relationEffects).forEach(([key, value]) => {
       state.relation[key] = (state.relation[key] || 0) + value;
     });
   }

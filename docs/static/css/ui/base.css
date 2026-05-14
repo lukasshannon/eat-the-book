@@ -51,3 +51,7 @@ body::before {
 
 button,
 summary { font: inherit; color: inherit; }
+
+[hidden] {
+  display: none !important;
+}

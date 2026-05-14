@@ -1,4 +1,4 @@
-const SUPPORTED_CHOICE_EFFECT_KEYS = new Set(["flags", "relation", "addItems"]);
+const SUPPORTED_CHOICE_EFFECT_KEYS = new Set(["flags", "relation", "relationship", "addItems"]);
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -19,9 +19,7 @@ function validateKeyedObject(value, path, errors, keyLabel) {
   }
 
   Object.keys(value).forEach((key) => {
-    if (!isNonEmptyString(key)) {
-      errors.push(`${describePath(path)} contains an empty ${keyLabel}.`);
-    }
+    if (!isNonEmptyString(key)) errors.push(`${describePath(path)} contains an empty ${keyLabel}.`);
   });
 }
 
@@ -32,10 +30,7 @@ function validateRelationMap(value, path, errors) {
   }
 
   Object.entries(value).forEach(([characterId, delta]) => {
-    if (!isNonEmptyString(characterId)) {
-      errors.push(`${describePath(path)} contains an empty character ID.`);
-    }
-
+    if (!isNonEmptyString(characterId)) errors.push(`${describePath(path)} contains an empty character ID.`);
     if (typeof delta !== "number" || !Number.isFinite(delta)) {
       errors.push(`${describePath([...path, characterId])} must be a finite number.`);
     }
@@ -49,9 +44,7 @@ function validateStringList(value, path, errors) {
   }
 
   value.forEach((entryValue, index) => {
-    if (!isNonEmptyString(entryValue)) {
-      errors.push(`${describePath([...path, index])} must be a non-empty string.`);
-    }
+    if (!isNonEmptyString(entryValue)) errors.push(`${describePath([...path, index])} must be a non-empty string.`);
   });
 }
 
@@ -65,166 +58,122 @@ function validateEffects(effects, sceneId, choiceIndex, errors) {
 
   Object.keys(effects).forEach((effectKey) => {
     if (!SUPPORTED_CHOICE_EFFECT_KEYS.has(effectKey)) {
-      errors.push(
-        `${describePath([...path, effectKey])} is not supported. Supported effect keys: ${Array.from(
-          SUPPORTED_CHOICE_EFFECT_KEYS,
-        ).join(", ")}.`,
-      );
+      errors.push(`${describePath([...path, effectKey])} is not supported.`);
     }
   });
 
   if (Object.hasOwn(effects, "flags")) validateKeyedObject(effects.flags, [...path, "flags"], errors, "flag name");
   if (Object.hasOwn(effects, "relation")) validateRelationMap(effects.relation, [...path, "relation"], errors);
+  if (Object.hasOwn(effects, "relationship")) validateRelationMap(effects.relationship, [...path, "relationship"], errors);
   if (Object.hasOwn(effects, "addItems")) validateStringList(effects.addItems, [...path, "addItems"], errors);
 }
 
-function normalizeCharacter(characterId, character) {
-  if (typeof character === "string") {
-    return { name: character, portrait: characterId, emotion: "neutral" };
-  }
-
+function normalizeCharacter(characterId, scene, rawCharacters) {
+  const fallback = rawCharacters[characterId] || {};
   return {
-    name: character?.name || characterId,
-    portrait: character?.portrait || characterId,
-    emotion: character?.emotion || "neutral",
+    name: scene.speakerName || fallback.name || characterId,
+    portrait: fallback.portrait || characterId,
+    emotion: scene.emotionKey || fallback.emotion || "neutral",
   };
 }
 
-export function validateGameData(rawCharacters, rawScenes) {
+function validateChoice(choice, choiceIndex, sceneId, sceneIds, errors) {
+  if (!isRecord(choice)) {
+    errors.push(`scene '${sceneId}' choice ${choiceIndex} must be an object.`);
+    return;
+  }
+
+  if (!isNonEmptyString(choice.label)) errors.push(`scene '${sceneId}' choice ${choiceIndex} label must be a non-empty string.`);
+  if (!isNonEmptyString(choice.nextNodeId)) {
+    errors.push(`scene '${sceneId}' choice ${choiceIndex} nextNodeId must be a non-empty scene ID.`);
+  } else if (!sceneIds.has(choice.nextNodeId)) {
+    errors.push(`scene '${sceneId}' choice ${choiceIndex} nextNodeId '${choice.nextNodeId}' is not defined.`);
+  }
+
+  if (!Array.isArray(choice.conditions)) errors.push(`scene '${sceneId}' choice ${choiceIndex} conditions must be an array.`);
+  if (Object.hasOwn(choice, "effects")) validateEffects(choice.effects, sceneId, choiceIndex, errors);
+}
+
+function validateStoryData(rawStory) {
   const errors = [];
 
-  if (!isRecord(rawCharacters)) {
-    errors.push("characters.json must contain an object keyed by character ID.");
+  if (!isRecord(rawStory) || !Array.isArray(rawStory.scenes)) {
+    throw new Error("Invalid story data:\n- story/dialogue.json must contain a scenes array.");
   }
 
-  if (!isRecord(rawScenes)) {
-    errors.push("scenes.json must contain an object keyed by scene ID.");
-  }
-
-  if (errors.length > 0) {
-    throw new Error(`Invalid game data:\n- ${errors.join("\n- ")}`);
-  }
-
-  Object.entries(rawCharacters).forEach(([characterId, character]) => {
-    if (!isNonEmptyString(characterId)) {
-      errors.push("characters.json contains an empty character ID.");
+  const sceneIds = new Set();
+  rawStory.scenes.forEach((scene, index) => {
+    if (!isRecord(scene)) {
+      errors.push(`scene ${index} must be an object.`);
       return;
     }
 
-    const normalized = normalizeCharacter(characterId, character);
-
-    if (!isNonEmptyString(normalized.name)) {
-      errors.push(`character '${characterId}' has no usable name after normalization.`);
-    }
-
-    if (!isNonEmptyString(normalized.portrait)) {
-      errors.push(`character '${characterId}' has no usable portrait after normalization.`);
-    }
-
-    if (!isNonEmptyString(normalized.emotion)) {
-      errors.push(`character '${characterId}' has no usable emotion after normalization.`);
-    }
+    if (!isNonEmptyString(scene.sceneId)) errors.push(`scene ${index} sceneId must be a non-empty string.`);
+    else if (sceneIds.has(scene.sceneId)) errors.push(`scene '${scene.sceneId}' is duplicated.`);
+    else sceneIds.add(scene.sceneId);
   });
 
-  Object.entries(rawScenes).forEach(([sceneId, node]) => {
-    if (!isNonEmptyString(sceneId)) {
-      errors.push("scenes.json contains an empty scene ID.");
-      return;
-    }
+  rawStory.scenes.forEach((scene) => {
+    if (!isRecord(scene) || !isNonEmptyString(scene.sceneId)) return;
+    const sceneId = scene.sceneId;
 
-    if (!isRecord(node)) {
-      errors.push(`scene '${sceneId}' must be an object.`);
-      return;
-    }
-
-    if (!isNonEmptyString(node.location)) {
-      errors.push(`scene '${sceneId}' location must be a non-empty string.`);
-    }
-
-    if (!isNonEmptyString(node.speaker)) {
-      errors.push(`scene '${sceneId}' speaker must be a non-empty known character ID.`);
-    } else if (!Object.hasOwn(rawCharacters, node.speaker)) {
-      errors.push(`scene '${sceneId}' speaker '${node.speaker}' is not defined in characters.json.`);
-    }
-
-    if (!isNonEmptyString(node.text)) {
-      errors.push(`scene '${sceneId}' text must be a non-empty string.`);
-    }
-
-    if (Object.hasOwn(node, "choices")) {
-      if (!Array.isArray(node.choices)) {
-        errors.push(`scene '${sceneId}' choices must be an array when present.`);
-      } else {
-        node.choices.forEach((choice, choiceIndex) => {
-          if (!isRecord(choice)) {
-            errors.push(`scene '${sceneId}' choice ${choiceIndex} must be an object.`);
-            return;
-          }
-
-          if (!isNonEmptyString(choice.label)) {
-            errors.push(`scene '${sceneId}' choice ${choiceIndex} label must be a non-empty string.`);
-          }
-
-          if (!isNonEmptyString(choice.next)) {
-            errors.push(`scene '${sceneId}' choice ${choiceIndex} next must be a non-empty scene ID.`);
-          } else if (!Object.hasOwn(rawScenes, choice.next)) {
-            errors.push(`scene '${sceneId}' choice ${choiceIndex} next '${choice.next}' is not defined in scenes.json.`);
-          }
-
-          if (Object.hasOwn(choice, "effects")) {
-            validateEffects(choice.effects, sceneId, choiceIndex, errors);
-          }
-        });
-      }
-    }
+    if (!isNonEmptyString(scene.characterId)) errors.push(`scene '${sceneId}' characterId must be a non-empty string.`);
+    if (!isNonEmptyString(scene.speakerName)) errors.push(`scene '${sceneId}' speakerName must be a non-empty string.`);
+    if (!isNonEmptyString(scene.emotionKey)) errors.push(`scene '${sceneId}' emotionKey must be a non-empty string.`);
+    if (!isNonEmptyString(scene.dialogueText)) errors.push(`scene '${sceneId}' dialogueText must be a non-empty string.`);
+    if (!Array.isArray(scene.labels)) errors.push(`scene '${sceneId}' labels must be an array.`);
+    if (!Array.isArray(scene.choices)) errors.push(`scene '${sceneId}' choices must be an array.`);
+    else scene.choices.forEach((choice, choiceIndex) => validateChoice(choice, choiceIndex, sceneId, sceneIds, errors));
   });
 
-  if (errors.length > 0) {
-    throw new Error(`Invalid game data:\n- ${errors.join("\n- ")}`);
-  }
+  if (errors.length > 0) throw new Error(`Invalid story data:\n- ${errors.join("\n- ")}`);
 }
 
-async function readJson(path, label) {
-  const response = await fetch(path);
-
-  if (!response.ok) {
-    throw new Error(`Unable to load ${label} (${response.status}).`);
-  }
-
-  return response.json();
-}
-
-export async function loadGameData() {
-  const [rawCharacters, rawScenes] = await Promise.all([
-    readJson("./static/data/characters.json", "characters"),
-    readJson("./static/data/scenes.json", "scenes"),
-  ]);
-
-  validateGameData(rawCharacters, rawScenes);
-
-  const characters = Object.fromEntries(
-    Object.entries(rawCharacters).map(([characterId, character]) => [
-      characterId,
-      normalizeCharacter(characterId, character),
-    ]),
-  );
-
-  const scenes = Object.fromEntries(
-    Object.entries(rawScenes).map(([sceneId, node]) => {
-      const character = characters[node.speaker];
+function normalizeScenes(rawStory, rawCharacters) {
+  return Object.fromEntries(
+    rawStory.scenes.map((scene) => {
+      const character = normalizeCharacter(scene.characterId, scene, rawCharacters);
+      const tags = [...(scene.labels || []), ...(scene.worldTags || []), ...(scene.chapterTags || [])];
 
       return [
-        sceneId,
+        scene.sceneId,
         {
-          ...node,
-          speakerId: node.speaker,
-          speaker: character.name,
+          id: scene.sceneId,
+          location: scene.labels?.[0] || "Café",
+          speakerId: scene.characterId,
+          speaker: scene.speakerName,
+          text: scene.dialogueText,
+          tags,
+          worldTags: scene.worldTags || [],
+          chapterTags: scene.chapterTags || [],
+          onEnter: scene.onEnter,
+          choices: scene.choices.map((choice) => ({
+            label: choice.label,
+            next: choice.nextNodeId,
+            conditions: choice.conditions,
+            effects: choice.effects || {},
+          })),
           portrait: character.portrait,
           portraitEmotion: character.emotion,
         },
       ];
     }),
   );
+}
 
-  return { scenes };
+async function fetchJson(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`Unable to load ${path}: ${response.status}`);
+  return response.json();
+}
+
+export async function loadGameData() {
+  const [rawCharacters, rawStory] = await Promise.all([
+    fetchJson("./static/data/characters.json"),
+    fetchJson("./static/data/story/dialogue.json"),
+  ]);
+
+  validateStoryData(rawStory);
+
+  return { scenes: normalizeScenes(rawStory, rawCharacters), characters: rawCharacters };
 }
