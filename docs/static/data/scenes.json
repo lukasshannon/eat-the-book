@@ -1,16 +1,4 @@
 {
-  "cafe_intro": {
-    "location": "Quiet Café",
-    "speaker": "keeper",
-    "text": "This café sits outside time. The recipe book can open portals into corrupted worlds, and ghost children may follow routes shaped by your choices.",
-    "tags": ["Café", "Data sample"],
-    "choices": [{ "label": "Open the recipe book", "next": "recipe_book_sample" }]
-  },
-  "recipe_book_sample": {
-    "location": "Recipe Book",
-    "speaker": "keeper",
-    "text": "Recipes are portals here. This placeholder stays minimal until real chapters are written.",
-    "tags": ["Recipes", "Portal"],
-    "choices": [{ "label": "Return to the café page", "next": "cafe_intro" }]
-  }
+  "note": "Legacy scene fixture kept for older tooling only. Runtime dialogue now loads from docs/static/data/story/dialogue.json.",
+  "runtimeStoryData": "./story/dialogue.json"
 }

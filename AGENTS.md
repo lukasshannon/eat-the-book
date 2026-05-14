@@ -67,4 +67,6 @@ Before finalizing, ensure all are true:
 - UI iteration requirement (2026-05-05): continue implementing the UI and reuse image assets from `docs/static/img/assets`.
 - Character portrait requirement (2026-05-12): use the prepared pictures under `docs/static/img/assets/characters/<name>` for character portraits.
 - Compact spacing requirement (2026-05-14): minimize unnecessary empty space around the notebook on compact/mobile viewports.
+- Mobile tab requirement (2026-05-14): prioritize phone portrait usability; right-side binder tabs must stay fully within the viewport, avoid horizontal scrolling, and remain large enough to tap.
+- Story data requirement (2026-05-14): keep dialogue JSON-driven under `docs/static/data/story/`; placeholder copy should refer only to confirmed concepts and avoid invented chapter lore.
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.

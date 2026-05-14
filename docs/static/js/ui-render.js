@@ -33,14 +33,18 @@ export function syncTheme(ui, state) {
 }
 
 export function syncBookMode(ui, state) {
-  ui.notebookShell.classList.toggle("cover-active", !state.started);
+  const isCoverVisible = !state.started;
+
+  ui.notebookShell.classList.toggle("cover-active", isCoverVisible);
   ui.notebookShell.classList.toggle("book-open", state.started);
   ui.bookCover.toggleAttribute("hidden", state.started);
   ui.bookCover.setAttribute("aria-hidden", String(state.started));
-  ui.bookPages.toggleAttribute("hidden", !state.started);
-  ui.bookPages.setAttribute("aria-hidden", String(!state.started));
-  ui.tabBar.toggleAttribute("hidden", !state.started);
-  ui.tabBar.setAttribute("aria-hidden", String(!state.started));
+  ui.bookPages.toggleAttribute("hidden", isCoverVisible);
+  ui.bookPages.setAttribute("aria-hidden", String(isCoverVisible));
+  ui.bookPages.toggleAttribute("inert", isCoverVisible);
+  ui.tabBar.toggleAttribute("hidden", isCoverVisible);
+  ui.tabBar.setAttribute("aria-hidden", String(isCoverVisible));
+  ui.tabBar.toggleAttribute("inert", isCoverVisible);
 }
 
 export function animateBookOpen(ui) {
@@ -48,6 +52,8 @@ export function animateBookOpen(ui) {
   ui.bookPages.hidden = false;
   ui.tabBar.hidden = false;
   ui.notebookShell.classList.remove("cover-active");
+  ui.bookPages.removeAttribute("inert");
+  ui.tabBar.removeAttribute("inert");
   ui.notebookShell.classList.add("book-opening", "book-open");
   window.setTimeout(() => {
     ui.notebookShell.classList.remove("book-opening");
@@ -176,7 +182,7 @@ export function renderStats(ui, state) {
   ui.characters.innerHTML = [
     `<div class="journal-grid character-grid">`,
     `<div class="journal-stat"><span>Café</span><strong>Café Keeper</strong><p>Guides the book interface.</p></div>`,
-    `<div class="journal-stat"><span>Routes</span><strong>Ghost Child</strong><p>Placeholder for branching character routes.</p></div>`,
+    `<div class="journal-stat"><span>Routes</span><strong>Ghost Child</strong><p>Branching character route sample.</p></div>`,
     `</div>`,
   ].join("");
 }
