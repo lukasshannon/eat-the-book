@@ -13,90 +13,107 @@
         <div class="intro-corner intro-corner-b"></div>
         <p class="intro-index">ETB</p>
         <h1>Eat the<br />Book</h1>
-        <p class="intro-script">Brew recipes,<br />enter wounded worlds,<br />and choose who<br />gets fed.</p>
+        <p class="intro-script">A café outside time,<br />a recipe book,<br />and routes through<br />corrupted worlds.</p>
         <div class="botanical-mark" aria-hidden="true">
           <span></span><span></span><span></span><span></span><span></span>
         </div>
       </aside>
 
-      <section class="notebook-shell" aria-label="Game notebook">
+      <section class="notebook-shell cover-active" id="notebookShell" aria-label="Game notebook">
         <div class="notebook-page" aria-hidden="true"></div>
 
-        <header class="top-status">
-          <div class="status-block role-block">
-            <span class="status-value" id="chapterValue">…</span>
-            <span class="status-label" id="chapterLabel">Loading</span>
-          </div>
-          <div class="status-block"><span class="ui-icon icon-cup" aria-hidden="true"></span><span id="energyValue">…</span></div>
-          <div class="status-block"><span class="ui-icon icon-coin" aria-hidden="true"></span><span id="coinValue">…</span></div>
-          <div class="status-block"><span class="ui-icon icon-gem" aria-hidden="true"></span><span id="gemValue">…</span></div>
-          <button class="settings-btn" id="themeToggle" type="button" aria-label="Toggle notebook contrast" aria-pressed="false"><span aria-hidden="true">⚙</span></button>
-        </header>
-
-        <div class="scene-visual" aria-label="Café scene illustration">
-          <div class="cafe-backdrop" aria-hidden="true">
-            <span class="shelf shelf-one"></span>
-            <span class="shelf shelf-two"></span>
-            <span class="shelf shelf-three"></span>
-            <span class="lamp lamp-one"></span>
-            <span class="lamp lamp-two"></span>
-            <span class="lamp lamp-three"></span>
-            <span class="bottle bottle-a"></span>
-            <span class="bottle bottle-b"></span>
-            <span class="bottle bottle-c"></span>
-            <span class="bottle bottle-d"></span>
-            <span class="scene-character" aria-live="off">
-              <img id="sceneCharacterAsset" alt="" />
-              <span class="scene-character-name" id="sceneCharacterName">Loading</span>
-            </span>
-          </div>
-          <aside class="special-note" id="progress">Loading</aside>
-        </div>
-
-        <article id="scenePanel" class="dialogue-card" role="tabpanel" aria-labelledby="tab-cafe"></article>
-
-        <section class="controls" aria-label="Save controls">
-          <div class="control-row">
-            <button id="startBtn" type="button">Start New</button>
-            <button id="continueBtn" type="button">Continue</button>
-            <button id="resetBtn" type="button">Reset Save</button>
+        <section class="book-cover" id="bookCover" aria-label="Eat the Book front cover">
+          <p class="cover-kicker">Quiet Café</p>
+          <h1>Eat the Book</h1>
+          <p class="cover-copy">Open a recipe book in a café outside time. Recipes become portals into corrupted worlds, where ghost children and branching character routes wait.</p>
+          <div class="cover-actions" aria-label="Main menu">
+            <button id="startBtn" type="button">Start</button>
+            <button id="continueBtn" type="button">Continue / Load</button>
+            <button id="coverSettingsBtn" type="button">Settings</button>
           </div>
           <div id="errorBox" class="error" role="alert"></div>
         </section>
 
-        <nav class="bottom-tabs" aria-label="Notebook tabs" id="tabBar" role="tablist">
-          <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel"><span class="tab-icon tab-icon-cafe" aria-hidden="true"></span>Café</button>
-          <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel"><span class="tab-icon tab-icon-recipes" aria-hidden="true"></span>Recipes</button>
-          <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud"><span class="tab-icon tab-icon-worlds" aria-hidden="true"></span>Worlds</button>
-          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel"><span class="tab-icon tab-icon-journal" aria-hidden="true"></span>Journal</button>
+        <div class="book-pages" id="bookPages">
+          <header class="top-status">
+            <div class="status-block role-block">
+              <span class="status-value" id="chapterValue">…</span>
+              <span class="status-label" id="chapterLabel">Loading</span>
+            </div>
+            <div class="status-block"><span class="ui-icon icon-cup" aria-hidden="true"></span><span id="energyValue">…</span></div>
+            <div class="status-block"><span class="ui-icon icon-coin" aria-hidden="true"></span><span id="coinValue">…</span></div>
+            <div class="status-block"><span class="ui-icon icon-gem" aria-hidden="true"></span><span id="gemValue">…</span></div>
+          </header>
+
+          <div class="scene-visual" aria-label="Café scene illustration">
+            <div class="cafe-backdrop" aria-hidden="true">
+              <span class="shelf shelf-one"></span>
+              <span class="shelf shelf-two"></span>
+              <span class="shelf shelf-three"></span>
+              <span class="lamp lamp-one"></span>
+              <span class="lamp lamp-two"></span>
+              <span class="lamp lamp-three"></span>
+              <span class="bottle bottle-a"></span>
+              <span class="bottle bottle-b"></span>
+              <span class="bottle bottle-c"></span>
+              <span class="bottle bottle-d"></span>
+              <span class="scene-character" aria-live="off">
+                <img id="sceneCharacterAsset" alt="" />
+                <span class="scene-character-name" id="sceneCharacterName">Loading</span>
+              </span>
+            </div>
+            <aside class="special-note" id="progress">Loading</aside>
+          </div>
+
+          <article id="scenePanel" class="dialogue-card" role="tabpanel" aria-labelledby="tab-cafe"></article>
+
+          <aside class="world-hud" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
+            <h3>Worlds</h3>
+            <div class="stealth-row"><span class="eye-icon" aria-hidden="true"></span><strong>Readiness</strong> <span id="stealthMeter">…</span></div>
+            <div class="world-scene" id="worldScene" aria-hidden="true">
+              <span class="cave-arch"></span>
+              <span class="world-runner"></span>
+              <span class="world-spirit spirit-one"></span>
+              <span class="world-spirit spirit-two"></span>
+              <span class="world-spirit spirit-three"></span>
+            </div>
+            <div class="slot-row" id="inventory"></div>
+            <p class="objective" id="worldObjective">Loading</p>
+          </aside>
+
+          <section class="pockets" id="pockets">
+            <details class="pocket-card" open id="recipePanel" role="tabpanel" aria-labelledby="tab-recipes">
+              <summary>Recipe Book</summary>
+              <div id="book"></div>
+            </details>
+            <details class="pocket-card" id="charactersPanel" role="tabpanel" aria-labelledby="tab-characters">
+              <summary>Characters</summary>
+              <div id="characters"></div>
+            </details>
+            <details class="pocket-card" id="journalPanel" role="tabpanel" aria-labelledby="tab-journal">
+              <summary>Journal</summary>
+              <div id="stats"></div>
+            </details>
+            <section class="pocket-card settings-panel" id="settingsPanel" role="tabpanel" aria-labelledby="tab-settings">
+              <h2>Settings</h2>
+              <p>Adjust the notebook display or clear the local save.</p>
+              <div class="settings-actions">
+                <button class="settings-btn" id="themeToggle" type="button" aria-label="Toggle notebook contrast" aria-pressed="false"><span aria-hidden="true">⚙</span> Contrast</button>
+                <button id="resetBtn" type="button">Reset Save</button>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <nav class="side-tabs" aria-label="Notebook tabs" id="tabBar" role="tablist">
+          <button id="tab-cafe" class="tab-btn active" data-tab="cafe" type="button" role="tab" aria-selected="true" aria-controls="scenePanel">Café</button>
+          <button id="tab-recipes" class="tab-btn" data-tab="recipes" type="button" role="tab" aria-selected="false" aria-controls="recipePanel">Recipes</button>
+          <button id="tab-worlds" class="tab-btn" data-tab="worlds" type="button" role="tab" aria-selected="false" aria-controls="worldHud">Worlds</button>
+          <button id="tab-characters" class="tab-btn" data-tab="characters" type="button" role="tab" aria-selected="false" aria-controls="charactersPanel">Characters</button>
+          <button id="tab-journal" class="tab-btn" data-tab="journal" type="button" role="tab" aria-selected="false" aria-controls="journalPanel">Journal</button>
+          <button id="tab-settings" class="tab-btn" data-tab="settings" type="button" role="tab" aria-selected="false" aria-controls="settingsPanel">Settings</button>
         </nav>
       </section>
-
-      <aside class="world-hud" id="worldHud" role="tabpanel" aria-labelledby="tab-worlds">
-        <h3>Exploration HUD (World)</h3>
-        <div class="stealth-row"><span class="eye-icon" aria-hidden="true"></span><strong>Stealth</strong> <span id="stealthMeter">…</span></div>
-        <div class="world-scene" id="worldScene" aria-hidden="true">
-          <span class="cave-arch"></span>
-          <span class="world-runner"></span>
-          <span class="world-spirit spirit-one"></span>
-          <span class="world-spirit spirit-two"></span>
-          <span class="world-spirit spirit-three"></span>
-        </div>
-        <div class="slot-row" id="inventory"></div>
-        <p class="objective" id="worldObjective">Loading</p>
-      </aside>
-
-      <section class="pockets" id="pockets">
-        <details class="pocket-card" open id="recipePanel" role="tabpanel" aria-labelledby="tab-recipes">
-          <summary>Recipe Book</summary>
-          <div id="book"></div>
-        </details>
-        <details class="pocket-card" id="journalPanel" role="tabpanel" aria-labelledby="tab-journal">
-          <summary>Inventory Pouch</summary>
-          <div id="stats"></div>
-        </details>
-      </section>
-
     </main>
 
     <script type="module" src="./static/js/main.js"></script>

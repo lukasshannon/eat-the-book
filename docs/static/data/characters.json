@@ -1,32 +1,12 @@
 {
   "keeper": {
-    "name": "Keeper",
+    "name": "Café Keeper",
     "portrait": "cleric",
     "emotion": "warm"
   },
-  "you": {
-    "name": "You",
-    "portrait": "trader",
-    "emotion": "determined"
-  },
-  "orchard": {
-    "name": "Orchard Child",
+  "ghostChild": {
+    "name": "Ghost Child",
     "portrait": "healer",
     "emotion": "vulnerable"
-  },
-  "raincoat": {
-    "name": "Raincoat Child",
-    "portrait": "warrior",
-    "emotion": "suspicious"
-  },
-  "mirror": {
-    "name": "Mirror Child",
-    "portrait": "illusionist",
-    "emotion": "uncanny"
-  },
-  "villain": {
-    "name": "Ashen Guest",
-    "portrait": "poisoner",
-    "emotion": "angry"
   }
 }

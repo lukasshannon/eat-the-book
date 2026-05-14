@@ -6,6 +6,23 @@ A game where you run a quiet café outside time, serving ghosts, failed heroes, 
 
 The browser mockup lives under `docs/`. Its structure, styles, rendering modules, state modules, and verification workflow are documented in [`docs/UI_ARCHITECTURE.md`](docs/UI_ARCHITECTURE.md).
 
+
+## Current web build workflow
+
+The playable static build lives in `docs/` for GitHub Pages. The current UI starts on a closed front cover with `Start`, `Continue / Load`, and `Settings` actions. Starting or loading opens the book and reveals a right-edge stack of cardstock tabs: Café, Recipes, Worlds, Characters, Journal, and Settings. Tab changes are handled by `setActiveTab()` in `docs/static/js/ui-render.js`; it updates ARIA tab state, swaps the active panel, and triggers a short page-turn animation unless the device asks for reduced motion.
+
+Dialogue samples are JSON-driven. Add or edit scene nodes in `docs/static/data/story/dialogue.json`. Each scene should include `sceneId`, `characterId`, `speakerName`, `emotionKey`, `dialogueText`, `choices`, `labels`, and optional `worldTags`, `chapterTags`, and `onEnter`. Each choice should include `label`, `nextNodeId`, `conditions`, and `effects`; supported effects are flag updates, relationship changes, and item additions. `docs/static/js/game-data.js` validates this file and normalizes it for the renderer, so visible dialogue and branches should come from JSON instead of hardcoded strings.
+
+Character portrait metadata remains in `docs/static/data/characters.json` and points at prepared images under `docs/static/img/assets/characters/<name>/`. The tab/page structure is in `docs/index.html`; visual rules are split across `docs/static/css/ui/*.css`; gameplay state and rendering are in `docs/static/js/*.js`.
+
+To run locally, serve the `docs/` directory from an HTTP server (ES modules and JSON fetches require HTTP rather than `file://`). To verify the responsive build, run:
+
+```sh
+npm exec --package playwright@1.60.0 -- node scripts/ui-smoke.mjs
+```
+
+To deploy, commit the `docs/` changes and push the branch used by GitHub Pages. Do not commit generated binary assets or dependency lock files for UI-only work.
+
 ## High Concept
 
 A cozy-horror, character-driven mobile game about running a café outside time, serving ghosts, failed heroes, villains, alternate selves, and survivors of broken worlds.

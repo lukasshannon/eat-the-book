@@ -18,16 +18,50 @@ function slugify(value) {
 
 export function createTabLayout(ui) {
   return {
-    cafe: [ui.scenePanel],
+    cafe: [ui.scenePanel, ui.sceneCharacterAsset.closest(".scene-visual")],
     recipes: [ui.recipePanel],
     worlds: [ui.worldHud],
+    characters: [ui.charactersPanel],
     journal: [ui.journalPanel],
+    settings: [ui.settingsPanel],
   };
 }
 
 export function syncTheme(ui, state) {
   document.body.dataset.theme = state.uiTheme;
   ui.themeToggle.setAttribute("aria-pressed", String(state.uiTheme === "high-contrast"));
+}
+
+export function syncBookMode(ui, state) {
+  ui.notebookShell.classList.toggle("cover-active", !state.started);
+  ui.notebookShell.classList.toggle("book-open", state.started);
+  ui.bookCover.toggleAttribute("hidden", state.started);
+  ui.bookCover.setAttribute("aria-hidden", String(state.started));
+  ui.bookPages.toggleAttribute("hidden", !state.started);
+  ui.bookPages.setAttribute("aria-hidden", String(!state.started));
+  ui.tabBar.toggleAttribute("hidden", !state.started);
+  ui.tabBar.setAttribute("aria-hidden", String(!state.started));
+}
+
+export function animateBookOpen(ui) {
+  ui.bookCover.hidden = false;
+  ui.bookPages.hidden = false;
+  ui.tabBar.hidden = false;
+  ui.notebookShell.classList.remove("cover-active");
+  ui.notebookShell.classList.add("book-opening", "book-open");
+  window.setTimeout(() => {
+    ui.notebookShell.classList.remove("book-opening");
+    ui.bookCover.hidden = true;
+  }, 360);
+}
+
+function animatePageTurn(ui) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  ui.bookPages.classList.remove("page-turning");
+  window.requestAnimationFrame(() => {
+    ui.bookPages.classList.add("page-turning");
+    window.setTimeout(() => ui.bookPages.classList.remove("page-turning"), 230);
+  });
 }
 
 export function renderInventorySlots(state) {
@@ -46,16 +80,13 @@ export function renderInventorySlots(state) {
     .join("");
 }
 
-function getPortraitEmotion(state, node) {
-  if (node.end && node.speakerId === "keeper") return state.flags.choseFeed ? "happy" : "sad";
-  if (node.speakerId === "raincoat" && state.flags.limbInjury) return "afraid";
-  if (node.speakerId === "mirror" && state.flags.sharedTruth) return "warm";
+function getPortraitEmotion(_state, node) {
   return node.portraitEmotion || "neutral";
 }
 
 export function renderCharacterPortrait(ui, state, node) {
   const emotion = getPortraitEmotion(state, node);
-  const displayName = node.speaker || "Keeper";
+  const displayName = node.speaker || "Café Keeper";
   const portraitName = node.portrait || node.speakerId;
 
   ui.sceneCharacterAsset.src = `./static/img/assets/characters/${portraitName}/${emotion}.png`;
@@ -69,34 +100,30 @@ function getSceneOrdinal(state) {
 
 function getRecipeForScene(state, node) {
   const sceneRecipes = node.onEnter?.addBook || [];
-  return sceneRecipes.at(-1) || state.recipeBook.at(-1) || "Recipe pending";
+  return sceneRecipes.at(-1) || state.recipeBook.at(-1) || "Recipe note";
 }
 
 function getProgressTitle(node) {
-  const primaryTag = node.tags?.[0];
-  if (node.end) return primaryTag || "Ending";
-  return primaryTag || node.location || "Current Scene";
+  return node.tags?.[0] || node.location || "Current Scene";
 }
 
 export function renderProgressNote(ui, state, node) {
   const progressTitle = getProgressTitle(node);
-  const progressDetail = node.end ? node.location : getRecipeForScene(state, node);
+  const progressDetail = getRecipeForScene(state, node);
   ui.progress.textContent = `${progressTitle}\n${progressDetail}`;
 }
 
 export function renderStatus(ui, state, node) {
   const chapter = getSceneOrdinal(state);
-  const stealth = state.flags.limbInjury ? "♥♥♥" : "♥♥♥♥";
-  const objective = node.end
-    ? `Reflect on ${node.location}.`
-    : `Gather ingredients in ${node.location}.\nReturn to the Quiet Café.`;
+  const readiness = state.flags.openedRecipeBook ? "Ready" : "Closed";
+  const objective = `Use recipes as portals from the café into corrupted worlds.\nCurrent page: ${node.location}.`;
 
   ui.chapterValue.textContent = String(chapter);
-  ui.chapterLabel.textContent = node.end ? "Ending" : node.location;
+  ui.chapterLabel.textContent = node.location;
   ui.energyValue.textContent = `${Math.max(40, 120 - state.inventory.length * 4)}/120`;
-  ui.coinValue.textContent = String(1200 + state.inventory.length * 25 + state.relation.orchard * 15);
-  ui.gemValue.textContent = String(80 + state.relation.mirror * 3 + (state.flags.sharedTruth ? 6 : 0));
-  ui.stealthMeter.textContent = stealth;
+  ui.coinValue.textContent = String(100 + state.inventory.length * 10 + (state.relation.keeper || 0));
+  ui.gemValue.textContent = String(10 + (state.relation.ghostChild || 0));
+  ui.stealthMeter.textContent = readiness;
   ui.worldObjective.textContent = objective;
 }
 
@@ -116,7 +143,7 @@ function renderInventoryLedger(items) {
 }
 
 function renderRecipeCard(recipe, index) {
-  const note = RECIPE_NOTES[recipe] || { world: "Unknown World", scar: "blank margin", cost: "unknown" };
+  const note = RECIPE_NOTES[recipe] || { world: "Recipe book", scar: "blank margin", cost: "unknown" };
   return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Scar</dt><dd>${escapeHtml(note.scar)}</dd><dt>Cost</dt><dd>${escapeHtml(note.cost)}</dd></dl></article>`;
 }
 
@@ -129,31 +156,35 @@ function renderSceneTags(tags) {
 }
 
 export function renderStats(ui, state) {
-  const tone = state.flags.protective ? "Protective" : "Balanced";
-  const risk = state.flags.riskyPlan ? "Risky Brew" : "Careful Brew";
-  const truth = state.flags.sharedTruth ? "Truth Shared" : "Truth Hidden";
-  const body = state.flags.limbInjury ? "Injured" : "Whole";
+  const route = state.flags.choseRouteQuestion ? "Character route noted" : "Route undecided";
+  const recipe = state.flags.openedRecipeBook ? "Recipe book opened" : "Recipe book closed";
   const inventoryHtml = renderInventorySlots(state);
   const relationRows = renderRelationRows(state.relation);
   const inventoryRows = renderInventoryLedger(state.inventory.length ? state.inventory : SHOWCASE_SLOTS);
   const recipeCards = state.recipeBook.map(renderRecipeCard).join("");
 
   ui.stats.innerHTML = [
-    `<div class="journal-grid"><div class="journal-stat"><span>Route Tone</span><strong>${tone}</strong></div>`,
-    `<div class="journal-stat"><span>Plan</span><strong>${risk}</strong></div>`,
-    `<div class="journal-stat"><span>Trust</span><strong>${truth}</strong></div>`,
-    `<div class="journal-stat"><span>Body</span><strong class="meter">${body}</strong></div></div>`,
+    `<div class="journal-grid"><div class="journal-stat"><span>Concept</span><strong>Café outside time</strong></div>`,
+    `<div class="journal-stat"><span>Recipes</span><strong>${recipe}</strong></div>`,
+    `<div class="journal-stat"><span>Worlds</span><strong>Corrupted portals</strong></div>`,
+    `<div class="journal-stat"><span>Routes</span><strong>${route}</strong></div></div>`,
     `<div class="relation-row" aria-label="Relations">${relationRows}</div>`,
-    `<h4>Gathered Ingredients</h4><ul class="inventory-ledger">${inventoryRows}</ul>`,
+    `<h4>Notebook items</h4><ul class="inventory-ledger">${inventoryRows}</ul>`,
   ].join("");
   ui.inventory.innerHTML = inventoryHtml;
   ui.book.innerHTML = [`<div class="recipe-spread">`, recipeCards, `</div>`].join("");
+  ui.characters.innerHTML = [
+    `<div class="journal-grid character-grid">`,
+    `<div class="journal-stat"><span>Café</span><strong>Café Keeper</strong><p>Guides the book interface.</p></div>`,
+    `<div class="journal-stat"><span>Routes</span><strong>Ghost Child</strong><p>Placeholder for branching character routes.</p></div>`,
+    `</div>`,
+  ].join("");
 }
 
 export function renderSceneContent(ui, node) {
   const tagsHtml = renderSceneTags(node.tags || []);
   const choicesHtml = (node.choices || []).map(renderChoiceButton).join("");
-  const fallbackChoice = "<div class='mini'>The shift is over. Use Start New to replay.</div>";
+  const fallbackChoice = "<div class='mini'>This data sample has no further branch.</div>";
 
   ui.scenePanel.innerHTML = [
     `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2><div class="tags">${tagsHtml}</div></div>`,
@@ -165,29 +196,26 @@ export function renderSceneContent(ui, node) {
 }
 
 function setDetailsPanelState(ui, tab) {
-  if (tab === "recipes") {
-    ui.recipePanel.open = true;
-    ui.journalPanel.open = false;
-  } else if (tab === "journal") {
-    ui.recipePanel.open = false;
-    ui.journalPanel.open = true;
-  }
+  ui.recipePanel.open = tab === "recipes";
+  ui.charactersPanel.open = tab === "characters";
+  ui.journalPanel.open = tab === "journal";
 }
 
 function setPanelVisibility(section, isVisible) {
+  if (!section) return;
   section.classList.toggle("tab-hidden", !isVisible);
   if (isVisible) section.removeAttribute("hidden");
   else section.setAttribute("hidden", "hidden");
 }
 
 export function syncWorldCompanionVisibility(ui, desktopWorldHud, state) {
-  const isCompanion = desktopWorldHud.matches && state.activeTab !== "worlds";
+  const isCompanion = false;
 
   ui.worldHud.classList.toggle("world-hud-companion", isCompanion);
   if (isCompanion) {
     setPanelVisibility(ui.worldHud, true);
     ui.worldHud.setAttribute("role", "complementary");
-    ui.worldHud.setAttribute("aria-label", "Exploration HUD companion");
+    ui.worldHud.setAttribute("aria-label", "Worlds companion");
     ui.worldHud.removeAttribute("aria-labelledby");
   } else {
     ui.worldHud.setAttribute("role", "tabpanel");
@@ -197,6 +225,7 @@ export function syncWorldCompanionVisibility(ui, desktopWorldHud, state) {
 }
 
 export function setActiveTab(ui, tabLayout, desktopWorldHud, state, tabName, onPersist, shouldPersist = true) {
+  const previousTab = state.activeTab;
   state.activeTab = tabLayout[tabName] ? tabName : "cafe";
 
   ui.tabBar.querySelectorAll(".tab-btn").forEach((button) => {
@@ -206,9 +235,10 @@ export function setActiveTab(ui, tabLayout, desktopWorldHud, state, tabName, onP
     button.setAttribute("tabindex", isActive ? "0" : "-1");
   });
 
-  TAB_ORDER.flatMap((tab) => tabLayout[tab]).forEach((section) => setPanelVisibility(section, false));
+  TAB_ORDER.flatMap((tab) => tabLayout[tab] || []).forEach((section) => setPanelVisibility(section, false));
   tabLayout[state.activeTab].forEach((section) => setPanelVisibility(section, true));
   syncWorldCompanionVisibility(ui, desktopWorldHud, state);
   setDetailsPanelState(ui, state.activeTab);
+  if (shouldPersist && state.started && previousTab !== state.activeTab) animatePageTurn(ui);
   if (shouldPersist) onPersist(state);
 }

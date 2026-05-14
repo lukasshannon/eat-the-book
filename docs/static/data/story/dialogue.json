@@ -1,0 +1,73 @@
+{
+  "scenes": [
+    {
+      "sceneId": "cafe_intro",
+      "characterId": "keeper",
+      "speakerName": "Café Keeper",
+      "emotionKey": "warm",
+      "dialogueText": "This café sits outside time. The recipe book can open portals into corrupted worlds, and ghost children may follow routes shaped by your choices.",
+      "labels": ["Café", "Data sample"],
+      "worldTags": ["café outside time"],
+      "chapterTags": ["opening"],
+      "choices": [
+        {
+          "label": "Open the recipe book",
+          "nextNodeId": "recipe_book_sample",
+          "conditions": [],
+          "effects": {
+            "flags": { "openedRecipeBook": true },
+            "relationship": { "keeper": 1 },
+            "addItems": ["recipe note"]
+          }
+        },
+        {
+          "label": "Ask about ghost children",
+          "nextNodeId": "ghost_child_sample",
+          "conditions": [],
+          "effects": {
+            "flags": { "choseRouteQuestion": true },
+            "relationship": { "ghostChild": 1 }
+          }
+        }
+      ]
+    },
+    {
+      "sceneId": "recipe_book_sample",
+      "characterId": "keeper",
+      "speakerName": "Café Keeper",
+      "emotionKey": "determined",
+      "dialogueText": "Recipes are portals here. A page can point from the café into a corrupted world, but this sample keeps the details minimal until real chapters are written.",
+      "labels": ["Recipes", "Portal"],
+      "worldTags": ["recipe book", "corrupted worlds"],
+      "chapterTags": ["opening"],
+      "onEnter": { "addBook": ["Portal Recipe"], "addItems": ["portal page"] },
+      "choices": [
+        {
+          "label": "Return to the café page",
+          "nextNodeId": "cafe_intro",
+          "conditions": [],
+          "effects": { "relationship": { "keeper": 1 } }
+        }
+      ]
+    },
+    {
+      "sceneId": "ghost_child_sample",
+      "characterId": "ghostChild",
+      "speakerName": "Ghost Child",
+      "emotionKey": "vulnerable",
+      "dialogueText": "Ghost children are tied to recipes, worlds, and branching character routes. This placeholder names only that structure and avoids invented chapter lore.",
+      "labels": ["Characters", "Routes"],
+      "worldTags": ["ghost children"],
+      "chapterTags": ["opening"],
+      "onEnter": { "addBook": ["Ghost Child Route"], "addItems": ["child memory"] },
+      "choices": [
+        {
+          "label": "Return to the café page",
+          "nextNodeId": "cafe_intro",
+          "conditions": [],
+          "effects": { "relationship": { "ghostChild": 1 } }
+        }
+      ]
+    }
+  ]
+}

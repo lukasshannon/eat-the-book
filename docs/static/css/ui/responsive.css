@@ -503,3 +503,159 @@
     height: clamp(18px, calc(var(--viewport-block-unit) * 5), 25px);
   }
 }
+
+/* Mobile-first overrides for the cover page and vertical tab stack. */
+@media (max-width: 620px) {
+  :root {
+    --notebook-padding: 10px 58px 10px 14px;
+    --content-panel-width: 390px;
+  }
+
+  #app {
+    padding: 2px 4px 4px;
+    overflow: hidden;
+  }
+
+  .notebook-shell {
+    width: min(100%, var(--content-panel-width));
+    padding: var(--notebook-padding);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .book-pages {
+    grid-template-rows: auto minmax(128px, 31%) minmax(0, 1fr);
+    row-gap: 7px;
+  }
+
+  .notebook-page {
+    inset: 5px 4px 5px 4px;
+  }
+
+  .top-status {
+    grid-template-columns: 52px minmax(70px, 1fr) minmax(52px, .8fr);
+    margin-right: 0;
+  }
+
+  .top-status .status-block:nth-child(4) {
+    display: none;
+  }
+
+  .scene-visual {
+    height: auto;
+    min-height: 128px;
+    margin-right: 0;
+  }
+
+  .bottle-d {
+    left: auto;
+    right: 12px;
+  }
+
+  #scenePanel.dialogue-card {
+    min-height: 0;
+    margin: 0;
+    padding: 20px 20px 14px 24px;
+  }
+
+  .dialogue-text {
+    font-size: max(1rem, var(--mobile-dialogue-scale));
+  }
+
+  .choices {
+    overflow: auto;
+  }
+
+  .choice {
+    min-height: 44px;
+    padding: 9px 12px;
+  }
+
+  .side-tabs {
+    top: 54px;
+    right: 6px;
+    width: 50px;
+    gap: 5px;
+  }
+
+  .side-tabs .tab-btn {
+    min-width: 44px;
+    min-height: 52px;
+    padding: 6px 3px 6px 7px;
+    font-size: clamp(.58rem, 2.55vw, .72rem);
+  }
+
+  .side-tabs .tab-btn.active {
+    transform: translateX(-2px);
+  }
+
+  .world-hud,
+  .pockets {
+    width: 100%;
+  }
+
+  .pockets {
+    max-height: 100%;
+  }
+
+  .pocket-card,
+  .settings-panel {
+    max-height: 100%;
+    padding: 28px 26px 24px;
+  }
+
+  .cover-active .notebook-shell,
+  .book-cover {
+    padding: clamp(22px, 7vw, 34px);
+  }
+
+  .book-cover {
+    gap: 14px;
+  }
+
+  .cover-actions button,
+  .settings-actions button {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  :root {
+    --notebook-padding: 8px 54px 8px 10px;
+  }
+
+  .side-tabs {
+    right: 5px;
+    width: 48px;
+    gap: 4px;
+  }
+
+  .side-tabs .tab-btn {
+    min-width: 42px;
+    min-height: 50px;
+    font-size: .58rem;
+  }
+}
+
+@media (max-height: 640px) and (max-width: 620px) {
+  .side-tabs {
+    top: 36px;
+    gap: 3px;
+  }
+
+  .side-tabs .tab-btn {
+    min-height: 44px;
+    font-size: .56rem;
+  }
+
+  .book-pages {
+    grid-template-rows: auto minmax(100px, 28%) minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-opening .book-cover,
+  .book-pages.page-turning {
+    animation: none;
+  }
+}
