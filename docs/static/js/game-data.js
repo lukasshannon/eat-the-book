@@ -1,4 +1,4 @@
-const SUPPORTED_CHOICE_EFFECT_KEYS = new Set(["flags", "relation", "relationship", "addItems"]);
+const SUPPORTED_EFFECT_KEYS = new Set(["flags", "relation", "relationship", "addItems", "addBook"]);
 
 function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -48,8 +48,8 @@ function validateStringList(value, path, errors) {
   });
 }
 
-function validateEffects(effects, sceneId, choiceIndex, errors) {
-  const path = ["scene", sceneId, "choice", choiceIndex, "effects"];
+function validateEffects(effects, sceneId, pathContext, errors) {
+  const path = ["scene", sceneId, ...pathContext, "effects"];
 
   if (!isRecord(effects)) {
     errors.push(`${describePath(path)} must be an object when present.`);
@@ -57,7 +57,7 @@ function validateEffects(effects, sceneId, choiceIndex, errors) {
   }
 
   Object.keys(effects).forEach((effectKey) => {
-    if (!SUPPORTED_CHOICE_EFFECT_KEYS.has(effectKey)) {
+    if (!SUPPORTED_EFFECT_KEYS.has(effectKey)) {
       errors.push(`${describePath([...path, effectKey])} is not supported.`);
     }
   });
@@ -66,6 +66,7 @@ function validateEffects(effects, sceneId, choiceIndex, errors) {
   if (Object.hasOwn(effects, "relation")) validateRelationMap(effects.relation, [...path, "relation"], errors);
   if (Object.hasOwn(effects, "relationship")) validateRelationMap(effects.relationship, [...path, "relationship"], errors);
   if (Object.hasOwn(effects, "addItems")) validateStringList(effects.addItems, [...path, "addItems"], errors);
+  if (Object.hasOwn(effects, "addBook")) validateStringList(effects.addBook, [...path, "addBook"], errors);
 }
 
 function normalizeCharacter(characterId, scene, rawCharacters) {
@@ -91,7 +92,7 @@ function validateChoice(choice, choiceIndex, sceneId, sceneIds, errors) {
   }
 
   if (!Array.isArray(choice.conditions)) errors.push(`scene '${sceneId}' choice ${choiceIndex} conditions must be an array.`);
-  if (Object.hasOwn(choice, "effects")) validateEffects(choice.effects, sceneId, choiceIndex, errors);
+  if (Object.hasOwn(choice, "effects")) validateEffects(choice.effects, sceneId, ["choice", choiceIndex], errors);
 }
 
 function validateStoryData(rawStory) {
@@ -124,6 +125,7 @@ function validateStoryData(rawStory) {
     if (!Array.isArray(scene.labels)) errors.push(`scene '${sceneId}' labels must be an array.`);
     if (!Array.isArray(scene.conditions)) errors.push(`scene '${sceneId}' conditions must be an array.`);
     if (!isRecord(scene.effects)) errors.push(`scene '${sceneId}' effects must be an object.`);
+    else validateEffects(scene.effects, sceneId, [], errors);
     if (!Array.isArray(scene.choices)) errors.push(`scene '${sceneId}' choices must be an array.`);
     else scene.choices.forEach((choice, choiceIndex) => validateChoice(choice, choiceIndex, sceneId, sceneIds, errors));
   });

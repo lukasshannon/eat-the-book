@@ -6,20 +6,37 @@
       "speakerName": "Café Keeper",
       "emotionKey": "warm",
       "dialogueText": "This café sits outside time. The recipe book can open portals into corrupted worlds, and ghost children may follow routes shaped by your choices.",
-      "labels": ["Café", "Data sample"],
+      "labels": [
+        "Café",
+        "Data sample"
+      ],
       "conditions": [],
-      "effects": {},
-      "worldTags": ["café outside time"],
-      "chapterTags": ["opening"],
+      "effects": {
+        "flags": {
+          "sampleIntroSeen": true
+        }
+      },
+      "worldTags": [
+        "café outside time"
+      ],
+      "chapterTags": [
+        "opening"
+      ],
       "choices": [
         {
           "label": "Open the recipe book",
           "nextNodeId": "recipe_book_sample",
           "conditions": [],
           "effects": {
-            "flags": { "openedRecipeBook": true },
-            "relationship": { "keeper": 1 },
-            "addItems": ["recipe note"]
+            "flags": {
+              "openedRecipeBook": true
+            },
+            "relationship": {
+              "keeper": 1
+            },
+            "addItems": [
+              "recipe note"
+            ]
           }
         },
         {
@@ -27,8 +44,12 @@
           "nextNodeId": "ghost_child_sample",
           "conditions": [],
           "effects": {
-            "flags": { "choseRouteQuestion": true },
-            "relationship": { "ghostChild": 1 }
+            "flags": {
+              "choseRouteQuestion": true
+            },
+            "relationship": {
+              "ghostChild": 1
+            }
           }
         }
       ]
@@ -38,21 +59,44 @@
       "characterId": "keeper",
       "speakerName": "Café Keeper",
       "emotionKey": "determined",
-      "dialogueText": "Recipes are portals here. A page can point from the café into a corrupted world; this sample stays minimal until real chapters are written.",
-      "labels": ["Recipes", "Portal"],
-      "conditions": [{ "flag": "openedRecipeBook", "equals": true }],
-      "effects": { "addBook": ["Portal Recipe"], "addItems": ["portal page"] },
-      "worldTags": ["recipe book", "corrupted worlds"],
-      "chapterTags": ["opening"],
-      "onEnter": { "addBook": ["Portal Recipe"], "addItems": ["portal page"] },
+      "dialogueText": "Recipes are portals here. A page can point from the café into a corrupted world; this sample stays minimal until real scenes are written.",
+      "labels": [
+        "Recipes",
+        "Portal"
+      ],
+      "conditions": [
+        {
+          "flag": "openedRecipeBook",
+          "equals": true
+        }
+      ],
+      "effects": {
+        "addBook": [
+          "Portal Recipe"
+        ],
+        "addItems": [
+          "portal page"
+        ]
+      },
+      "worldTags": [
+        "recipe book",
+        "corrupted worlds"
+      ],
+      "chapterTags": [
+        "opening"
+      ],
       "choices": [
         {
           "label": "Return to the café page",
           "nextNodeId": "cafe_intro",
           "conditions": [],
           "effects": {
-            "flags": { "returnedFromRecipeSample": true },
-            "relationship": { "keeper": 1 }
+            "flags": {
+              "returnedFromRecipeSample": true
+            },
+            "relationship": {
+              "keeper": 1
+            }
           }
         }
       ]
@@ -63,20 +107,42 @@
       "speakerName": "Ghost Child",
       "emotionKey": "vulnerable",
       "dialogueText": "Ghost children are tied to recipes, worlds, and branching character routes. This sample names only that structure and avoids invented chapter lore.",
-      "labels": ["Characters", "Routes"],
-      "conditions": [{ "flag": "choseRouteQuestion", "equals": true }],
-      "effects": { "addBook": ["Ghost Child Route"], "addItems": ["child memory"] },
-      "worldTags": ["ghost children"],
-      "chapterTags": ["opening"],
-      "onEnter": { "addBook": ["Ghost Child Route"], "addItems": ["child memory"] },
+      "labels": [
+        "Characters",
+        "Routes"
+      ],
+      "conditions": [
+        {
+          "flag": "choseRouteQuestion",
+          "equals": true
+        }
+      ],
+      "effects": {
+        "addBook": [
+          "Ghost Child Route"
+        ],
+        "addItems": [
+          "child memory"
+        ]
+      },
+      "worldTags": [
+        "ghost children"
+      ],
+      "chapterTags": [
+        "opening"
+      ],
       "choices": [
         {
           "label": "Return to the café page",
           "nextNodeId": "cafe_intro",
           "conditions": [],
           "effects": {
-            "flags": { "returnedFromRouteSample": true },
-            "relationship": { "ghostChild": 1 }
+            "flags": {
+              "returnedFromRouteSample": true
+            },
+            "relationship": {
+              "ghostChild": 1
+            }
           }
         }
       ]

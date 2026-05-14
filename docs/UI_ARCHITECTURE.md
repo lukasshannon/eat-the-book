@@ -78,7 +78,7 @@ Runtime narrative content lives in `docs/static/data/story/dialogue.json`. Chara
 - `dialogueText` — text rendered from JSON, not hardcoded in JavaScript.
 - `labels` — tab/page labels shown as scene tags.
 - `conditions` — scene-level condition objects for future gating.
-- `effects` — scene-level effect object for future hooks. Runtime one-time effects currently use `onEnter`.
+- `effects` — scene-level effect object applied once on first visit; use it for JSON-owned flags, relationship deltas, inventory items, and recipe-book entries.
 - `worldTags` / `chapterTags` — optional tags.
 - `choices` — array of branch options.
 
@@ -91,5 +91,6 @@ Each choice object must include:
   - `flags` — object keyed by flag name.
   - `relation` or `relationship` — object keyed by character ID with finite numeric deltas.
   - `addItems` — array of inventory item strings.
+  - `addBook` — array of recipe-book entry strings.
 
-Unsupported choice effect keys, missing scene targets, blank required strings, and malformed choice/effect values cause `loadGameData()` to throw an `Error` that names the scene ID or choice index that failed validation. Keep sample prose minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes.
+Unsupported choice effect keys, missing scene targets, blank required strings, and malformed choice/effect values cause `loadGameData()` to throw an `Error` that names the scene ID or choice index that failed validation. Keep sample prose minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes. The long-form concept notes in the repository are design reference only; runtime placeholder dialogue should remain in `docs/static/data/story/` and avoid new invented chapter lore.

@@ -6,7 +6,7 @@ The web build in `docs/` opens on a closed book cover. The cover owns the meta m
 
 The in-game notebook uses right-edge cardstock tabs instead of a bottom menu. The tab list lives in `docs/index.html` as `#tabBar`, while `docs/static/css/ui/layout.css` and `docs/static/css/ui/responsive.css` keep the tabs inside phone viewports and sized as touch targets. Tab changes call `setActiveTab()` in `docs/static/js/ui-render.js`, which swaps the visible panel and applies a short page-turn animation. The animation is skipped automatically when `prefers-reduced-motion: reduce` is active.
 
-Runtime dialogue is JSON-driven. Story data lives in `docs/static/data/story/dialogue.json`, and character portrait defaults live in `docs/static/data/characters.json`. `docs/static/js/game-data.js` fetches, validates, and normalizes the JSON into renderable scene nodes. To add a scene, add an object to the `scenes` array with `sceneId`, `characterId`, `speakerName`, `emotionKey`, `dialogueText`, `labels`, `conditions`, `effects`, optional `worldTags`/`chapterTags`, and `choices`. Each choice needs `label`, `nextNodeId`, `conditions`, and `effects` such as `flags`, `relationship` deltas, or `addItems`. Keep placeholder copy minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes.
+Runtime dialogue is JSON-driven. Story data lives in `docs/static/data/story/dialogue.json`, and character portrait defaults live in `docs/static/data/characters.json`. `docs/static/js/game-data.js` fetches, validates, and normalizes the JSON into renderable scene nodes. To add a scene, add an object to the `scenes` array with `sceneId`, `characterId`, `speakerName`, `emotionKey`, `dialogueText`, `labels`, `conditions`, `effects`, optional `worldTags`/`chapterTags`, and `choices`. Each choice needs `label`, `nextNodeId`, `conditions`, and `effects` such as `flags`, `relationship` deltas, `addItems`, or `addBook`. Scene-level `effects` are applied once on first visit, so sample inventory/book changes stay in JSON instead of JavaScript. Keep placeholder copy minimal and limited to the confirmed concepts: café outside time, recipe book, corrupted worlds, ghost children, recipes as portals, and branching character routes.
 
 Run locally with:
 
@@ -14,7 +14,7 @@ Run locally with:
 python3 -m http.server 8000 --directory docs
 ```
 
-Then open `http://127.0.0.1:8000/`. For automated layout and interaction checks, run:
+Then open `http://127.0.0.1:8000/`. Before this UI pass, the live GitHub Pages build was checked at a 390×844 mobile viewport for horizontal overflow, readable text, and touch target size. For automated layout and interaction checks, run:
 
 ```bash
 node scripts/ui-smoke.mjs
