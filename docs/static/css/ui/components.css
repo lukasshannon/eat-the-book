@@ -72,7 +72,7 @@
 
 .special-note {
   right: 18px;
-  top: 28px;
+  top: 24px;
   z-index: 5;
 }
 
@@ -448,8 +448,8 @@
 /* Character asset pass: use the prepared portrait sprites instead of CSS-drawn stand-ins. */
 .scene-character-name {
   position: absolute;
-  left: 42px;
-  bottom: 18px;
+  left: 32px;
+  bottom: 12px;
   min-width: 112px;
   padding: 5px 12px 6px;
   border: 1px solid rgba(72, 45, 24, .56);
