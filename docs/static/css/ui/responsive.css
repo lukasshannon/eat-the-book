@@ -480,13 +480,13 @@
   }
 
   .choices {
-    max-height: clamp(30px, calc(var(--viewport-block-unit) * 12), 52px);
+    max-height: clamp(44px, calc(var(--viewport-block-unit) * 14), 68px);
     margin-top: 4px;
   }
 
   .choice {
-    min-height: 28px;
-    padding: 4px 8px;
+    min-height: 44px;
+    padding: 6px 9px;
   }
 
   .bottom-tabs {
@@ -507,7 +507,7 @@
 /* Mobile-first overrides for the cover page and vertical tab stack. */
 @media (max-width: 620px) {
   :root {
-    --notebook-padding: 10px 58px 10px 14px;
+    --notebook-padding: 10px 66px 10px 14px;
     --content-panel-width: 390px;
   }
 
@@ -561,6 +561,19 @@
     font-size: max(1rem, var(--mobile-dialogue-scale));
   }
 
+  .dialogue-card .scene-meta h2 {
+    font-size: .82rem;
+  }
+
+  .tag {
+    min-height: 22px;
+    font-size: .7rem;
+  }
+
+  .scene-character-name {
+    font-size: .84rem;
+  }
+
   .choices {
     overflow: auto;
   }
@@ -573,15 +586,15 @@
   .side-tabs {
     top: 54px;
     right: 5px;
-    width: 54px;
+    width: 62px;
     gap: 5px;
   }
 
   .side-tabs .tab-btn {
-    min-width: 48px;
+    min-width: 56px;
     min-height: 52px;
-    padding: 6px 4px 6px 7px;
-    font-size: clamp(.69rem, 2.9vw, .76rem);
+    padding: 6px 5px 6px 8px;
+    font-size: clamp(.74rem, 3vw, .82rem);
   }
 
   .side-tabs .tab-btn.active {
@@ -621,19 +634,19 @@
 
 @media (max-width: 360px) {
   :root {
-    --notebook-padding: 8px 54px 8px 10px;
+    --notebook-padding: 8px 60px 8px 10px;
   }
 
   .side-tabs {
     right: 4px;
-    width: 52px;
+    width: 56px;
     gap: 4px;
   }
 
   .side-tabs .tab-btn {
-    min-width: 46px;
+    min-width: 50px;
     min-height: 50px;
-    font-size: .66rem;
+    font-size: .7rem;
   }
 }
 
@@ -644,8 +657,8 @@
   }
 
   .side-tabs .tab-btn {
-    min-height: 44px;
-    font-size: .64rem;
+    min-height: 48px;
+    font-size: .68rem;
   }
 
   .book-pages {

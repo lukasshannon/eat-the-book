@@ -55,9 +55,9 @@
   --notebook-visual-min: 162px;
   --notebook-visual-max: 176px;
   --compact-font-scale: .88rem;
-  --mobile-font-scale: .78rem;
-  --mobile-font-scale-small: .72rem;
-  --mobile-dialogue-scale: .94rem;
+  --mobile-font-scale: .86rem;
+  --mobile-font-scale-small: .78rem;
+  --mobile-dialogue-scale: 1rem;
   --asset-pit: url("../../img/assets/pit-square.png");
   --asset-journal: url("../../img/assets/journal-bkgd.png");
   --asset-note-large: url("../../img/assets/note-large.png");

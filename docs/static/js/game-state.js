@@ -5,14 +5,11 @@ export function defaultState() {
     current: "cafe_intro",
     started: false,
     flags: {
-      protective: false,
-      riskyPlan: false,
-      sharedTruth: false,
-      disguiseChecked: false,
-      extraIngredients: false,
-      limbInjury: false,
+      sampleIntroSeen: false,
       openedRecipeBook: false,
       choseRouteQuestion: false,
+      returnedFromRecipeSample: false,
+      returnedFromRouteSample: false,
     },
     relation: { keeper: 0, ghostChild: 0 },
     inventory: [],
@@ -139,11 +136,13 @@ export function applyEffects(state, effects = {}) {
   }
 
   if (effects.addItems) uniquePush(state.inventory, effects.addItems);
+  if (effects.addBook) uniquePush(state.recipeBook, effects.addBook);
 }
 
 export function applyOnEnter(state, node) {
   if (state.visited[state.current]) return;
 
+  applyEffects(state, node.effects);
   uniquePush(state.inventory, node.onEnter?.addItems);
   uniquePush(state.recipeBook, node.onEnter?.addBook);
   state.visited[state.current] = true;

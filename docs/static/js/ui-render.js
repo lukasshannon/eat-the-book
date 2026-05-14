@@ -149,8 +149,8 @@ function renderInventoryLedger(items) {
 }
 
 function renderRecipeCard(recipe, index) {
-  const note = RECIPE_NOTES[recipe] || { world: "Recipe book", scar: "blank margin", cost: "unknown" };
-  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Scar</dt><dd>${escapeHtml(note.scar)}</dd><dt>Cost</dt><dd>${escapeHtml(note.cost)}</dd></dl></article>`;
+  const note = RECIPE_NOTES[recipe] || { world: "Recipe book", status: "sample", note: "placeholder" };
+  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>Note</dt><dd>${escapeHtml(note.note)}</dd></dl></article>`;
 }
 
 function renderChoiceButton(choice, index) {

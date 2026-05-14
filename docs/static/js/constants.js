@@ -12,9 +12,9 @@ export const ITEM_GLYPHS = {
 export const SHOWCASE_SLOTS = ["recipe note", "world ingredient", "child memory"];
 
 export const RECIPE_NOTES = {
-  "Café Starter": { world: "Café outside time", scar: "blank margin", cost: "unknown" },
-  "Portal Recipe": { world: "Corrupted worlds", scar: "folded page", cost: "choice" },
-  "Ghost Child Route": { world: "Character routes", scar: "soft fingerprint", cost: "trust" },
+  "Café Starter": { world: "Café outside time", status: "sample", note: "recipe book" },
+  "Portal Recipe": { world: "Corrupted worlds", status: "sample", note: "recipes as portals" },
+  "Ghost Child Route": { world: "Character routes", status: "sample", note: "branching routes" },
 };
 
 export const TAB_ORDER = ["cafe", "recipes", "worlds", "characters", "journal", "settings"];
