@@ -24,7 +24,7 @@
   align-self: start;
   height: min(596px, calc(var(--viewport-height) - 96px));
   min-height: 0;
-  margin-top: clamp(16px, calc(var(--viewport-block-unit) * 5), 38px);
+  margin-top: clamp(16px, calc(var(--viewport-block-unit) * 3), 24px);
   position: relative;
   padding: 30px 21px;
   border: 2px solid rgba(116, 85, 54, .72);
@@ -150,12 +150,12 @@
   grid-area: status;
   min-height: 0;
   height: var(--status-bar-height);
-  margin: 2px 6px 0 0;
+  margin: 1px 6px 0 0;
   display: grid;
   grid-template-columns: 58px 1fr 1fr .84fr 34px;
   align-items: center;
-  gap: 9px;
-  padding: 5px 8px 5px 7px;
+  gap: 7px;
+  padding: 4px 7px 4px 6px;
   border-radius: var(--radius-page);
   background: rgba(222, 197, 158, .84);
   border: 1px solid var(--edge-soft);
@@ -227,10 +227,10 @@
 
 .scene-character {
   position: absolute;
-  left: 40px;
-  bottom: -25px;
-  width: 270px;
-  height: clamp(180px, calc(var(--viewport-block-unit) * 30.5), 245px);
+  left: 26px;
+  bottom: -16px;
+  width: 252px;
+  height: clamp(168px, calc(var(--viewport-block-unit) * 28), 222px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -239,7 +239,7 @@
 }
 .scene-character img {
   width: auto;
-  height: clamp(180px, calc(var(--viewport-block-unit) * 30.5), 245px);
+  height: clamp(168px, calc(var(--viewport-block-unit) * 28), 222px);
   max-width: 100%;
   object-fit: contain;
   object-position: bottom center;
@@ -248,8 +248,8 @@
 
 .special-note {
   position: absolute;
-  right: 20px;
-  top: clamp(18px, calc(var(--viewport-block-unit) * 4), 32px);
+  right: 19px;
+  top: clamp(14px, calc(var(--viewport-block-unit) * 3.4), 28px);
   width: 96px;
   min-height: clamp(92px, calc(var(--viewport-block-unit) * 18), 136px);
   padding: clamp(14px, calc(var(--viewport-block-unit) * 3), 22px) 13px 12px;
@@ -351,9 +351,9 @@
 .world-hud {
   grid-column: 3;
   grid-row: 1;
-  height: clamp(280px, calc(var(--viewport-height) - 118px), 476px);
+  height: clamp(280px, calc(var(--viewport-height) - 98px), 476px);
   min-height: 0;
-  margin-top: 72px;
+  margin-top: 52px;
   position: relative;
   box-sizing: border-box;
   padding: 27px 23px 20px;
@@ -368,14 +368,14 @@
   position: absolute;
   left: 15px;
   right: 15px;
-  top: 3px;
-  height: 84px;
+  top: -2px;
+  height: 86px;
   z-index: -1;
   background: var(--asset-note-medium) center / 100% 100% no-repeat;
   transform: rotate(2deg);
 }
 .world-hud h3 {
-  margin: 0 0 17px 23px;
+  margin: 0 0 15px 23px;
   color: var(--edge-heading);
   font-size: .98rem;
   font-style: italic;
@@ -386,8 +386,8 @@
 .eye-icon { width: 25px; height: 15px; border: 2px solid currentColor; border-radius: 100% 0 100% 0; transform: rotate(45deg); }
 .eye-icon::after { content: ""; display: block; width: 7px; height: 7px; margin: 2px auto; border-radius: 50%; background: currentColor; }
 .world-scene {
-  height: clamp(112px, calc(var(--viewport-block-unit) * 22), 175px);
-  margin: 3px 4px 15px;
+  height: clamp(124px, calc(var(--viewport-block-unit) * 23), 182px);
+  margin: 2px 4px 13px;
   position: relative;
   overflow: hidden;
   border-radius: 6px;

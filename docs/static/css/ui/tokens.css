@@ -47,13 +47,13 @@
   --shadow-scene-panel: inset 0 0 0 1px rgba(225, 184, 116, .32), 0 4px 8px rgba(55, 32, 17, .35);
 
   /* Component sizing tokens */
-  --status-bar-height: 50px;
-  --status-role-height: 42px;
+  --status-bar-height: 42px;
+  --status-role-height: 34px;
   --tab-height: 83px;
   --tab-height-mobile: 82px;
   --notebook-content-gap: 8px;
-  --notebook-visual-min: 180px;
-  --notebook-visual-max: 195px;
+  --notebook-visual-min: 162px;
+  --notebook-visual-max: 176px;
   --compact-font-scale: .88rem;
   --mobile-font-scale: .78rem;
   --mobile-font-scale-small: .72rem;
