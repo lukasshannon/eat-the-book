@@ -66,4 +66,5 @@ Before finalizing, ensure all are true:
 
 - UI iteration requirement (2026-05-05): continue implementing the UI and reuse image assets from `docs/static/img/assets`.
 - Character portrait requirement (2026-05-12): use the prepared pictures under `docs/static/img/assets/characters/<name>` for character portraits.
+- Compact spacing requirement (2026-05-14): minimize unnecessary empty space around the notebook on compact/mobile viewports.
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.
