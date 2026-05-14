@@ -215,7 +215,7 @@
   }
 
   .notebook-page {
-    inset: 5px 4px 5px 12px;
+    inset: 5px 4px 5px -4%;
   }
 
   .top-status {
