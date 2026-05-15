@@ -147,5 +147,44 @@
         }
       ]
     }
-  ]
+  ],
+  "notebookSamples": {
+    "recipes": [
+      {
+        "id": "Café Starter",
+        "title": "Café Starter",
+        "world": "Café outside time",
+        "status": "sample",
+        "note": "The Recipe Book begins in the café."
+      },
+      {
+        "id": "Portal Recipe",
+        "title": "Portal Recipe",
+        "world": "Corrupted worlds",
+        "status": "sample",
+        "note": "Recipes can open portals from the café."
+      },
+      {
+        "id": "Ghost Child Route",
+        "title": "Ghost Child Route",
+        "world": "Ghost children",
+        "status": "sample",
+        "note": "Routes can follow ghost children."
+      }
+    ],
+    "characters": [
+      {
+        "id": "keeper",
+        "label": "Café",
+        "name": "Café Keeper",
+        "description": "Keeps the café outside time and points readers toward the Recipe Book."
+      },
+      {
+        "id": "ghostChild",
+        "label": "Routes",
+        "name": "Ghost Child",
+        "description": "A ghost child tied to corrupted worlds, recipes, and branching routes."
+      }
+    ]
+  }
 }

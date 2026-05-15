@@ -61,6 +61,64 @@ async function assertElementFullyVisibleInViewport(page, selector, message) {
   assert.ok(box.y + box.height <= viewport.height, `${message}: expected bottom edge in viewport`);
 }
 
+async function waitForNextPageTurn(page, trigger) {
+  await page.evaluate(() => {
+    window.__nextPageTurn = new Promise((resolve) => {
+      const bookPages = document.querySelector('#bookPages');
+      if (!bookPages) {
+        resolve(false);
+        return;
+      }
+
+      const timeout = window.setTimeout(() => {
+        observer.disconnect();
+        resolve(false);
+      }, 1000);
+      const observer = new MutationObserver(() => {
+        if (bookPages.classList.contains('page-turning')) {
+          window.clearTimeout(timeout);
+          observer.disconnect();
+          resolve(true);
+        }
+      });
+      observer.observe(bookPages, { attributes: true, attributeFilter: ['class'] });
+    });
+  });
+
+  await trigger();
+  assert.equal(await page.evaluate(() => window.__nextPageTurn), true, 'tab change should start a page-turn animation');
+}
+
+async function assertTabLabelsStayOnOneLine(page, viewportName) {
+  const wrappedLabels = await page.locator('.side-tabs .tab-btn').evaluateAll((buttons) =>
+    buttons
+      .filter((button) => button.scrollWidth > button.clientWidth || button.scrollHeight > button.clientHeight)
+      .map((button) => button.textContent.trim()),
+  );
+
+  assert.deepEqual(wrappedLabels, [], `${viewportName}: tab labels should fit without wrapping or clipping`);
+}
+
+async function assertElementsDoNotOverlap(page, firstSelector, secondSelector, message) {
+  const overlap = await page.evaluate(
+    ([first, second]) => {
+      const firstRect = document.querySelector(first)?.getBoundingClientRect();
+      const secondRect = document.querySelector(second)?.getBoundingClientRect();
+      if (!firstRect || !secondRect) return true;
+
+      return !(
+        firstRect.right <= secondRect.left ||
+        firstRect.left >= secondRect.right ||
+        firstRect.bottom <= secondRect.top ||
+        firstRect.top >= secondRect.bottom
+      );
+    },
+    [firstSelector, secondSelector],
+  );
+
+  assert.equal(overlap, false, message);
+}
+
 async function assertActivePanelUsable(page, tabName, viewportName) {
   const tabSelector = `[data-tab="${tabName}"]`;
   const panelSelector = tabPanelSelectors[tabName];
@@ -168,6 +226,19 @@ async function assertFullscreenLayout(page, viewport) {
     await assertElementFullyVisibleInViewport(page, selector, `${viewportName}: tab ${selector} should remain visible`);
   }
 
+  await assertTabLabelsStayOnOneLine(page, viewportName);
+
+  if (viewport.width <= 620) {
+    await assertElementFullyVisibleInViewport(page, '.mobile-intro summary', `${viewportName}: mobile intro control should remain visible`);
+    await assertElementsDoNotOverlap(
+      page,
+      '.mobile-intro summary',
+      '.top-status',
+      `${viewportName}: mobile intro control should not cover the top status bar`,
+    );
+    assert.equal(await page.locator('.desk-intro').isVisible(), false, `${viewportName}: full intro banner should collapse on mobile`);
+  }
+
   for (const tabName of Object.keys(tabPanelSelectors)) {
     await assertActivePanelUsable(page, tabName, viewportName);
   }
@@ -247,6 +318,11 @@ try {
   assert.equal(await page.locator('#scenePanel').isVisible(), true, 'scene panel should be visible after starting');
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'cafe tab should be selected');
   assert.match(
+    await page.locator('#scenePanel').textContent(),
+    /This café sits outside time/,
+    'cafe tab should render the JSON dialogue sample',
+  );
+  assert.match(
     await page.getAttribute('#sceneCharacterAsset', 'src'),
     /\/static\/img\/assets\/characters\/cleric\/warm\.png$/,
     'keeper portrait should use the configured character asset folder',
@@ -269,11 +345,21 @@ try {
   await page.keyboard.press('Home');
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'Home should jump to first tab');
 
-  await page.locator('[data-tab="recipes"]').click();
+  await waitForNextPageTurn(page, () => page.locator('[data-tab="recipes"]').click());
   assert.ok(await page.locator('#recipePanel .recipe-card').count() >= 1, 'recipe tab should render recipe cards');
+  assert.match(
+    await page.locator('#recipePanel').textContent(),
+    /The Recipe Book begins in the café/,
+    'recipe tab should render recipe metadata from JSON',
+  );
 
   await page.locator('[data-tab="characters"]').click();
   assert.ok(await page.locator('#charactersPanel .journal-stat').count() >= 1, 'characters tab should render character cards');
+  assert.match(
+    await page.locator('#charactersPanel').textContent(),
+    /Keeps the café outside time/,
+    'characters tab should render character sample data from JSON',
+  );
 
   await page.locator('[data-tab="journal"]').click();
   assert.equal(await page.locator('#journalPanel .journal-stat').count(), 4, 'journal tab should render state cards');
