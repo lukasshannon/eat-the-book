@@ -898,3 +898,167 @@
     padding-inline: 23px 18px;
   }
 }
+
+/* 2026-05-15 mobile composition polish: keep tabs tappable and content breathing. */
+@media (max-width: 620px) {
+  .book-pages {
+    grid-template-rows: auto minmax(132px, 30%) minmax(0, 1fr);
+  }
+
+  .scene-visual::before {
+    opacity: .62;
+  }
+
+  .scene-character {
+    left: clamp(-18px, -3vw, -8px);
+    width: min(236px, 72%);
+  }
+
+  .special-note {
+    right: clamp(8px, 3vw, 14px);
+    width: clamp(82px, 27vw, 100px);
+    font-size: clamp(.78rem, 3.1vw, .88rem);
+  }
+
+  #scenePanel.dialogue-card {
+    padding: 20px 18px 14px 22px;
+  }
+
+  .scene-meta {
+    gap: 5px;
+  }
+
+  .dialogue-card .tags {
+    flex-wrap: wrap;
+    max-height: 48px;
+  }
+
+  .speaker-label {
+    margin-bottom: 6px;
+  }
+
+  .dialogue-text {
+    max-width: none;
+    line-height: 1.48;
+  }
+
+  .choices {
+    gap: 7px;
+    max-height: clamp(94px, 16vh, 132px);
+  }
+
+  .choice {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .side-tabs {
+    top: clamp(58px, 7vh, 66px);
+    right: 4px;
+    width: 60px;
+    gap: 5px;
+  }
+
+  .side-tabs::before {
+    left: 12px;
+    width: 20px;
+  }
+
+  .side-tabs .tab-btn,
+  .side-tabs .tab-btn:nth-child(2n),
+  .side-tabs .tab-btn:nth-child(3n) {
+    min-width: 54px;
+    min-height: 51px;
+    padding-inline: 5px 3px;
+    transform: translateX(2px);
+  }
+
+  .side-tabs .tab-btn.active {
+    transform: translateX(-4px);
+  }
+
+  .pocket-card,
+  .settings-panel {
+    padding: 30px 24px 24px;
+  }
+
+  .recipe-spread,
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-actions button {
+    min-height: 49px;
+  }
+}
+
+@media (max-width: 360px) {
+  .book-pages {
+    grid-template-rows: auto minmax(118px, 28%) minmax(0, 1fr);
+  }
+
+  .scene-character {
+    width: min(218px, 70%);
+  }
+
+  #scenePanel.dialogue-card {
+    padding: 18px 17px 12px 20px;
+  }
+
+  .side-tabs .tab-btn,
+  .side-tabs .tab-btn:nth-child(2n),
+  .side-tabs .tab-btn:nth-child(3n) {
+    min-width: 51px;
+    min-height: 49px;
+    font-size: .65rem;
+  }
+}
+
+@media (max-height: 640px) and (max-width: 620px) {
+  .choices {
+    max-height: clamp(76px, 14vh, 104px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice,
+  .side-tabs .tab-btn,
+  .inv-slot {
+    transition: none;
+  }
+}
+
+/* Follow-up mobile portrait sizing after visual inspection: keep the keeper present without crowding the café card. */
+@media (max-width: 620px) {
+  .scene-visual::before,
+  .scene-visual::after {
+    z-index: 2;
+  }
+
+  .scene-character {
+    left: clamp(-16px, -2vw, -6px);
+    bottom: -15px;
+    width: min(218px, 66%);
+    height: clamp(128px, 26vh, 226px);
+  }
+
+  .scene-character img {
+    height: clamp(128px, 26vh, 226px);
+  }
+
+  .scene-character-name {
+    left: clamp(30px, 10vw, 42px);
+    bottom: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .scene-character {
+    width: min(198px, 64%);
+    height: clamp(118px, 25vh, 206px);
+  }
+
+  .scene-character img {
+    height: clamp(118px, 25vh, 206px);
+  }
+}

@@ -985,3 +985,150 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 .book-pages > .pockets {
   filter: drop-shadow(0 12px 13px rgba(55, 33, 17, .25));
 }
+
+/* 2026-05-15 cohesive polish: physical cover, layered tabs, and calmer page rhythm. */
+.notebook-shell {
+  background:
+    radial-gradient(ellipse at 52% 2%, rgba(226, 166, 83, .2), transparent 26%),
+    linear-gradient(180deg, #4b3321, #251810 78%);
+}
+
+.book-cover {
+  gap: clamp(12px, 2.2vh, 18px);
+}
+
+.book-cover::before {
+  background:
+    radial-gradient(circle at 92% 7%, rgba(255, 229, 164, .08), transparent 13%),
+    linear-gradient(180deg, rgba(255, 235, 177, .035), transparent 34%);
+}
+
+.book-cover .cover-kicker {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -2px;
+  font-size: clamp(.84rem, 2.5vw, .98rem);
+}
+
+.book-cover h1 {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2px;
+}
+
+.cover-copy {
+  position: relative;
+  z-index: 1;
+  padding-inline: 2px;
+}
+
+.cover-actions {
+  position: relative;
+  z-index: 1;
+  gap: 12px;
+}
+
+.cover-actions button {
+  min-height: 50px;
+  border-color: var(--cover-button-edge);
+  border-radius: 8px 13px 9px 12px;
+  color: var(--cover-button-ink);
+  background:
+    linear-gradient(90deg, rgba(116, 72, 36, .12), transparent 13%, transparent 88%, rgba(95, 57, 29, .1)),
+    linear-gradient(180deg, var(--paper-slip-light), var(--paper-slip) 72%, var(--paper-slip-dark));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 251, 230, .72),
+    inset 0 -8px 13px rgba(119, 72, 33, .14),
+    0 3px 0 rgba(71, 43, 21, .68),
+    0 9px 14px rgba(0, 0, 0, .24);
+  font-weight: 700;
+  text-shadow: 0 1px rgba(255, 244, 214, .55);
+}
+
+.cover-actions button::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  right: 13px;
+  top: 8px;
+  border-top: 1px dashed rgba(89, 55, 27, .28);
+}
+
+.cover-actions button:hover,
+.cover-actions button:focus-visible {
+  background:
+    linear-gradient(90deg, rgba(116, 72, 36, .12), transparent 13%, transparent 88%, rgba(95, 57, 29, .1)),
+    linear-gradient(180deg, #fff5d7, #efce91 72%, #c28b47);
+}
+
+.book-pages {
+  gap: clamp(7px, 1.35vh, 10px);
+}
+
+.side-tabs {
+  right: 6px;
+  gap: 6px;
+}
+
+.side-tabs::before {
+  left: 10px;
+  width: 26px;
+  background:
+    linear-gradient(90deg, rgba(35, 21, 12, .2), rgba(128, 80, 39, .24), rgba(35, 21, 12, .1)),
+    linear-gradient(180deg, rgba(86, 55, 31, .36), rgba(36, 23, 14, .2));
+}
+
+.side-tabs .tab-btn {
+  min-height: 51px;
+  transform: translateX(2px);
+  box-shadow: var(--tab-shadow-tucked), inset 0 1px 0 rgba(255, 250, 226, .62), inset -10px 0 14px rgba(76, 45, 20, .13);
+}
+
+.side-tabs .tab-btn:nth-child(2n) {
+  transform: translateX(4px);
+}
+
+.side-tabs .tab-btn:nth-child(3n) {
+  transform: translateX(1px);
+}
+
+.side-tabs .tab-btn.active {
+  transform: translateX(-8px);
+  box-shadow: var(--tab-shadow-active), inset 0 1px 0 rgba(255, 252, 232, .86), inset -8px 0 12px rgba(103, 62, 28, .08);
+}
+
+.side-tabs .tab-btn.active::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 7px;
+  bottom: 7px;
+  border-left: 2px solid rgba(87, 53, 26, .3);
+}
+
+.top-status {
+  border-color: rgba(100, 67, 38, .38);
+}
+
+/* Keep all cover actions visible on the fixed desktop book height. */
+@media (min-width: 621px) {
+  .book-cover {
+    padding-top: clamp(44px, 8vh, 72px);
+  }
+
+  .book-cover h1 {
+    font-size: clamp(2.25rem, 7.6vw, 3.9rem);
+  }
+
+  .cover-copy {
+    font-size: clamp(.98rem, 2vw, 1.12rem);
+  }
+
+  .cover-actions {
+    gap: 9px;
+  }
+
+  .cover-actions button {
+    min-height: 46px;
+  }
+}

@@ -69,3 +69,19 @@ body::after {
   mix-blend-mode: screen;
   opacity: .8;
 }
+/* Desk lighting polish: a warmer center glow with darkened edges keeps the book staged. */
+body {
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(220, 166, 86, .14), transparent 32%),
+    radial-gradient(circle at 91% -8%, rgba(196, 157, 92, .16), transparent 22%),
+    radial-gradient(circle at 14% 106%, rgba(98, 70, 42, .24), transparent 26%),
+    linear-gradient(180deg, #1b1b19 0%, #0e0f0e 100%);
+}
+
+body::after {
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(246, 194, 104, .17), transparent 36%),
+    radial-gradient(circle at 48% 72%, rgba(113, 67, 29, .18), transparent 32%),
+    linear-gradient(90deg, rgba(0, 0, 0, .46), transparent 24%, transparent 76%, rgba(0, 0, 0, .5)),
+    linear-gradient(180deg, rgba(0, 0, 0, .16), transparent 34%, rgba(0, 0, 0, .2));
+}

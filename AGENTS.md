@@ -73,3 +73,4 @@ Before finalizing, ensure all are true:
 - Mobile intro requirement (2026-05-14): collapse the left-hand intro banner on narrow screens into a small expandable control so the notebook remains the priority.
 - JSON sample requirement (2026-05-14): demonstrate sample tab content loaded from JSON rather than hardcoded UI strings.
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.
+- Visual polish requirement (2026-05-15): do focused, cohesive improvements to the existing cozy-haunted recipe notebook UI; preserve the current design direction, mobile-first readability, JSON-driven content, and DOM/test contracts.
