@@ -18,6 +18,10 @@
   overflow: hidden;
 }
 
+.mobile-intro {
+  display: none;
+}
+
 .desk-intro {
   grid-column: 1;
   grid-row: 1;
@@ -626,7 +630,19 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 }
 
 .book-pages.page-turning {
-  animation: quick-page-turn .22s ease-out both;
+  animation: quick-page-turn .18s ease-out both;
+  will-change: transform, opacity;
+}
+
+.book-pages.page-turning::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  border-radius: calc(var(--radius-page) * 2);
+  background: linear-gradient(90deg, transparent 0 52%, rgba(126, 83, 45, .16) 58%, rgba(255, 246, 217, .34) 68%, transparent 100%);
+  animation: quick-page-sheen .18s ease-out both;
 }
 
 @keyframes open-cover {
@@ -635,8 +651,14 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 }
 
 @keyframes quick-page-turn {
-  0% { transform: translateX(12px) scaleX(.985); opacity: .72; }
-  100% { transform: translateX(0) scaleX(1); opacity: 1; }
+  0% { transform: translateX(14px) skewY(-.8deg); opacity: .74; }
+  100% { transform: translateX(0) skewY(0); opacity: 1; }
+}
+
+@keyframes quick-page-sheen {
+  0% { transform: translateX(-26%); opacity: 0; }
+  45% { opacity: .75; }
+  100% { transform: translateX(22%); opacity: 0; }
 }
 
 .top-status,
@@ -654,7 +676,7 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   z-index: 9;
   top: clamp(42px, 11%, 76px);
   right: 10px;
-  width: clamp(48px, 10vw, 70px);
+  width: clamp(56px, 10vw, 74px);
   display: grid;
   gap: 6px;
   pointer-events: auto;
@@ -671,10 +693,11 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
     linear-gradient(180deg, rgba(246, 224, 184, .96), rgba(213, 174, 111, .96));
   box-shadow: -3px 3px 5px rgba(36, 22, 12, .26), inset 0 1px 0 rgba(255, 250, 226, .55);
   color: var(--ink);
-  font-size: clamp(.74rem, 1.8vw, .86rem);
-  line-height: 1.05;
+  font-size: clamp(.7rem, 1.65vw, .82rem);
+  line-height: 1;
   writing-mode: horizontal-tb;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 
 .side-tabs .tab-btn.active {

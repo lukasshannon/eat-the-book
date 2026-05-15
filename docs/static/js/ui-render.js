@@ -1,4 +1,4 @@
-import { ITEM_GLYPHS, RECIPE_NOTES, SHOWCASE_SLOTS, TAB_ORDER } from "./constants.js";
+import { ITEM_GLYPHS, SHOWCASE_SLOTS, TAB_ORDER } from "./constants.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -61,12 +61,25 @@ export function animateBookOpen(ui) {
   }, 360);
 }
 
+const pageTurnTimers = new WeakMap();
+
+function clearPageTurnState(bookPages) {
+  bookPages.classList.remove("page-turning");
+  pageTurnTimers.delete(bookPages);
+}
+
 function animatePageTurn(ui) {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const existingTimer = pageTurnTimers.get(ui.bookPages);
+  if (existingTimer) window.clearTimeout(existingTimer);
+
   ui.bookPages.classList.remove("page-turning");
+
   window.requestAnimationFrame(() => {
     ui.bookPages.classList.add("page-turning");
-    window.setTimeout(() => ui.bookPages.classList.remove("page-turning"), 230);
+    const timer = window.setTimeout(() => clearPageTurnState(ui.bookPages), 220);
+    pageTurnTimers.set(ui.bookPages, timer);
   });
 }
 
@@ -148,9 +161,23 @@ function renderInventoryLedger(items) {
     .join("");
 }
 
-function renderRecipeCard(recipe, index) {
-  const note = RECIPE_NOTES[recipe] || { world: "Recipe book", status: "sample", note: "placeholder" };
-  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(recipe)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>Note</dt><dd>${escapeHtml(note.note)}</dd></dl></article>`;
+function renderRecipeCard(recipe, index, recipeNotes) {
+  const note = recipeNotes.get(recipe) || {
+    title: recipe,
+    world: "Recipe Book",
+    status: "sample",
+    note: "Recipes can become portals.",
+  };
+  const title = note.title || recipe;
+  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>Note</dt><dd>${escapeHtml(note.note)}</dd></dl></article>`;
+}
+
+function renderCharacterCards(characters) {
+  return characters
+    .map((character) => {
+      return `<div class="journal-stat"><span>${escapeHtml(character.label)}</span><strong>${escapeHtml(character.name)}</strong><p>${escapeHtml(character.description)}</p></div>`;
+    })
+    .join("");
 }
 
 function renderChoiceButton(choice, index) {
@@ -161,13 +188,15 @@ function renderSceneTags(tags) {
   return tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
 }
 
-export function renderStats(ui, state) {
+export function renderStats(ui, state, notebookSamples = { recipes: [], characters: [] }) {
   const route = state.flags.choseRouteQuestion ? "Character route noted" : "Route undecided";
   const recipe = state.flags.openedRecipeBook ? "Recipe book opened" : "Recipe book closed";
   const inventoryHtml = renderInventorySlots(state);
   const relationRows = renderRelationRows(state.relation);
   const inventoryRows = renderInventoryLedger(state.inventory.length ? state.inventory : SHOWCASE_SLOTS);
-  const recipeCards = state.recipeBook.map(renderRecipeCard).join("");
+  const recipeNotes = new Map((notebookSamples.recipes || []).map((recipe) => [recipe.id, recipe]));
+  const recipeCards = state.recipeBook.map((recipe, index) => renderRecipeCard(recipe, index, recipeNotes)).join("");
+  const characterCards = renderCharacterCards(notebookSamples.characters || []);
 
   ui.stats.innerHTML = [
     `<div class="journal-grid"><div class="journal-stat"><span>Concept</span><strong>Café outside time</strong></div>`,
@@ -179,12 +208,7 @@ export function renderStats(ui, state) {
   ].join("");
   ui.inventory.innerHTML = inventoryHtml;
   ui.book.innerHTML = [`<div class="recipe-spread">`, recipeCards, `</div>`].join("");
-  ui.characters.innerHTML = [
-    `<div class="journal-grid character-grid">`,
-    `<div class="journal-stat"><span>Café</span><strong>Café Keeper</strong><p>Guides the book interface.</p></div>`,
-    `<div class="journal-stat"><span>Routes</span><strong>Ghost Child</strong><p>Branching character route sample.</p></div>`,
-    `</div>`,
-  ].join("");
+  ui.characters.innerHTML = [`<div class="journal-grid character-grid">`, characterCards, `</div>`].join("");
 }
 
 export function renderSceneContent(ui, node) {

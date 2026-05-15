@@ -18,7 +18,7 @@ export async function initGame() {
   const desktopWorldHud = window.matchMedia("(min-width: 981px)");
   const ui = collectUi();
   const tabLayout = createTabLayout(ui);
-  const { scenes } = await loadGameData();
+  const { scenes, notebookSamples } = await loadGameData();
   let state = loadState({
     onCorrupt: () => showError(ui, "Save file is corrupted. Starting fresh."),
   });
@@ -58,7 +58,7 @@ export async function initGame() {
     renderCharacterPortrait(ui, state, node);
     renderSceneContent(ui, node);
     renderStatus(ui, state, node);
-    renderStats(ui, state);
+    renderStats(ui, state, notebookSamples);
     syncTheme(ui, state);
     syncBookMode(ui, state);
     activateTab(state.activeTab, false);

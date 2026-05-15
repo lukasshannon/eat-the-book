@@ -69,4 +69,7 @@ Before finalizing, ensure all are true:
 - Compact spacing requirement (2026-05-14): minimize unnecessary empty space around the notebook on compact/mobile viewports.
 - Mobile tab requirement (2026-05-14): prioritize phone portrait usability; right-side binder tabs must stay fully within the viewport, avoid horizontal scrolling, and remain large enough to tap.
 - Story data requirement (2026-05-14): keep dialogue JSON-driven under `docs/static/data/story/`; placeholder copy should refer only to confirmed concepts and avoid invented chapter lore.
+- UI motion requirement (2026-05-14): tab changes should use quick page-turn or slide animation while respecting reduced-motion preferences and keeping interactions responsive.
+- Mobile intro requirement (2026-05-14): collapse the left-hand intro banner on narrow screens into a small expandable control so the notebook remains the priority.
+- JSON sample requirement (2026-05-14): demonstrate sample tab content loaded from JSON rather than hardcoded UI strings.
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.

@@ -583,6 +583,49 @@
     padding: 9px 12px;
   }
 
+  .mobile-intro {
+    position: absolute;
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 11;
+    display: block;
+    max-width: min(242px, calc(100vw - 82px));
+    color: var(--ink);
+  }
+
+  .mobile-intro summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(98, 68, 39, .62);
+    border-radius: 50%;
+    background: rgba(246, 224, 184, .96);
+    box-shadow: 0 3px 7px rgba(36, 22, 12, .28);
+    font-size: .72rem;
+    font-weight: 800;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .mobile-intro summary::-webkit-details-marker { display: none; }
+
+  .mobile-intro p {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 6px);
+    width: min(242px, calc(100vw - 82px));
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(98, 68, 39, .46);
+    border-radius: 12px;
+    background: rgba(246, 224, 184, .97);
+    box-shadow: 0 6px 12px rgba(36, 22, 12, .26);
+    font-size: .86rem;
+    line-height: 1.35;
+  }
+
   .side-tabs {
     top: 54px;
     right: 5px;
@@ -593,8 +636,8 @@
   .side-tabs .tab-btn {
     min-width: 56px;
     min-height: 52px;
-    padding: 6px 5px 6px 8px;
-    font-size: clamp(.74rem, 3vw, .82rem);
+    padding: 6px 4px 6px 7px;
+    font-size: clamp(.68rem, 2.7vw, .78rem);
   }
 
   .side-tabs .tab-btn.active {
@@ -638,15 +681,15 @@
   }
 
   .side-tabs {
-    right: 4px;
-    width: 56px;
+    right: 3px;
+    width: 58px;
     gap: 4px;
   }
 
   .side-tabs .tab-btn {
-    min-width: 50px;
+    min-width: 52px;
     min-height: 50px;
-    font-size: .7rem;
+    font-size: .66rem;
   }
 }
 
@@ -658,7 +701,7 @@
 
   .side-tabs .tab-btn {
     min-height: 48px;
-    font-size: .68rem;
+    font-size: .64rem;
   }
 
   .book-pages {
@@ -670,5 +713,10 @@
   .book-opening .book-cover,
   .book-pages.page-turning {
     animation: none;
+  }
+
+  .book-pages.page-turning::after {
+    animation: none;
+    opacity: 0;
   }
 }

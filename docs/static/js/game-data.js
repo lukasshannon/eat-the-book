@@ -95,6 +95,43 @@ function validateChoice(choice, choiceIndex, sceneId, sceneIds, errors) {
   if (Object.hasOwn(choice, "effects")) validateEffects(choice.effects, sceneId, ["choice", choiceIndex], errors);
 }
 
+function validateNotebookSampleEntry(entry, path, requiredFields, errors) {
+  if (!isRecord(entry)) {
+    errors.push(`${describePath(path)} must be an object.`);
+    return;
+  }
+
+  requiredFields.forEach((field) => {
+    if (!isNonEmptyString(entry[field])) errors.push(`${describePath([...path, field])} must be a non-empty string.`);
+  });
+}
+
+function validateNotebookSamples(rawStory, errors) {
+  if (!Object.hasOwn(rawStory, "notebookSamples")) return;
+
+  const path = ["notebookSamples"];
+  if (!isRecord(rawStory.notebookSamples)) {
+    errors.push(`${describePath(path)} must be an object when present.`);
+    return;
+  }
+
+  const sampleSchemas = {
+    recipes: ["id", "title", "world", "status", "note"],
+    characters: ["id", "label", "name", "description"],
+  };
+
+  Object.entries(sampleSchemas).forEach(([sampleKey, requiredFields]) => {
+    const sampleList = rawStory.notebookSamples[sampleKey];
+    if (sampleList === undefined) return;
+    if (!Array.isArray(sampleList)) {
+      errors.push(`${describePath([...path, sampleKey])} must be an array.`);
+      return;
+    }
+
+    sampleList.forEach((entry, index) => validateNotebookSampleEntry(entry, [...path, sampleKey, index], requiredFields, errors));
+  });
+}
+
 function validateStoryData(rawStory) {
   const errors = [];
 
@@ -114,6 +151,8 @@ function validateStoryData(rawStory) {
     else sceneIds.add(scene.sceneId);
   });
 
+  validateNotebookSamples(rawStory, errors);
+
   rawStory.scenes.forEach((scene) => {
     if (!isRecord(scene) || !isNonEmptyString(scene.sceneId)) return;
     const sceneId = scene.sceneId;
@@ -131,6 +170,13 @@ function validateStoryData(rawStory) {
   });
 
   if (errors.length > 0) throw new Error(`Invalid story data:\n- ${errors.join("\n- ")}`);
+}
+
+function normalizeNotebookSamples(rawStory) {
+  return {
+    recipes: Array.isArray(rawStory.notebookSamples?.recipes) ? rawStory.notebookSamples.recipes : [],
+    characters: Array.isArray(rawStory.notebookSamples?.characters) ? rawStory.notebookSamples.characters : [],
+  };
 }
 
 function normalizeScenes(rawStory, rawCharacters) {
@@ -181,5 +227,9 @@ export async function loadGameData() {
 
   validateStoryData(rawStory);
 
-  return { scenes: normalizeScenes(rawStory, rawCharacters), characters: rawCharacters };
+  return {
+    scenes: normalizeScenes(rawStory, rawCharacters),
+    characters: rawCharacters,
+    notebookSamples: normalizeNotebookSamples(rawStory),
+  };
 }
