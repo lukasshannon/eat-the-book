@@ -55,3 +55,17 @@ summary { font: inherit; color: inherit; }
 [hidden] {
   display: none !important;
 }
+
+/* Extra candlelit desk atmosphere without adding bitmap assets. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(246, 194, 104, .13), transparent 34%),
+    radial-gradient(circle at 48% 72%, rgba(113, 67, 29, .16), transparent 32%),
+    linear-gradient(90deg, rgba(0, 0, 0, .34), transparent 22%, transparent 78%, rgba(0, 0, 0, .4));
+  mix-blend-mode: screen;
+  opacity: .8;
+}

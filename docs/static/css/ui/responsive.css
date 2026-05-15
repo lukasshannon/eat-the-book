@@ -720,3 +720,181 @@
     opacity: 0;
   }
 }
+
+/* Responsive polish: preserve the finished look while keeping phone layouts centered and unclipped. */
+@media (max-width: 620px) {
+  .notebook-shell {
+    box-shadow:
+      0 18px 32px rgba(0, 0, 0, .68),
+      0 0 0 1px rgba(205, 143, 74, .28),
+      inset 0 0 0 2px rgba(202, 138, 68, .38),
+      inset 0 0 22px rgba(0, 0, 0, .32);
+  }
+
+  .notebook-shell::before {
+    inset: 8px 8px 8px 28px;
+  }
+
+  .notebook-shell::after {
+    left: 8px;
+    top: 48px;
+    bottom: 46px;
+    width: 19px;
+  }
+
+  .book-cover {
+    padding-top: clamp(68px, 18vh, 112px);
+  }
+
+  .book-cover h1 {
+    font-size: clamp(2.12rem, 9.4vw, 3.05rem);
+  }
+
+  .cover-copy {
+    max-width: 17rem;
+    font-size: clamp(.98rem, 4.2vw, 1.08rem);
+  }
+
+  .cover-actions {
+    width: min(100%, 240px);
+  }
+
+  .top-status {
+    box-shadow: 0 4px 8px rgba(64, 38, 18, .22), inset 0 1px 0 rgba(255, 249, 226, .5);
+  }
+
+  .scene-visual {
+    border-width: 1px;
+    box-shadow:
+      inset 0 0 0 1px rgba(246, 184, 102, .18),
+      inset 0 -20px 26px rgba(0, 0, 0, .34),
+      0 5px 8px rgba(55, 32, 17, .3);
+  }
+
+  .scene-character {
+    left: clamp(-4px, 1vw, 12px);
+    width: min(236px, 73%);
+  }
+
+  .scene-character::before {
+    left: 8%;
+    right: 0;
+  }
+
+  .special-note {
+    right: 4px;
+    width: min(98px, 36%);
+    font-size: .82rem;
+  }
+
+  #scenePanel.dialogue-card {
+    padding: 22px 22px 15px 26px;
+    filter: drop-shadow(0 8px 9px rgba(55, 33, 17, .25));
+  }
+
+  .dialogue-card::after {
+    inset: 24px 23px 16px 25px;
+    background-size: 18px 18px, 18px 18px, auto;
+  }
+
+  .scene-meta {
+    margin-bottom: 4px;
+  }
+
+  .dialogue-card .scene-meta h2 {
+    font-size: .76rem;
+  }
+
+  .tag {
+    min-height: 20px;
+    max-width: 132px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .speaker-label {
+    font-size: 1.08rem;
+  }
+
+  .dialogue-text {
+    line-height: 1.5;
+  }
+
+  .choices {
+    gap: 8px;
+    margin-top: 10px;
+    overflow: auto;
+    padding-bottom: 2px;
+  }
+
+  .choice {
+    min-height: 43px;
+    max-width: 100%;
+  }
+
+  .side-tabs {
+    right: 4px;
+    top: 58px;
+    width: 61px;
+    gap: 5px;
+  }
+
+  .side-tabs::before {
+    left: 13px;
+    width: 15px;
+  }
+
+  .side-tabs .tab-btn {
+    min-width: 55px;
+    min-height: 51px;
+    padding-left: 6px;
+    font-size: clamp(.67rem, 2.65vw, .76rem);
+  }
+
+  .side-tabs .tab-btn.active {
+    transform: translateX(-3px);
+  }
+
+  .pocket-card,
+  .settings-panel {
+    padding: 30px 26px 24px;
+  }
+
+  .recipe-spread,
+  .journal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-card {
+    min-height: 110px;
+  }
+
+  .mobile-intro summary {
+    background:
+      linear-gradient(180deg, rgba(255, 240, 205, .98), rgba(225, 194, 145, .96));
+    box-shadow: 0 4px 9px rgba(36, 22, 12, .32), inset 0 1px 0 rgba(255, 251, 232, .68);
+  }
+}
+
+@media (max-width: 360px) {
+  .side-tabs {
+    right: 2px;
+    width: 56px;
+  }
+
+  .side-tabs .tab-btn {
+    min-width: 51px;
+    min-height: 50px;
+    padding-inline: 5px 3px;
+    font-size: .64rem;
+  }
+
+  .special-note {
+    width: min(90px, 35%);
+    font-size: .78rem;
+  }
+
+  #scenePanel.dialogue-card {
+    padding-inline: 23px 18px;
+  }
+}

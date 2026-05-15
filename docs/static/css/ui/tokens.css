@@ -75,3 +75,17 @@
   --viewport-height: 100vh;
   --viewport-block-unit: 1vh;
 }
+
+/* Polishing tokens for richer paper depth, warm light, and accessible focus states. */
+:root {
+  --paper-shadow-deep: 0 14px 22px rgba(45, 27, 14, .34);
+  --paper-shadow-lifted: 0 8px 12px rgba(68, 42, 22, .24), inset 0 1px 0 rgba(255, 249, 226, .44);
+  --cover-leather-light: #7c4928;
+  --cover-leather: #4a2817;
+  --cover-leather-dark: #21120d;
+  --cover-gold: #e2c27e;
+  --focus-ring: rgba(255, 222, 143, .92);
+  --tab-paper: #e7bd77;
+  --tab-paper-light: #f7dfad;
+  --tab-paper-dark: #b98543;
+}
