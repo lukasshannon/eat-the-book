@@ -760,3 +760,228 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
 .book-pages .top-status {
   grid-area: status;
 }
+
+/* Final composition polish: center the book, deepen cover/page layering, and make tabs feel attached. */
+.notebook-shell {
+  box-shadow:
+    0 30px 54px rgba(0, 0, 0, .68),
+    0 0 0 1px rgba(205, 143, 74, .32),
+    inset 0 0 0 2px rgba(202, 138, 68, .42),
+    inset 0 0 32px rgba(0, 0, 0, .35);
+}
+
+.notebook-shell::before,
+.notebook-shell::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.notebook-shell::before {
+  inset: 11px 11px 11px 43px;
+  z-index: 2;
+  border-radius: 24px 21px 18px 18px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 241, 199, .22),
+    inset 18px 0 22px rgba(97, 59, 28, .18),
+    inset -12px 0 18px rgba(78, 48, 25, .15);
+}
+
+.notebook-shell::after {
+  left: 12px;
+  top: 38px;
+  bottom: 38px;
+  z-index: 8;
+  width: 25px;
+  border-radius: 18px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 29px, rgba(255, 228, 157, .2) 30px 31px, transparent 32px 48px),
+    linear-gradient(90deg, rgba(0, 0, 0, .52), rgba(98, 62, 31, .14), transparent);
+  opacity: .62;
+}
+
+.book-pages {
+  filter: drop-shadow(0 4px 4px rgba(63, 37, 18, .16));
+}
+
+.book-cover {
+  justify-content: flex-start;
+  padding-top: clamp(62px, 12vh, 104px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 47% 16%, rgba(255, 217, 139, .26), transparent 17%),
+    radial-gradient(ellipse at 50% 104%, rgba(0, 0, 0, .38), transparent 44%),
+    linear-gradient(90deg, rgba(18, 10, 7, .62) 0 13px, rgba(226, 184, 107, .14) 14px 16px, transparent 17px 100%),
+    repeating-linear-gradient(112deg, rgba(255, 235, 180, .04) 0 2px, transparent 3px 12px),
+    linear-gradient(145deg, var(--cover-leather-light) 0%, var(--cover-leather) 45%, var(--cover-leather-dark) 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(239, 200, 128, .22),
+    inset 16px 0 24px rgba(0, 0, 0, .44),
+    inset -10px 0 20px rgba(255, 224, 148, .06),
+    0 10px 18px rgba(0, 0, 0, .42);
+}
+
+.book-cover::before,
+.book-cover::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.book-cover::before {
+  inset: 18px 20px;
+  border: 1px solid rgba(226, 194, 126, .42);
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 1px rgba(62, 34, 19, .45),
+    inset 0 0 26px rgba(255, 217, 139, .08);
+}
+
+.book-cover::after {
+  left: 32px;
+  right: 32px;
+  top: 34px;
+  height: 58px;
+  border-block: 1px solid rgba(226, 194, 126, .3);
+  opacity: .58;
+}
+
+.cover-kicker {
+  color: var(--cover-gold);
+  text-shadow: 0 2px 2px rgba(0, 0, 0, .28);
+}
+
+.book-cover h1 {
+  color: #ffe4ad;
+  text-shadow: 0 2px 0 rgba(49, 24, 10, .65), 0 10px 18px rgba(0, 0, 0, .28);
+}
+
+.cover-copy {
+  max-width: 24rem;
+  color: #f6dfb3;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .5);
+}
+
+.cover-actions {
+  width: min(100%, 296px);
+  gap: 11px;
+  margin-top: 8px;
+}
+
+.cover-actions button,
+.settings-actions button {
+  position: relative;
+  border-color: rgba(216, 172, 98, .78);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(72, 45, 28, .95), rgba(38, 27, 20, .96));
+  color: #f8dfae;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 237, 190, .16),
+    0 3px 0 rgba(0, 0, 0, .35),
+    0 8px 12px rgba(0, 0, 0, .18);
+}
+
+.cover-actions button:hover,
+.settings-actions button:hover {
+  background:
+    linear-gradient(180deg, rgba(92, 58, 35, .98), rgba(48, 34, 24, .98));
+  transform: translateY(-1px);
+}
+
+.top-status {
+  background:
+    linear-gradient(180deg, rgba(238, 218, 179, .94), rgba(209, 181, 137, .9));
+  box-shadow: var(--paper-shadow-lifted);
+}
+
+.scene-visual {
+  box-shadow:
+    inset 0 0 0 1px rgba(246, 184, 102, .2),
+    inset 0 -26px 36px rgba(0, 0, 0, .32),
+    0 7px 12px rgba(55, 32, 17, .36);
+}
+
+.scene-character {
+  bottom: -12px;
+  filter: drop-shadow(0 18px 16px rgba(0, 0, 0, .52));
+}
+
+.special-note {
+  transform: rotate(1.5deg);
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .38));
+}
+
+.dialogue-card {
+  padding: 22px 40px 14px 42px;
+  filter: drop-shadow(0 11px 13px rgba(55, 33, 17, .28));
+}
+
+.dialogue-text {
+  line-height: 1.55;
+}
+
+.choices {
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.choice {
+  min-height: 38px;
+}
+
+.side-tabs {
+  right: 8px;
+  gap: 5px;
+  filter: drop-shadow(-5px 6px 7px rgba(40, 24, 12, .26));
+}
+
+.side-tabs::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  bottom: -9px;
+  left: 17px;
+  width: 18px;
+  z-index: -1;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(86, 55, 31, .34), rgba(36, 23, 14, .18));
+}
+
+.side-tabs .tab-btn {
+  position: relative;
+  justify-content: center;
+  border-color: rgba(99, 65, 33, .72);
+  background:
+    linear-gradient(90deg, rgba(139, 91, 45, .18), transparent 28%),
+    linear-gradient(180deg, var(--tab-paper-light), var(--tab-paper) 68%, var(--tab-paper-dark));
+  box-shadow:
+    -4px 4px 6px rgba(36, 22, 12, .28),
+    inset 0 1px 0 rgba(255, 250, 226, .62),
+    inset -9px 0 12px rgba(103, 62, 28, .1);
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+
+.side-tabs .tab-btn::after {
+  content: "";
+  position: absolute;
+  inset: 6px 4px 6px auto;
+  width: 1px;
+  background: rgba(91, 58, 31, .18);
+}
+
+.side-tabs .tab-btn.active {
+  background:
+    linear-gradient(90deg, rgba(255, 244, 209, .38), transparent 35%),
+    linear-gradient(180deg, #fff1cb, #edc986 68%, #ca914b);
+  box-shadow:
+    -7px 7px 9px rgba(36, 22, 12, .32),
+    inset 0 1px 0 rgba(255, 252, 232, .82),
+    inset -8px 0 12px rgba(103, 62, 28, .08);
+  transform: translateX(-7px);
+}
+
+.book-pages > .world-hud,
+.book-pages > .pockets {
+  filter: drop-shadow(0 12px 13px rgba(55, 33, 17, .25));
+}

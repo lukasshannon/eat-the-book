@@ -463,3 +463,357 @@
   text-align: center;
 }
 
+
+/* Finished notebook surface polish: richer café lighting, pasted-in portrait grounding, cards, and controls. */
+.notebook-page {
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .58));
+}
+
+.notebook-page::before,
+.notebook-page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.notebook-page::before {
+  inset: 14px 22px 16px 54px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(119, 75, 33, .13), transparent 13%),
+    radial-gradient(circle at 86% 18%, rgba(93, 58, 26, .12), transparent 10%),
+    radial-gradient(circle at 20% 90%, rgba(80, 48, 22, .1), transparent 15%),
+    linear-gradient(90deg, rgba(103, 66, 31, .15), transparent 8%, transparent 92%, rgba(103, 66, 31, .1));
+  mix-blend-mode: multiply;
+  opacity: .72;
+}
+
+.notebook-page::after {
+  right: 20px;
+  top: 58px;
+  bottom: 44px;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, rgba(103, 63, 27, .14), transparent);
+  opacity: .7;
+}
+
+.cafe-backdrop {
+  background:
+    radial-gradient(circle at 17% 14%, rgba(255, 216, 112, .95) 0 4px, transparent 5px),
+    radial-gradient(circle at 55% 16%, rgba(255, 205, 94, .88) 0 4px, transparent 5px),
+    radial-gradient(ellipse at 42% 60%, rgba(255, 179, 77, .2), transparent 34%),
+    linear-gradient(90deg, rgba(33, 21, 13, .18), rgba(12, 8, 6, .42)),
+    linear-gradient(180deg, #55331b 0%, #26170f 56%, #100b08 100%);
+}
+
+.cafe-backdrop::before {
+  opacity: .78;
+}
+
+.cafe-backdrop::after {
+  background:
+    radial-gradient(ellipse at 36% 72%, rgba(255, 209, 132, .36), transparent 28%),
+    radial-gradient(circle at 26% 29%, rgba(227, 161, 77, .28) 0 9px, transparent 10px),
+    radial-gradient(circle at 68% 35%, rgba(222, 148, 67, .24) 0 12px, transparent 13px),
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(244, 184, 104, .12) 35px 36px),
+    linear-gradient(180deg, transparent 0 70%, rgba(0, 0, 0, .34));
+}
+
+.scene-character::before,
+.scene-character::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.scene-character::before {
+  left: 12%;
+  right: 3%;
+  bottom: 5px;
+  height: 58%;
+  z-index: -1;
+  border-radius: 46% 46% 14px 14px;
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(255, 196, 110, .26), transparent 62%),
+    linear-gradient(180deg, rgba(255, 216, 142, .13), rgba(0, 0, 0, .2));
+  filter: blur(10px);
+}
+
+.scene-character::after {
+  left: 20%;
+  right: 7%;
+  bottom: 9px;
+  height: 15px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, .46), transparent 70%);
+  filter: blur(3px);
+}
+
+.scene-character img {
+  filter: sepia(.05) saturate(.94) contrast(1.03) drop-shadow(0 1px 0 rgba(255, 224, 164, .12));
+}
+
+.scene-character-name {
+  background:
+    linear-gradient(180deg, rgba(244, 224, 183, .94), rgba(207, 179, 132, .9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, .72),
+    0 6px 10px rgba(0, 0, 0, .32);
+}
+
+.special-note::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: -6px;
+  height: 14px;
+  border-radius: 2px;
+  background: rgba(114, 80, 48, .22);
+  box-shadow: 0 1px 3px rgba(66, 39, 20, .18);
+  transform: rotate(-4deg);
+}
+
+.dialogue-card::before {
+  top: 19px;
+  opacity: .86;
+}
+
+.dialogue-card::after {
+  content: "";
+  position: absolute;
+  inset: 24px 35px 18px 39px;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(102, 65, 31, .08) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(rgba(102, 65, 31, .08) 1px, transparent 1px) 0 0 / 22px 22px,
+    radial-gradient(circle at 88% 7%, rgba(110, 69, 35, .12), transparent 18%);
+  opacity: .75;
+}
+
+.scene-meta {
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+.dialogue-card .scene-meta h2 {
+  color: rgba(69, 43, 24, .76);
+  font-weight: 800;
+}
+
+.tag {
+  background: rgba(240, 220, 184, .68);
+  border-color: rgba(105, 72, 43, .3);
+  color: rgba(73, 47, 28, .76);
+}
+
+.speaker-label {
+  color: #2f1d11;
+  text-shadow: 0 1px rgba(255, 244, 217, .62);
+}
+
+.dialogue-text {
+  color: #332014;
+  text-wrap: pretty;
+}
+
+.choice {
+  border-color: rgba(96, 61, 33, .64);
+  background:
+    linear-gradient(180deg, rgba(250, 234, 205, .96), rgba(225, 195, 145, .9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 225, .74),
+    0 2px 0 rgba(91, 57, 31, .35),
+    0 5px 8px rgba(85, 53, 28, .18);
+}
+
+.choice:hover,
+.choice:focus-visible {
+  background:
+    linear-gradient(180deg, #fff0cb, #ecd09a);
+  border-color: rgba(79, 47, 24, .8);
+}
+
+.choice-mark {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(71, 43, 24, .88) 0 3px, transparent 4px),
+    linear-gradient(180deg, rgba(251, 235, 199, .9), rgba(212, 177, 121, .7));
+}
+
+.pocket-card,
+.settings-panel {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(117, 76, 36, .1), transparent 14%),
+    linear-gradient(180deg, rgba(255, 241, 214, .28), transparent 38%),
+    var(--asset-note-large) center / 100% 100% no-repeat;
+}
+
+.pocket-card::after,
+.settings-panel::after {
+  content: "";
+  position: absolute;
+  right: 22px;
+  top: 24px;
+  width: 56px;
+  height: 68px;
+  pointer-events: none;
+  background:
+    linear-gradient(45deg, rgba(96, 61, 35, .16) 25%, transparent 25% 50%, rgba(96, 61, 35, .16) 50% 75%, transparent 75%) 0 0 / 14px 14px;
+  transform: rotate(5deg);
+  opacity: .42;
+}
+
+.pocket-card summary,
+.settings-panel h2 {
+  position: relative;
+  z-index: 1;
+  color: #3a2415;
+  text-shadow: 0 1px rgba(255, 244, 218, .7);
+}
+
+.recipe-spread {
+  position: relative;
+  z-index: 1;
+}
+
+.recipe-card {
+  border-color: rgba(102, 68, 39, .38);
+  background:
+    linear-gradient(90deg, rgba(120, 72, 35, .08), transparent 13%, transparent 86%, rgba(120, 72, 35, .06)),
+    linear-gradient(180deg, rgba(255, 240, 207, .82), rgba(221, 188, 132, .78)),
+    var(--asset-note-square) center / cover no-repeat;
+  box-shadow:
+    0 6px 10px rgba(80, 49, 24, .18),
+    inset 0 0 0 1px rgba(255, 244, 213, .42);
+}
+
+.recipe-card::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 9px;
+  border-top: 1px dashed rgba(100, 64, 35, .2);
+}
+
+.journal-stat,
+.relation-chip {
+  background:
+    linear-gradient(180deg, rgba(248, 229, 193, .68), rgba(226, 198, 151, .56));
+  box-shadow: inset 0 1px 0 rgba(255, 248, 223, .5), 0 3px 6px rgba(75, 45, 22, .1);
+}
+
+.world-hud {
+  color: #f0d7a5;
+}
+
+.world-scene {
+  border: 1px solid rgba(151, 188, 204, .22);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, .82), 0 6px 12px rgba(37, 22, 12, .22);
+}
+
+.world-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 70% 44%, rgba(143, 203, 240, .16), transparent 20%),
+    linear-gradient(180deg, transparent 0 58%, rgba(0, 0, 0, .32));
+}
+
+.settings-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.settings-panel p {
+  position: relative;
+  z-index: 1;
+  max-width: 20rem;
+}
+
+.settings-btn:focus-visible,
+.tab-btn:focus-visible,
+.side-tabs .tab-btn:focus-visible,
+.choice:focus-visible,
+.controls button:focus-visible,
+.cover-actions button:focus-visible,
+.settings-actions button:focus-visible,
+.mobile-intro summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(64, 37, 17, .7), var(--paper-shadow-lifted);
+}
+
+body[data-theme="high-contrast"] {
+  --paper: #f6e5c5;
+  --paper-light: #fff1d2;
+  --ink: #1a0f08;
+  --ink-soft: #2c1b10;
+  --edge-soft: rgba(55, 32, 16, .68);
+}
+
+body[data-theme="high-contrast"] .dialogue-card,
+body[data-theme="high-contrast"] .pocket-card,
+body[data-theme="high-contrast"] .settings-panel,
+body[data-theme="high-contrast"] .top-status {
+  filter: contrast(1.08) brightness(1.07) drop-shadow(0 7px 8px rgba(44, 25, 12, .24));
+}
+
+body[data-theme="high-contrast"] .dialogue-text,
+body[data-theme="high-contrast"] .speaker-label,
+body[data-theme="high-contrast"] .choice,
+body[data-theme="high-contrast"] .tag,
+body[data-theme="high-contrast"] .journal-stat,
+body[data-theme="high-contrast"] .recipe-card {
+  color: #160c06;
+}
+
+/* Worlds tab: make the portal page feel like an intentional inserted notebook spread. */
+.book-pages > .world-hud {
+  background:
+    radial-gradient(circle at 74% 16%, rgba(71, 104, 111, .18), transparent 20%),
+    linear-gradient(180deg, rgba(244, 226, 190, .72), rgba(206, 177, 129, .58)),
+    var(--asset-note-large) center / 100% 100% no-repeat;
+  color: #2b1d13;
+}
+
+.book-pages > .world-hud::before {
+  z-index: 0;
+  opacity: .95;
+  filter: drop-shadow(0 5px 5px rgba(58, 35, 18, .2));
+}
+
+.book-pages > .world-hud::after {
+  right: 26px;
+  top: 96px;
+}
+
+.book-pages > .world-hud h3,
+.book-pages > .world-hud .stealth-row,
+.book-pages > .world-hud .objective,
+.book-pages > .world-hud .slot-row,
+.book-pages > .world-hud .world-scene {
+  position: relative;
+  z-index: 2;
+}
+
+.book-pages > .world-hud .world-scene {
+  margin-top: 10px;
+}
+
+.book-pages > .world-hud .slot-row {
+  margin: 0 4px;
+}
+
+.book-pages > .world-hud .objective {
+  margin: 14px 8px 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(105, 72, 43, .3);
+  border-radius: 12px;
+  background: rgba(45, 30, 20, .76);
+  color: #f4dba9;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 180, .12), 0 4px 8px rgba(56, 34, 18, .16);
+}
