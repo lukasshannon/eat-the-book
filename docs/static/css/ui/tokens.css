@@ -89,3 +89,18 @@
   --tab-paper-light: #f7dfad;
   --tab-paper-dark: #b98543;
 }
+/* 2026-05-15 visual polish pass: shared materials and atmospheric effects. */
+:root {
+  --paper-deckle: rgba(82, 50, 23, .18);
+  --paper-foxing: rgba(111, 68, 32, .14);
+  --paper-rule: rgba(116, 78, 43, .105);
+  --paper-slip-light: #fff0c9;
+  --paper-slip: #e8c98f;
+  --paper-slip-dark: #b57e3d;
+  --cover-button-ink: #2d1a0f;
+  --cover-button-edge: rgba(191, 136, 60, .82);
+  --warm-lantern: rgba(255, 197, 101, .34);
+  --haunt-blue: rgba(116, 178, 231, .34);
+  --tab-shadow-tucked: -2px 3px 5px rgba(32, 18, 9, .24);
+  --tab-shadow-active: -9px 9px 14px rgba(31, 18, 9, .36);
+}
