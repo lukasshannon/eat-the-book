@@ -188,9 +188,11 @@
           this.pointerStart = null;
           this._drag = null;
           this._dragFrame = 0;
+          this._previewFrame = 0;
           this._ghostClickUntil = 0;
           this._previousDocumentUserSelect = '';
           this.boundListeners = [];
+          this.motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
           this.options = this.parseAttributes();
         }
 
@@ -411,8 +413,15 @@
                 border-radius: 1rem;
                 outline: none;
                 user-select: none;
-                touch-action: none;
+                touch-action: pan-y;
+                overscroll-behavior: contain;
                 transform-style: preserve-3d;
+                --peek-opacity: 0;
+                --peek-overlay-opacity: .25;
+                --peek-next-angle: 0deg;
+                --peek-next-offset: 0rem;
+                --peek-previous-angle: 0deg;
+                --peek-previous-offset: 0rem;
               }
 
               .book:focus-visible {
@@ -428,6 +437,7 @@
               .book.is-dragging {
                 cursor: grabbing;
                 user-select: none;
+                touch-action: none;
               }
 
               .book.is-dragging .page-content {
@@ -459,6 +469,65 @@
                 pointer-events: none;
                 background: linear-gradient(90deg, transparent calc(50% - .75rem), rgba(49, 30, 14, .25), rgba(255, 255, 255, .2), rgba(49, 30, 14, .24), transparent calc(50% + .75rem));
                 opacity: .9;
+              }
+
+
+              .edge-peek {
+                position: absolute;
+                top: 5%;
+                bottom: 5%;
+                z-index: 980;
+                width: min(18%, 6rem);
+                border: 1px solid rgba(93, 65, 36, .16);
+                background:
+                  linear-gradient(90deg, rgba(255, 255, 255, .5), rgba(255, 245, 214, .32) 38%, rgba(88, 52, 24, .16)),
+                  repeating-linear-gradient(0deg, rgba(108, 77, 42, .07) 0 1px, transparent 1px 1.65rem),
+                  #fffdf5;
+                box-shadow: .35rem .35rem .8rem rgba(22, 12, 6, .22);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 120ms ease, transform 150ms cubic-bezier(.2, .68, .16, 1);
+                will-change: opacity, transform;
+              }
+
+              .edge-peek.next {
+                right: .5rem;
+                border-radius: .15rem .75rem .75rem .15rem;
+                transform-origin: right center;
+                transform: rotateY(0deg) translateX(0) translateZ(18px);
+              }
+
+              .edge-peek.previous {
+                left: .5rem;
+                border-radius: .75rem .15rem .15rem .75rem;
+                transform-origin: left center;
+                transform: rotateY(0deg) translateX(0) translateZ(18px);
+              }
+
+              .edge-peek::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(90deg, rgba(34, 18, 8, .22), transparent 38%, rgba(255, 255, 255, .32));
+                opacity: var(--peek-overlay-opacity);
+                pointer-events: none;
+              }
+
+              .book.is-preview-next .edge-peek.next,
+              .book.is-preview-previous .edge-peek.previous,
+              .book.is-pressing-next .edge-peek.next,
+              .book.is-pressing-previous .edge-peek.previous {
+                opacity: var(--peek-opacity);
+              }
+
+              .book.is-preview-next .edge-peek.next,
+              .book.is-pressing-next .edge-peek.next {
+                transform: rotateY(var(--peek-next-angle)) translateX(var(--peek-next-offset)) translateZ(18px);
+              }
+
+              .book.is-preview-previous .edge-peek.previous,
+              .book.is-pressing-previous .edge-peek.previous {
+                transform: rotateY(var(--peek-previous-angle)) translateX(var(--peek-previous-offset)) translateZ(18px);
               }
 
               .page {
@@ -730,7 +799,8 @@
               slot { display: none; }
 
               @media (prefers-reduced-motion: reduce) {
-                .page {
+                .page,
+                .edge-peek {
                   transition-duration: 1ms;
                 }
               }
@@ -740,6 +810,8 @@
                 <div class="book" tabindex="0" role="region" aria-label="Turn book">
                   <div class="book-bed" aria-hidden="true"></div>
                   <div class="page-layer"></div>
+                  <span class="edge-peek previous" aria-hidden="true"></span>
+                  <span class="edge-peek next" aria-hidden="true"></span>
                   <div class="gutter" aria-hidden="true"></div>
                   <button class="click-zone previous" type="button" tabindex="-1" aria-label="Previous page"></button>
                   <button class="click-zone next" type="button" tabindex="-1" aria-label="Next page"></button>
@@ -782,9 +854,14 @@
           this.addBoundListener(this.book, 'click', (event) => this.handleBookClick(event));
           this.addBoundListener(this.book, 'keydown', (event) => this.handleKeydown(event));
           this.addBoundListener(this.book, 'pointerdown', (event) => this._startDrag(event));
-          this.addBoundListener(this.book, 'pointermove', (event) => this._updateDrag(event));
+          this.addBoundListener(this.book, 'pointermove', (event) => {
+            this._updateDrag(event);
+            this._updateTurnPreview(event);
+          });
           this.addBoundListener(this.book, 'pointerup', (event) => this._finishDrag(event));
           this.addBoundListener(this.book, 'pointercancel', (event) => this._cancelDrag(event));
+          this.addBoundListener(this.book, 'pointerleave', () => this._clearTurnPreview());
+          this.addBoundListener(this.book, 'blur', () => this._clearTurnPreview());
         }
 
         addBoundListener(target, type, listener) {
@@ -834,6 +911,7 @@
 
           const direction = this._getDragDirection(event);
           if (!direction) return;
+          this._clearTurnPreview();
 
           const targetPage = direction === 'next' ? this.nextPageNumber() : this.previousPageNumber();
           if (targetPage === this.currentPage) return;
@@ -879,9 +957,10 @@
 
           this._previousDocumentUserSelect = document.documentElement.style.userSelect;
           document.documentElement.style.userSelect = 'none';
-          this.book.classList.add('is-dragging');
+          this.book.classList.add('is-dragging', `is-pressing-${direction}`);
+          this._applyPeekStyle(direction, event.pointerType === 'touch' ? .72 : .42);
           this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0, pointerType: this._drag.pointerType });
-          this._applyDragProgress(0);
+          this._applyDragProgress(this._initialDragProgress(event.pointerType));
 
           try { this.book.setPointerCapture(event.pointerId); } catch (error) { /* Pointer capture can fail if the pointer already ended. */ }
         }
@@ -903,7 +982,10 @@
           }
 
           if (!drag.horizontal && absX >= 5 && absX >= absY) drag.horizontal = true;
-          if (drag.horizontal) event.preventDefault();
+          if (drag.horizontal) {
+            event.preventDefault();
+            this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
+          }
 
           const elapsed = Math.max(now - drag.lastTime, 1);
           drag.velocityX = (event.clientX - drag.lastX) / elapsed;
@@ -1003,7 +1085,9 @@
           const from = drag.progress;
           const to = this._clamp(targetProgress, 0, 1);
           const distance = Math.abs(to - from);
-          const duration = Math.max(120, this.options.duration * Math.max(.22, distance));
+          const duration = this._prefersReducedMotion()
+            ? 1
+            : Math.max(120, this.options.duration * Math.max(.22, distance));
           const started = performance.now();
 
           return new Promise((resolve) => {
@@ -1049,6 +1133,8 @@
         _resetDragStyles() {
           if (this._dragFrame) cancelAnimationFrame(this._dragFrame);
           this._dragFrame = 0;
+          this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
+          this._resetPeekStyle();
           this.pageElements.forEach((page) => {
             page.classList.remove('turn-live', 'turning-next', 'turning-previous');
             page.style.transform = '';
@@ -1061,13 +1147,124 @@
           });
         }
 
+        _updateTurnPreview(event) {
+          if (this._drag || this.options.disabled || this.isAnimating || !this.options.swipe || event.pointerType === 'touch') return;
+          if (this._isInteractiveTarget(event.target)) {
+            this._clearTurnPreview();
+            return;
+          }
+
+          const preview = this._previewForPoint(event.clientX, event.clientY);
+          if (!preview) {
+            this._clearTurnPreview();
+            return;
+          }
+
+          this._setTurnPreview(preview.direction, preview.progress);
+        }
+
+        _setTurnPreview(direction, progress) {
+          const safeProgress = this._clamp(progress, 0, 1);
+          if (this._preview?.direction === direction && Math.abs(this._preview.progress - safeProgress) < .02) return;
+          this._preview = { direction, progress: safeProgress };
+
+          if (!this._previewFrame) {
+            this._previewFrame = requestAnimationFrame(() => {
+              this._previewFrame = 0;
+              if (!this._preview) return;
+              this.book.classList.toggle('is-preview-next', this._preview.direction === 'next');
+              this.book.classList.toggle('is-preview-previous', this._preview.direction === 'previous');
+              this._applyPeekStyle(this._preview.direction, this._preview.progress);
+            });
+          }
+        }
+
+        _clearTurnPreview() {
+          if (this._previewFrame) cancelAnimationFrame(this._previewFrame);
+          this._previewFrame = 0;
+          this._preview = null;
+          if (!this.book) return;
+          this.book.classList.remove('is-preview-next', 'is-preview-previous');
+          if (!this._drag) this._resetPeekStyle();
+        }
+
+        _applyPeekStyle(direction, progress) {
+          const safeProgress = this._clamp(progress, 0, 1);
+          const offset = `${(.75 * safeProgress).toFixed(3)}rem`;
+          const angle = `${(13 * safeProgress).toFixed(2)}deg`;
+          this.book.style.setProperty('--peek-opacity', (.18 + safeProgress * .72).toFixed(3));
+          this.book.style.setProperty('--peek-overlay-opacity', (.25 + safeProgress * .7).toFixed(3));
+          this.book.style.setProperty('--peek-next-angle', direction === 'next' ? `-${angle}` : '0deg');
+          this.book.style.setProperty('--peek-next-offset', direction === 'next' ? `-${offset}` : '0rem');
+          this.book.style.setProperty('--peek-previous-angle', direction === 'previous' ? angle : '0deg');
+          this.book.style.setProperty('--peek-previous-offset', direction === 'previous' ? offset : '0rem');
+        }
+
+        _resetPeekStyle() {
+          ['--peek-opacity', '--peek-overlay-opacity', '--peek-next-angle', '--peek-next-offset', '--peek-previous-angle', '--peek-previous-offset']
+            .forEach((property) => this.book.style.removeProperty(property));
+        }
+
+        _previewForPoint(clientX, clientY) {
+          const view = this.view();
+          if (view.length === 0) return null;
+
+          const rect = this.book.getBoundingClientRect();
+          const x = clientX - rect.left;
+          const y = clientY - rect.top;
+          if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+
+          const edgeZone = this._edgeZone(rect);
+          const cornerZone = Math.min(rect.height * .24, 120);
+          const inTopOrBottomCorner = y <= cornerZone || y >= rect.height - cornerZone;
+          const half = rect.width / 2;
+
+          if (this.options.display === 'single' || view.length === 1) {
+            if (x >= half && this.nextPageNumber() !== this.currentPage) {
+              return { direction: 'next', progress: this._edgeProgress(rect.width - x, edgeZone) };
+            }
+            if (x < half && this.previousPageNumber() !== this.currentPage) {
+              return { direction: 'previous', progress: this._edgeProgress(x, edgeZone) };
+            }
+            return null;
+          }
+
+          const onRightPage = x >= half;
+          const onLeftPage = x < half;
+          if (onRightPage && (x >= rect.width - edgeZone || inTopOrBottomCorner) && this.nextPageNumber() !== this.currentPage) {
+            return { direction: 'next', progress: this._edgeProgress(rect.width - x, edgeZone, inTopOrBottomCorner) };
+          }
+          if (onLeftPage && (x <= edgeZone || inTopOrBottomCorner) && this.previousPageNumber() !== this.currentPage) {
+            return { direction: 'previous', progress: this._edgeProgress(x, edgeZone, inTopOrBottomCorner) };
+          }
+          return null;
+        }
+
+        _edgeZone(rect) {
+          return Math.max(rect.width * .22, Math.min(rect.width * .3, 120));
+        }
+
+        _edgeProgress(distanceFromEdge, edgeZone, isCorner = false) {
+          const proximity = 1 - this._clamp(distanceFromEdge / Math.max(edgeZone, 1), 0, 1);
+          return this._clamp((isCorner ? .4 : .25) + proximity * .75, 0, 1);
+        }
+
+        _initialDragProgress(pointerType) {
+          if (this._prefersReducedMotion()) return 0;
+          return pointerType === 'touch' ? .035 : .018;
+        }
+
+        _prefersReducedMotion() {
+          return Boolean(this.motionQuery?.matches);
+        }
+
         _getDragDirection(event) {
           const view = this.view();
           if (view.length === 0) return null;
           const rect = this.book.getBoundingClientRect();
           const x = event.clientX - rect.left;
           const y = event.clientY - rect.top;
-          const edgeZone = Math.max(rect.width * .22, Math.min(rect.width * .3, 120));
+          const edgeZone = this._edgeZone(rect);
           const cornerZone = Math.min(rect.height * .24, 120);
           const inTopOrBottomCorner = y <= cornerZone || y >= rect.height - cornerZone;
 
