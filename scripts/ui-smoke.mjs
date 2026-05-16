@@ -538,7 +538,7 @@ try {
     {
       name: 'null save root',
       persistedValue: 'null',
-      expectedState: { current: 'cafe_intro', activeTab: 'cafe', inventory: [], recipeBook: ['orchard-porridge'] },
+      expectedState: { current: 'cafe_intro', activeTab: 'cafe', inventory: [], recipeBook: ['orchard-threshold-tart'] },
     },
     {
       name: 'null visited map',
@@ -580,7 +580,7 @@ try {
   assert.equal(await page.getAttribute('[data-tab="cafe"]', 'aria-selected'), 'true', 'cafe tab should be selected');
   assert.match(
     await page.locator('#scenePanel').textContent(),
-    /I'm the child from the ruined orchard/,
+    /The café is outside time/,
     'cafe tab should render the JSON dialogue sample',
   );
   assert.match(
@@ -589,11 +589,11 @@ try {
     'orchard ghost child portrait should use the configured character asset folder',
   );
 
-  await page.locator('.choice', { hasText: 'Ask about branching routes' }).click();
+  await page.locator('.choice', { hasText: 'Ask how recipes open portals' }).click();
   assert.match(
     await page.getAttribute('#sceneCharacterAsset', 'src'),
-    /\/static\/img\/assets\/characters\/healer\/warm\.png$/,
-    'ghost child route sample should use the configured character asset folder after a JSON branch',
+    /\/static\/img\/assets\/characters\/cleric\/determined\.png$/,
+    'recipe sample should use the configured character asset folder after a JSON branch',
   );
 
   await page.locator('[data-tab="cafe"]').focus();
@@ -610,7 +610,7 @@ try {
   assert.ok(await page.locator('#recipePanel .recipe-card').count() >= 1, 'recipe tab should render recipe cards');
   assert.match(
     await page.locator('#recipePanel').textContent(),
-    /Orchard Porridge/,
+    /A discovered Recipe Book card/,
     'recipe tab should render recipe metadata from JSON',
   );
 
@@ -636,6 +636,16 @@ try {
   await page.locator('[data-tab="settings"]').click();
   await page.locator('#themeToggle').click();
   assert.equal(await page.getAttribute('#themeToggle', 'aria-pressed'), 'true', 'theme toggle should expose pressed state');
+
+  await page.goto(`http://127.0.0.1:${port}/book.html`);
+  await page.evaluate(() => customElements.whenDefined('page-turn-book'));
+  await page.locator('page-turn-book').waitFor();
+  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Cover closed', 'book demo should initialize the custom element');
+  await page.locator('page-turn-book .next').click();
+  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Page 1 of 4', 'book demo should turn to the first page');
+  await page.locator('page-turn-book .book').focus();
+  await page.keyboard.press('End');
+  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Page 4 of 4', 'book demo should support keyboard navigation');
 
   console.log('UI smoke checks passed');
 } finally {
