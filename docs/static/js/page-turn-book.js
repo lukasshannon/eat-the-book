@@ -381,7 +381,6 @@ template.innerHTML = `
     .cover-subtitle,
     .status {
       margin: 0;
-      color: var(--muted);
       font-size: .95rem;
       letter-spacing: .04em;
     }
@@ -389,6 +388,10 @@ template.innerHTML = `
     .cover-subtitle {
       color: rgba(255, 229, 172, .78);
       text-transform: uppercase;
+    }
+
+    .status {
+      color: rgba(255, 239, 204, .78);
     }
 
     .face h2 {
@@ -830,11 +833,25 @@ class PageTurnBook extends HTMLElement {
   }
 
   previous() {
-    return this.goTo(this.currentPage - 1);
+    return this.goTo(this.previousPageIndex());
   }
 
   next() {
-    return this.goTo(this.currentPage + 1);
+    return this.goTo(this.nextPageIndex());
+  }
+
+  previousPageIndex() {
+    if (this.currentPage <= 1) return 0;
+    if (this.options.display === 'single') return this.currentPage - 1;
+
+    return Math.max(this.visibleSpreadStart() - 2, 1);
+  }
+
+  nextPageIndex() {
+    if (this.currentPage >= this.pages.length) return this.pages.length;
+    if (this.currentPage === 0 || this.options.display === 'single') return this.currentPage + 1;
+
+    return Math.min(this.visibleSpreadStart() + 2, this.pages.length);
   }
 
   turn(command, value) {
@@ -916,8 +933,19 @@ class PageTurnBook extends HTMLElement {
   currentView() {
     if (this.currentPage === 0) return [];
     if (this.options.display === 'single') return [this.currentPage];
-    const left = this.currentPage % 2 === 0 ? this.currentPage : this.currentPage - 1;
+
+    const left = this.visibleSpreadStart();
     return [left, left + 1].filter((page) => page > 0 && page <= this.pages.length);
+  }
+
+  visibleSpreadStart(pageIndex = this.currentPage) {
+    if (pageIndex <= 0) return 0;
+    if (this.options.display === 'single') return pageIndex;
+    if (pageIndex >= this.pages.length) {
+      return this.pages.length % 2 === 0 ? this.pages.length - 1 : this.pages.length;
+    }
+
+    return pageIndex % 2 === 0 ? pageIndex - 1 : pageIndex;
   }
 
   updateState() {
@@ -928,10 +956,14 @@ class PageTurnBook extends HTMLElement {
     this.book.classList.toggle('is-disabled', this.options.disabled);
     this.book.classList.toggle('is-animating', this.isAnimating());
     this.cover.classList.toggle('is-open', this.currentPage > 0);
+    const visibleStart = this.visibleSpreadStart();
     leaves.forEach((leaf, index) => {
-      const isTurned = this.currentPage > index * 2 + 1;
+      const leafStart = index * 2 + 1;
+      const leafEnd = leafStart + 1;
+      const isTurned = visibleStart > leafStart;
+      const isCurrent = this.currentPage > 0 && visibleStart >= leafStart && visibleStart <= leafEnd;
       leaf.classList.toggle('is-turned', isTurned);
-      leaf.classList.toggle('is-current', this.currentPage > 0 && this.currentPage <= index * 2 + 2 && !isTurned);
+      leaf.classList.toggle('is-current', isCurrent && !isTurned);
       leaf.style.zIndex = isTurned ? String(index + 1) : leaf.style.getPropertyValue('--depth');
     });
 
@@ -940,9 +972,19 @@ class PageTurnBook extends HTMLElement {
     this.nextButton.disabled = this.options.disabled || this.currentPage === this.pages.length;
     this.nextZone.disabled = this.options.disabled || this.currentPage === this.pages.length;
     this.nextButton.textContent = this.currentPage === 0 ? 'Open book' : 'Next';
-    this.status.textContent = this.currentPage === 0
-      ? 'Cover closed'
-      : `Page ${Math.min(this.currentPage, this.pages.length)} of ${this.pages.length}`;
+    this.status.textContent = this.statusText();
+  }
+
+  statusText() {
+    if (this.currentPage === 0) return 'Cover closed';
+    if (this.options.display === 'single') {
+      return `Page ${Math.min(this.currentPage, this.pages.length)} of ${this.pages.length}`;
+    }
+
+    const visiblePages = this.currentView();
+    return visiblePages.length > 1
+      ? `Pages ${visiblePages[0]}–${visiblePages.at(-1)} of ${this.pages.length}`
+      : `Page ${visiblePages[0]} of ${this.pages.length}`;
   }
 }
 
