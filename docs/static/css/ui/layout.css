@@ -1156,3 +1156,17 @@ body[data-theme="high-contrast"] .world-hud { filter: contrast(1.1) brightness(1
   0% { transform: translateX(-12px) skewY(.55deg); opacity: .78; }
   100% { transform: translateX(0) skewY(0); opacity: 1; }
 }
+
+.cover-demo-link {
+  color: rgba(255, 231, 174, .9);
+  font-size: .92rem;
+  font-weight: 700;
+  text-underline-offset: .22em;
+}
+
+.cover-demo-link:hover,
+.cover-demo-link:focus-visible {
+  color: #fff1c7;
+  outline: 2px solid rgba(255, 222, 143, .7);
+  outline-offset: 3px;
+}

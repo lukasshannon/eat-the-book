@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eat the Book — Page Turn Component Demo</title>
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        gap: 1.25rem;
+        padding: 1.5rem;
+        color: #f8e8c4;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(208, 151, 74, .28), transparent 34rem),
+          linear-gradient(180deg, #24150f, #0f0d0b);
+        font-family: Georgia, 'Times New Roman', serif;
+      }
+
+      main {
+        display: grid;
+        gap: 1rem;
+        justify-items: center;
+        width: 100%;
+      }
+
+      .demo-header {
+        max-width: 46rem;
+        text-align: center;
+      }
+
+      .demo-header h1 {
+        margin: 0 0 .4rem;
+        font-size: clamp(2rem, 5vw, 3.75rem);
+      }
+
+      .demo-header p {
+        margin: 0;
+        color: rgba(248, 232, 196, .78);
+        line-height: 1.5;
+      }
+
+      a {
+        color: #ffd98a;
+      }
+    </style>
+    <script type="module" src="./static/js/page-turn-book.js"></script>
+  </head>
+  <body>
+    <main>
+      <header class="demo-header">
+        <p><a href="./index.html">← Back to Eat the Book</a></p>
+        <h1>Vanilla Page-Turn Book</h1>
+        <p>A zero-dependency Web Component inspired by a CodePen book flip demo. Click either side of the book, use the buttons, or focus it and press arrow keys.</p>
+      </header>
+
+      <page-turn-book title="Eat the Book" subtitle="Custom element demo">
+        <section data-page data-title="Chapter 1">
+          <p>The café opens between heartbeats, warm with candlelight and the smell of sugar browned in a copper pan.</p>
+        </section>
+        <section data-page data-title="Chapter 2">
+          <p>A recipe card waits inside the notebook. Its ink shifts when the page turns, as if the book remembers another kitchen.</p>
+        </section>
+        <section data-page data-title="Chapter 3">
+          <p>This component is plain JavaScript: no jQuery, no turn.js, no image dependency, and no build step.</p>
+        </section>
+        <section data-page data-title="The End">
+          <p>Use <code>&lt;page-turn-book&gt;</code> anywhere a static HTML page can load one module script.</p>
+        </section>
+      </page-turn-book>
+    </main>
+  </body>
+</html>
