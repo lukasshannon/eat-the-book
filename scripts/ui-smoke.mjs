@@ -538,7 +538,7 @@ try {
     {
       name: 'null save root',
       persistedValue: 'null',
-      expectedState: { current: 'cafe_intro', activeTab: 'cafe', inventory: [], recipeBook: ['orchard-threshold-tart'] },
+      expectedState: { current: 'cafe_intro', activeTab: 'cafe', inventory: [], recipeBook: ['orchard-porridge'] },
     },
     {
       name: 'null visited map',
@@ -592,7 +592,7 @@ try {
   await page.locator('.choice', { hasText: 'Ask how recipes open portals' }).click();
   assert.match(
     await page.getAttribute('#sceneCharacterAsset', 'src'),
-    /\/static\/img\/assets\/characters\/cleric\/determined\.png$/,
+    /\/static\/img\/assets\/characters\/healer\/warm\.png$/,
     'recipe sample should use the configured character asset folder after a JSON branch',
   );
 
@@ -610,7 +610,7 @@ try {
   assert.ok(await page.locator('#recipePanel .recipe-card').count() >= 1, 'recipe tab should render recipe cards');
   assert.match(
     await page.locator('#recipePanel').textContent(),
-    /A discovered Recipe Book card/,
+    /A warm recipe used to enter the ruined orchard/,
     'recipe tab should render recipe metadata from JSON',
   );
 
@@ -638,14 +638,35 @@ try {
   assert.equal(await page.getAttribute('#themeToggle', 'aria-pressed'), 'true', 'theme toggle should expose pressed state');
 
   await page.goto(`http://127.0.0.1:${port}/book.html`);
-  await page.evaluate(() => customElements.whenDefined('page-turn-book'));
-  await page.locator('page-turn-book').waitFor();
-  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Cover closed', 'book demo should initialize the custom element');
-  await page.locator('page-turn-book .next').click();
-  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Page 1 of 4', 'book demo should turn to the first page');
-  await page.locator('page-turn-book .book').focus();
-  await page.keyboard.press('End');
-  assert.equal(await page.locator('page-turn-book .status').textContent(), 'Page 4 of 4', 'book demo should support keyboard navigation');
+  await page.evaluate(() => customElements.whenDefined('turn-book'));
+  await page.locator('turn-book').waitFor();
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [1], 'turn-book should initialize on the cover page');
+
+  await page.locator('turn-book').evaluate((book) => book.next());
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [2, 3], 'turn-book should advance from cover to the first interior spread');
+  await page.waitForTimeout(740);
+
+  await page.locator('turn-book').evaluate((book) => book.next());
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [4, 5], 'turn-book should advance by spreads in double display');
+  await page.waitForTimeout(740);
+
+  await page.locator('turn-book').evaluate((book) => book.page(6));
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [6], 'turn-book should show the back cover alone');
+  await page.waitForTimeout(740);
+
+  await page.locator('turn-book').evaluate((book) => book.display('single'));
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [6], 'turn-book should switch to single-page display');
+
+  await page.locator('turn-book').evaluate((book) => {
+    const newPage = document.createElement('section');
+    newPage.innerHTML = '<h2>Inserted Page</h2><p>This page was added dynamically.</p>';
+    book.addPage(newPage, 3);
+  });
+  assert.equal(await page.locator('turn-book').evaluate((book) => book.pages()), 7, 'turn-book should support addPage');
+  assert.equal(await page.locator('turn-book').evaluate((book) => book.removePage(3)), true, 'turn-book should support removePage');
+
+  await page.locator('[data-demo-command="double"]').click();
+  assert.match(await page.locator('#eventLog').textContent(), /display double/i, 'book demo should expose public API controls');
 
   console.log('UI smoke checks passed');
 } finally {
