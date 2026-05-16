@@ -1107,3 +1107,61 @@
     transform: none;
   }
 }
+
+/* Keep player-facing dialogue controls compact in portrait layouts. */
+@media (max-width: 620px) {
+  .scene-debug summary {
+    min-height: 20px;
+    padding-inline: 7px;
+    font-size: .66rem;
+  }
+
+  .scene-debug[open] .tags {
+    max-height: 44px;
+    overflow: auto;
+  }
+
+  .scene-debug .emotion-label {
+    font-size: .58rem;
+  }
+
+  .speaker-line {
+    gap: 6px;
+  }
+
+  .dialogue-return {
+    min-height: 30px;
+    padding-inline: 9px;
+    font-size: .7rem;
+  }
+
+  .recipe-card h4 {
+    line-height: 1.18;
+  }
+}
+
+@media (max-width: 620px) {
+  .scene-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .dialogue-card .scene-meta h2 {
+    align-self: flex-start;
+  }
+
+  .speaker-line {
+    align-items: flex-start;
+  }
+
+  .dialogue-return {
+    flex: 0 1 auto;
+  }
+
+  .scene-debug,
+  .scene-debug[open] {
+    width: 100%;
+    max-width: 100%;
+  }
+}

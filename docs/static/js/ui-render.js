@@ -171,8 +171,9 @@ function renderRecipeCard(recipe, index, recipeNotes) {
   const title = note.name || note.title || recipe;
   const ingredients = Array.isArray(note.ingredients) && note.ingredients.length ? note.ingredients : ["to be discovered"];
   const ingredientItems = ingredients.map((ingredient) => `<li>${escapeHtml(ingredient)}</li>`).join("");
+  const typeRow = note.type ? `<dt>Type</dt><dd>${escapeHtml(note.type)}</dd>` : "";
 
-  return `<article class="recipe-card recipe-card-${index % 4}" data-recipe-id="${escapeHtml(note.id || recipe)}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(note.description || note.note || "Recipe Book entry")}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>World</dt><dd>${escapeHtml(note.world || "Recipe Book")}</dd></dl><div class="recipe-ingredients"><strong>Ingredients</strong><ul>${ingredientItems}</ul></div></article>`;
+  return `<article class="recipe-card recipe-card-${index % 4}" data-recipe-id="${escapeHtml(note.id || recipe)}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(note.description || note.note || "Recipe Book entry")}</p><dl>${typeRow}<dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>World</dt><dd>${escapeHtml(note.world || "Recipe Book")}</dd></dl><div class="recipe-ingredients"><strong>Ingredients</strong><ul>${ingredientItems}</ul></div></article>`;
 }
 
 function renderWorldEntries(worlds = []) {
@@ -201,6 +202,19 @@ function renderSceneTags(tags) {
   return tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
 }
 
+function renderSceneDetails(node) {
+  const tagsHtml = renderSceneTags(node.tags || []);
+  const emotion = escapeHtml(node.emotion || node.portraitEmotion || "neutral");
+
+  return `<details class="scene-debug"><summary>Details</summary><div class="tags">${tagsHtml}</div><span class="emotion-label">Mood: ${emotion}</span></details>`;
+}
+
+function renderDialogueReturn(node) {
+  if (node.id === "cafe_intro") return "";
+
+  return `<button class="dialogue-return" data-dialogue-return type="button" aria-label="Return to the café page">← Café page</button>`;
+}
+
 export function renderStats(ui, state, notebookSamples = { recipes: [], worlds: [], characters: [] }) {
   const route = state.flags.choseRouteQuestion ? "Character route noted" : "Route undecided";
   const recipe = state.flags.openedRecipeBook ? "Recipe book opened" : "Recipe book closed";
@@ -212,6 +226,7 @@ export function renderStats(ui, state, notebookSamples = { recipes: [], worlds: 
     recipeNotes.set(recipe.id, recipe);
     recipeNotes.set(recipe.name, recipe);
     recipeNotes.set(String(recipe.name || "").toLowerCase(), recipe);
+    (recipe.aliases || []).forEach((alias) => recipeNotes.set(alias, recipe));
   });
   if (notebookSamples.recipes?.[0] && !recipeNotes.has("Café Starter")) {
     recipeNotes.set("Café Starter", notebookSamples.recipes[0]);
@@ -235,13 +250,14 @@ export function renderStats(ui, state, notebookSamples = { recipes: [], worlds: 
 }
 
 export function renderSceneContent(ui, node) {
-  const tagsHtml = renderSceneTags(node.tags || []);
+  const detailsHtml = renderSceneDetails(node);
+  const returnHtml = renderDialogueReturn(node);
   const choicesHtml = (node.choices || []).map(renderChoiceButton).join("");
-  const fallbackChoice = "<div class='mini'>This data sample has no further branch.</div>";
+  const fallbackChoice = renderChoiceButton({ label: "Return to the café page" }, 0);
 
   ui.scenePanel.innerHTML = [
-    `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2><div class="tags">${tagsHtml}</div></div>`,
-    `<div class="speaker-line"><span class="speaker-label">${escapeHtml(node.speaker)}</span><span class="emotion-label">${escapeHtml(node.emotion || node.portraitEmotion || "neutral")}</span></div>`,
+    `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2>${detailsHtml}</div>`,
+    `<div class="speaker-line"><span class="speaker-label">${escapeHtml(node.speaker)}</span>${returnHtml}</div>`,
     `<div class="dialogue-text">${escapeHtml(node.text)}</div>`,
     `<div class="dialogue-stamp" aria-hidden="true"></div>`,
     `<div class="choices">${choicesHtml || fallbackChoice}</div>`,

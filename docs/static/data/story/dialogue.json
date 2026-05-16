@@ -5,10 +5,9 @@
       "characterId": "orchardGhostChild",
       "speakerName": "Orchard Ghost Child",
       "emotionKey": "vulnerable",
-      "dialogueText": "I'm the child from the orchard world. The café is outside time, and the Recipe Book can turn recipes into paths back into corrupted worlds.",
+      "dialogueText": "I'm the child from the ruined orchard. The café is outside time, and the Recipe Book can turn recipes into paths back into corrupted worlds.",
       "labels": [
-        "Café",
-        "JSON scene"
+        "Café"
       ],
       "conditions": [],
       "effects": {
@@ -39,7 +38,7 @@
               "recipe note"
             ],
             "addBook": [
-              "orchard-threshold-tart"
+              "orchard-porridge"
             ]
           }
         },
@@ -60,13 +59,12 @@
     },
     {
       "sceneId": "recipe_book_sample",
-      "characterId": "keeper",
-      "speakerName": "Café Keeper",
-      "emotionKey": "determined",
-      "dialogueText": "The magical Recipe Book records recipes as portal keys. A discovered recipe can point from the café toward a corrupted world when the route is ready.",
+      "characterId": "orchardGhostChild",
+      "speakerName": "Orchard Ghost Child",
+      "emotionKey": "warm",
+      "dialogueText": "Recipes become paths when the Recipe Book is ready. From the café, a discovered recipe can open the way into a corrupted world.",
       "labels": [
-        "Recipes",
-        "Portal"
+        "Café"
       ],
       "conditions": [
         {
@@ -76,7 +74,7 @@
       ],
       "effects": {
         "addBook": [
-          "orchard-threshold-tart"
+          "orchard-porridge"
         ],
         "addItems": [
           "portal page"
@@ -91,6 +89,19 @@
       ],
       "choices": [
         {
+          "label": "Ask the other question",
+          "nextNodeId": "ghost_child_sample",
+          "conditions": [],
+          "effects": {
+            "flags": {
+              "choseRouteQuestion": true
+            },
+            "relationship": {
+              "ghostChild": 1
+            }
+          }
+        },
+        {
           "label": "Return to the café page",
           "nextNodeId": "cafe_intro",
           "conditions": [],
@@ -99,7 +110,7 @@
               "returnedFromRecipeSample": true
             },
             "relationship": {
-              "keeper": 1
+              "ghostChild": 1
             }
           }
         }
@@ -110,10 +121,9 @@
       "characterId": "orchardGhostChild",
       "speakerName": "Orchard Ghost Child",
       "emotionKey": "warm",
-      "dialogueText": "Ghost children can anchor branching character routes. Choices decide which route opens, but this sample keeps the details to confirmed concepts only.",
+      "dialogueText": "Ghost children can anchor branching character routes. A route can open around the child you choose to help and the choices you make with them.",
       "labels": [
-        "Characters",
-        "Routes"
+        "Café"
       ],
       "conditions": [
         {
@@ -134,6 +144,22 @@
       ],
       "choices": [
         {
+          "label": "Ask the other question",
+          "nextNodeId": "recipe_book_sample",
+          "conditions": [],
+          "effects": {
+            "flags": {
+              "openedRecipeBook": true
+            },
+            "relationship": {
+              "ghostChild": 1
+            },
+            "addBook": [
+              "orchard-porridge"
+            ]
+          }
+        },
+        {
           "label": "Return to the café page",
           "nextNodeId": "cafe_intro",
           "conditions": [],
@@ -152,24 +178,28 @@
   "notebookSamples": {
     "recipes": [
       {
-        "id": "orchard-threshold-tart",
-        "name": "Orchard Threshold Tart",
-        "description": "A discovered Recipe Book card that marks a portal toward the orchard world.",
+        "id": "orchard-porridge",
+        "name": "Orchard Porridge",
+        "type": "Entry recipe",
+        "status": "Discovered",
+        "description": "A warm recipe used to enter the ruined orchard.",
         "ingredients": [
-          "café flour",
-          "orchard fruit placeholder",
-          "remembered sweetness"
+          "bruised oats",
+          "blighted apple milk",
+          "grave-honey"
         ],
-        "status": "discovered",
-        "world": "Orchard world"
+        "world": "Ruined Orchard",
+        "aliases": [
+          "orchard-threshold-tart"
+        ]
       }
     ],
     "worlds": [
       {
-        "id": "orchard-world",
-        "name": "Orchard World",
-        "status": "readiness: not ready",
-        "description": "A corrupted world connected to the orchard ghost child; it will open through recipes when the route is ready."
+        "id": "ruined-orchard",
+        "name": "Ruined Orchard",
+        "status": "Corrupted",
+        "description": "A wounded orchard world where the first baby-sun waits below the roots."
       }
     ],
     "characters": [
