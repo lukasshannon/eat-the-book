@@ -2,13 +2,13 @@
   "scenes": [
     {
       "sceneId": "cafe_intro",
-      "characterId": "keeper",
-      "speakerName": "Café Keeper",
-      "emotionKey": "warm",
-      "dialogueText": "This café sits outside time. The recipe book can open portals into corrupted worlds, and ghost children may follow routes shaped by your choices.",
+      "characterId": "orchardGhostChild",
+      "speakerName": "Orchard Ghost Child",
+      "emotionKey": "vulnerable",
+      "dialogueText": "I'm the child from the orchard world. The café is outside time, and the Recipe Book can turn recipes into paths back into corrupted worlds.",
       "labels": [
         "Café",
-        "Data sample"
+        "JSON scene"
       ],
       "conditions": [],
       "effects": {
@@ -17,14 +17,15 @@
         }
       },
       "worldTags": [
-        "café outside time"
+        "café outside time",
+        "ghost children"
       ],
       "chapterTags": [
         "opening"
       ],
       "choices": [
         {
-          "label": "Open the recipe book",
+          "label": "Ask how recipes open portals",
           "nextNodeId": "recipe_book_sample",
           "conditions": [],
           "effects": {
@@ -32,15 +33,18 @@
               "openedRecipeBook": true
             },
             "relationship": {
-              "keeper": 1
+              "ghostChild": 1
             },
             "addItems": [
               "recipe note"
+            ],
+            "addBook": [
+              "orchard-threshold-tart"
             ]
           }
         },
         {
-          "label": "Ask about ghost children",
+          "label": "Ask about branching routes",
           "nextNodeId": "ghost_child_sample",
           "conditions": [],
           "effects": {
@@ -59,7 +63,7 @@
       "characterId": "keeper",
       "speakerName": "Café Keeper",
       "emotionKey": "determined",
-      "dialogueText": "Recipes are portals here. A page can point from the café into a corrupted world; this sample stays minimal until real scenes are written.",
+      "dialogueText": "The magical Recipe Book records recipes as portal keys. A discovered recipe can point from the café toward a corrupted world when the route is ready.",
       "labels": [
         "Recipes",
         "Portal"
@@ -72,7 +76,7 @@
       ],
       "effects": {
         "addBook": [
-          "Portal Recipe"
+          "orchard-threshold-tart"
         ],
         "addItems": [
           "portal page"
@@ -103,10 +107,10 @@
     },
     {
       "sceneId": "ghost_child_sample",
-      "characterId": "ghostChild",
-      "speakerName": "Ghost Child",
-      "emotionKey": "vulnerable",
-      "dialogueText": "Ghost children are tied to recipes, worlds, and branching character routes. This sample names only that structure and avoids invented chapter lore.",
+      "characterId": "orchardGhostChild",
+      "speakerName": "Orchard Ghost Child",
+      "emotionKey": "warm",
+      "dialogueText": "Ghost children can anchor branching character routes. Choices decide which route opens, but this sample keeps the details to confirmed concepts only.",
       "labels": [
         "Characters",
         "Routes"
@@ -118,9 +122,6 @@
         }
       ],
       "effects": {
-        "addBook": [
-          "Ghost Child Route"
-        ],
         "addItems": [
           "child memory"
         ]
@@ -151,25 +152,24 @@
   "notebookSamples": {
     "recipes": [
       {
-        "id": "Café Starter",
-        "title": "Café Starter",
-        "world": "Café outside time",
-        "status": "sample",
-        "note": "The Recipe Book begins in the café."
-      },
+        "id": "orchard-threshold-tart",
+        "name": "Orchard Threshold Tart",
+        "description": "A discovered Recipe Book card that marks a portal toward the orchard world.",
+        "ingredients": [
+          "café flour",
+          "orchard fruit placeholder",
+          "remembered sweetness"
+        ],
+        "status": "discovered",
+        "world": "Orchard world"
+      }
+    ],
+    "worlds": [
       {
-        "id": "Portal Recipe",
-        "title": "Portal Recipe",
-        "world": "Corrupted worlds",
-        "status": "sample",
-        "note": "Recipes can open portals from the café."
-      },
-      {
-        "id": "Ghost Child Route",
-        "title": "Ghost Child Route",
-        "world": "Ghost children",
-        "status": "sample",
-        "note": "Routes can follow ghost children."
+        "id": "orchard-world",
+        "name": "Orchard World",
+        "status": "readiness: not ready",
+        "description": "A corrupted world connected to the orchard ghost child; it will open through recipes when the route is ready."
       }
     ],
     "characters": [
@@ -180,10 +180,10 @@
         "description": "Keeps the café outside time and points readers toward the Recipe Book."
       },
       {
-        "id": "ghostChild",
+        "id": "orchardGhostChild",
         "label": "Routes",
-        "name": "Ghost Child",
-        "description": "A ghost child tied to corrupted worlds, recipes, and branching routes."
+        "name": "Orchard Ghost Child",
+        "description": "A ghost child tied to the orchard world, recipes, and branching routes."
       }
     ]
   }

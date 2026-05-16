@@ -1105,3 +1105,86 @@ body[data-theme="high-contrast"] .side-tabs .tab-btn {
   color: #1b1009;
   filter: saturate(1.05) contrast(1.04);
 }
+
+/* Data-driven sample content polish. */
+.speaker-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+
+.speaker-line .speaker-label {
+  margin-bottom: 0;
+}
+
+.emotion-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid rgba(95, 62, 35, .28);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 239, 198, .58);
+  color: rgba(73, 48, 29, .78);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.recipe-ingredients {
+  margin-top: 7px;
+  font-size: .72rem;
+}
+
+.recipe-ingredients strong {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(83, 55, 34, .68);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.recipe-ingredients ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.world-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.world-entry {
+  padding: 9px 10px;
+  border: 1px solid rgba(151, 188, 204, .24);
+  border-radius: 10px;
+  background: rgba(19, 29, 31, .46);
+  box-shadow: inset 0 1px 0 rgba(246, 226, 184, .12);
+}
+
+.world-entry h4 {
+  margin: 0 0 4px;
+  color: #ffe2ac;
+  font-size: .96rem;
+}
+
+.world-entry span {
+  display: inline-flex;
+  margin-bottom: 5px;
+  color: #b8d9e8;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.world-entry p {
+  margin: 0;
+  color: #f0d7a5;
+  font-size: .78rem;
+  line-height: 1.35;
+}

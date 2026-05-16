@@ -75,3 +75,4 @@ Before finalizing, ensure all are true:
 - Commit content requirement (2026-05-05): do not include binary files (for example `.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.pdf`) in any commit.
 - Visual polish requirement (2026-05-15): do focused, cohesive improvements to the existing cozy-haunted recipe notebook UI; preserve the current design direction, mobile-first readability, JSON-driven content, and DOM/test contracts.
 - Journal background requirement (2026-05-16): render the split journal background from `docs/static/img/assets/journal/` so the center can stretch responsively without distorting the outer notebook edges.
+- JSON content requirement (2026-05-16): Café, Recipes, and Worlds tab sample content should load from `docs/static/data/story/dialogue.json`; include orchard ghost child dialogue, one discovered recipe, and the orchard world entry without hardcoded narrative copy.

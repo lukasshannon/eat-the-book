@@ -1062,3 +1062,48 @@
     height: clamp(118px, 25vh, 206px);
   }
 }
+
+/* Mobile intro banner: keep the notebook primary, expose only a compact expandable control. */
+@media (max-width: 620px) {
+  .mobile-intro summary {
+    gap: 4px;
+    width: auto;
+    min-width: 42px;
+    max-width: 82px;
+    padding: 0 9px;
+    border-radius: var(--radius-pill);
+  }
+
+  .mobile-intro:not([open]) .intro-toggle-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .mobile-intro[open] summary {
+    max-width: 108px;
+  }
+
+  .recipe-spread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recipe-card {
+    min-height: 0;
+  }
+
+  .world-entry p {
+    font-size: .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-pages.page-turning-left,
+  .book-pages.page-turning-right {
+    animation: none;
+    transform: none;
+  }
+}
