@@ -13,7 +13,7 @@ export function defaultState() {
     },
     relation: { keeper: 0, ghostChild: 0 },
     inventory: [],
-    recipeBook: ["orchard-threshold-tart"],
+    recipeBook: ["orchard-porridge"],
     visited: {},
     uiTheme: "default",
     activeTab: "cafe",
