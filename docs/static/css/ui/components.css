@@ -1,7 +1,75 @@
 /* Decorative notebook art, rendered panels, choices, recipes, journal, and portraits. */
 .notebook-page {
-  background: var(--asset-journal) left center / 100% 100% no-repeat;
+  --journal-edge: min(var(--journal-edge-size), 18%);
+  display: grid;
+  grid-template-columns: var(--journal-edge) minmax(0, 1fr) var(--journal-edge);
+  grid-template-rows: var(--journal-edge) minmax(0, 1fr) var(--journal-edge);
   filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .55));
+  overflow: hidden;
+}
+
+.journal-slice {
+  min-width: 0;
+  min-height: 0;
+  background-repeat: no-repeat;
+}
+
+.journal-slice-top-left {
+  background-image: var(--asset-journal-top);
+  background-position: left top;
+  background-size: auto var(--journal-edge-size);
+}
+
+.journal-slice-top {
+  background-image: var(--asset-journal-top);
+  background-position: center top;
+  background-repeat: repeat-x;
+  background-size: auto var(--journal-edge-size);
+}
+
+.journal-slice-top-right {
+  background-image: var(--asset-journal-top);
+  background-position: right top;
+  background-size: auto var(--journal-edge-size);
+}
+
+.journal-slice-left {
+  background-image: var(--asset-journal-left);
+  background-position: left center;
+  background-repeat: repeat-y;
+  background-size: var(--journal-edge-size) auto;
+}
+
+.journal-slice-center {
+  background-image: var(--asset-journal-center);
+  background-position: center;
+  background-size: 100% 100%;
+}
+
+.journal-slice-right {
+  background-image: var(--asset-journal-right);
+  background-position: right center;
+  background-repeat: repeat-y;
+  background-size: var(--journal-edge-size) auto;
+}
+
+.journal-slice-bottom-left {
+  background-image: var(--asset-journal-bottom);
+  background-position: left bottom;
+  background-size: auto var(--journal-edge-size);
+}
+
+.journal-slice-bottom {
+  background-image: var(--asset-journal-bottom);
+  background-position: center bottom;
+  background-repeat: repeat-x;
+  background-size: auto var(--journal-edge-size);
+}
+
+.journal-slice-bottom-right {
+  background-image: var(--asset-journal-bottom);
+  background-position: right bottom;
+  background-size: auto var(--journal-edge-size);
 }
 
 .scene-visual {

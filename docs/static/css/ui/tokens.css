@@ -60,6 +60,12 @@
   --mobile-dialogue-scale: 1rem;
   --asset-pit: url("../../img/assets/pit-square.png");
   --asset-journal: url("../../img/assets/journal-bkgd.png");
+  --asset-journal-top: url("../../img/assets/journal/journal-bkgd-top.png");
+  --asset-journal-right: url("../../img/assets/journal/journal-bkgd-right.png");
+  --asset-journal-bottom: url("../../img/assets/journal/journal-bkgd-bottom.png");
+  --asset-journal-left: url("../../img/assets/journal/journal-bkgd-left.png");
+  --asset-journal-center: url("../../img/assets/journal/journal-bkgd-center.png");
+  --journal-edge-size: 100px;
   --asset-note-large: url("../../img/assets/note-large.png");
   --asset-note-medium: url("../../img/assets/note-medium.png");
   --asset-note-small: url("../../img/assets/note-small.png");
