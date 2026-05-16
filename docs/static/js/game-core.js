@@ -63,13 +63,23 @@ export async function initGame() {
     syncBookMode(ui, state);
     activateTab(state.activeTab, false);
 
+    function returnToCafePage() {
+      state.started = true;
+      state.current = "cafe_intro";
+      state.activeTab = "cafe";
+      persist(state);
+      renderScene();
+    }
+
+    ui.scenePanel.querySelector("[data-dialogue-return]")?.addEventListener("click", returnToCafePage);
+
     ui.scenePanel.querySelectorAll("[data-choice]").forEach((button) => {
       button.addEventListener("click", () => {
         const index = Number(button.getAttribute("data-choice"));
         const selectedChoice = node.choices?.[index];
 
         if (!selectedChoice) {
-          showError(ui, "Choice data is missing for this scene.");
+          returnToCafePage();
           return;
         }
 
