@@ -116,7 +116,8 @@ function validateNotebookSamples(rawStory, errors) {
   }
 
   const sampleSchemas = {
-    recipes: ["id", "title", "world", "status", "note"],
+    recipes: ["id", "name", "description", "status"],
+    worlds: ["id", "name", "status", "description"],
     characters: ["id", "label", "name", "description"],
   };
 
@@ -175,6 +176,7 @@ function validateStoryData(rawStory) {
 function normalizeNotebookSamples(rawStory) {
   return {
     recipes: Array.isArray(rawStory.notebookSamples?.recipes) ? rawStory.notebookSamples.recipes : [],
+    worlds: Array.isArray(rawStory.notebookSamples?.worlds) ? rawStory.notebookSamples.worlds : [],
     characters: Array.isArray(rawStory.notebookSamples?.characters) ? rawStory.notebookSamples.characters : [],
   };
 }
@@ -193,6 +195,7 @@ function normalizeScenes(rawStory, rawCharacters) {
           speakerId: scene.characterId,
           speaker: scene.speakerName,
           text: scene.dialogueText,
+          emotion: scene.emotionKey,
           tags,
           conditions: scene.conditions || [],
           effects: scene.effects || {},

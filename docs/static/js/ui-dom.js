@@ -27,6 +27,7 @@ const requiredElementIds = [
   "journalPanel",
   "stealthMeter",
   "worldObjective",
+  "worldList",
   "sceneCharacterAsset",
   "sceneCharacterName",
 ];

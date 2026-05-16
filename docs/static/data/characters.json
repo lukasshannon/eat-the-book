@@ -8,5 +8,10 @@
     "name": "Ghost Child",
     "portrait": "healer",
     "emotion": "vulnerable"
+  },
+  "orchardGhostChild": {
+    "name": "Orchard Ghost Child",
+    "portrait": "healer",
+    "emotion": "vulnerable"
   }
 }

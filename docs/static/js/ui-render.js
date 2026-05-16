@@ -64,21 +64,21 @@ export function animateBookOpen(ui) {
 const pageTurnTimers = new WeakMap();
 
 function clearPageTurnState(bookPages) {
-  bookPages.classList.remove("page-turning");
+  bookPages.classList.remove("page-turning", "page-turning-left", "page-turning-right");
   pageTurnTimers.delete(bookPages);
 }
 
-function animatePageTurn(ui) {
+function animatePageTurn(ui, direction = "right") {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const existingTimer = pageTurnTimers.get(ui.bookPages);
   if (existingTimer) window.clearTimeout(existingTimer);
 
-  ui.bookPages.classList.remove("page-turning");
+  clearPageTurnState(ui.bookPages);
 
   window.requestAnimationFrame(() => {
-    ui.bookPages.classList.add("page-turning");
-    const timer = window.setTimeout(() => clearPageTurnState(ui.bookPages), 220);
+    ui.bookPages.classList.add("page-turning", `page-turning-${direction}`);
+    const timer = window.setTimeout(() => clearPageTurnState(ui.bookPages), 240);
     pageTurnTimers.set(ui.bookPages, timer);
   });
 }
@@ -162,14 +162,27 @@ function renderInventoryLedger(items) {
 }
 
 function renderRecipeCard(recipe, index, recipeNotes) {
-  const note = recipeNotes.get(recipe) || {
-    title: recipe,
-    world: "Recipe Book",
-    status: "sample",
-    note: "Recipes can become portals.",
+  const note = recipeNotes.get(recipe) || recipeNotes.get(String(recipe).toLowerCase()) || {
+    name: recipe,
+    description: "Recipes can become portals from the café into corrupted worlds.",
+    ingredients: ["recipe page"],
+    status: "unknown",
   };
-  const title = note.title || recipe;
-  return `<article class="recipe-card recipe-card-${index % 4}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(note.world)}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>Note</dt><dd>${escapeHtml(note.note)}</dd></dl></article>`;
+  const title = note.name || note.title || recipe;
+  const ingredients = Array.isArray(note.ingredients) && note.ingredients.length ? note.ingredients : ["to be discovered"];
+  const ingredientItems = ingredients.map((ingredient) => `<li>${escapeHtml(ingredient)}</li>`).join("");
+
+  return `<article class="recipe-card recipe-card-${index % 4}" data-recipe-id="${escapeHtml(note.id || recipe)}"><span class="recipe-index">0${index + 1}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(note.description || note.note || "Recipe Book entry")}</p><dl><dt>Status</dt><dd>${escapeHtml(note.status)}</dd><dt>World</dt><dd>${escapeHtml(note.world || "Recipe Book")}</dd></dl><div class="recipe-ingredients"><strong>Ingredients</strong><ul>${ingredientItems}</ul></div></article>`;
+}
+
+function renderWorldEntries(worlds = []) {
+  if (!worlds.length) return `<p class="mini">World entries will appear as JSON data is added.</p>`;
+
+  return worlds
+    .map((world) => {
+      return `<article class="world-entry" data-world-id="${escapeHtml(world.id)}"><h4>${escapeHtml(world.name)}</h4><span>${escapeHtml(world.status)}</span><p>${escapeHtml(world.description)}</p></article>`;
+    })
+    .join("");
 }
 
 function renderCharacterCards(characters) {
@@ -188,14 +201,23 @@ function renderSceneTags(tags) {
   return tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
 }
 
-export function renderStats(ui, state, notebookSamples = { recipes: [], characters: [] }) {
+export function renderStats(ui, state, notebookSamples = { recipes: [], worlds: [], characters: [] }) {
   const route = state.flags.choseRouteQuestion ? "Character route noted" : "Route undecided";
   const recipe = state.flags.openedRecipeBook ? "Recipe book opened" : "Recipe book closed";
   const inventoryHtml = renderInventorySlots(state);
   const relationRows = renderRelationRows(state.relation);
   const inventoryRows = renderInventoryLedger(state.inventory.length ? state.inventory : SHOWCASE_SLOTS);
-  const recipeNotes = new Map((notebookSamples.recipes || []).map((recipe) => [recipe.id, recipe]));
-  const recipeCards = state.recipeBook.map((recipe, index) => renderRecipeCard(recipe, index, recipeNotes)).join("");
+  const recipeNotes = new Map();
+  (notebookSamples.recipes || []).forEach((recipe) => {
+    recipeNotes.set(recipe.id, recipe);
+    recipeNotes.set(recipe.name, recipe);
+    recipeNotes.set(String(recipe.name || "").toLowerCase(), recipe);
+  });
+  if (notebookSamples.recipes?.[0] && !recipeNotes.has("Café Starter")) {
+    recipeNotes.set("Café Starter", notebookSamples.recipes[0]);
+  }
+  const visibleRecipeIds = state.recipeBook.length ? state.recipeBook : (notebookSamples.recipes || []).map((recipe) => recipe.id);
+  const recipeCards = visibleRecipeIds.map((recipe, index) => renderRecipeCard(recipe, index, recipeNotes)).join("");
   const characterCards = renderCharacterCards(notebookSamples.characters || []);
 
   ui.stats.innerHTML = [
@@ -209,6 +231,7 @@ export function renderStats(ui, state, notebookSamples = { recipes: [], characte
   ui.inventory.innerHTML = inventoryHtml;
   ui.book.innerHTML = [`<div class="recipe-spread">`, recipeCards, `</div>`].join("");
   ui.characters.innerHTML = [`<div class="journal-grid character-grid">`, characterCards, `</div>`].join("");
+  ui.worldList.innerHTML = renderWorldEntries(notebookSamples.worlds || []);
 }
 
 export function renderSceneContent(ui, node) {
@@ -218,7 +241,7 @@ export function renderSceneContent(ui, node) {
 
   ui.scenePanel.innerHTML = [
     `<div class="scene-meta"><h2>${escapeHtml(node.location)}</h2><div class="tags">${tagsHtml}</div></div>`,
-    `<div class="speaker-label">${escapeHtml(node.speaker)}</div>`,
+    `<div class="speaker-line"><span class="speaker-label">${escapeHtml(node.speaker)}</span><span class="emotion-label">${escapeHtml(node.emotion || node.portraitEmotion || "neutral")}</span></div>`,
     `<div class="dialogue-text">${escapeHtml(node.text)}</div>`,
     `<div class="dialogue-stamp" aria-hidden="true"></div>`,
     `<div class="choices">${choicesHtml || fallbackChoice}</div>`,
@@ -269,6 +292,10 @@ export function setActiveTab(ui, tabLayout, desktopWorldHud, state, tabName, onP
   tabLayout[state.activeTab].forEach((section) => setPanelVisibility(section, true));
   syncWorldCompanionVisibility(ui, desktopWorldHud, state);
   setDetailsPanelState(ui, state.activeTab);
-  if (shouldPersist && state.started && previousTab !== state.activeTab) animatePageTurn(ui);
+  if (shouldPersist && state.started && previousTab !== state.activeTab) {
+    const previousIndex = TAB_ORDER.indexOf(previousTab);
+    const activeIndex = TAB_ORDER.indexOf(state.activeTab);
+    animatePageTurn(ui, activeIndex >= previousIndex ? "right" : "left");
+  }
   if (shouldPersist) onPersist(state);
 }
