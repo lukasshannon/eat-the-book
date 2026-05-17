@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eat the Book — Turn Book Web Component Demo</title>
     <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        overflow-x: clip;
+      }
+
       body {
         min-height: 100vh;
         margin: 0;
+        overflow-x: clip;
         display: grid;
         place-items: center;
         gap: 1.25rem;
@@ -380,6 +389,14 @@
                 --page-height: ${this.options.height}px;
                 --turn-duration: ${this.options.duration}ms;
                 --book-ratio: ${this.options.width} / ${this.options.height};
+                --book-cover: #6f4328;
+                --book-cover-dark: #3d2317;
+                --book-cover-border: rgba(255, 225, 162, .28);
+                --book-container-background: linear-gradient(135deg, rgba(120, 72, 37, .62), rgba(37, 22, 14, .92));
+                --page-background: #fff9e9;
+                --page-lines-colour: rgba(120, 85, 48, .105);
+                --page-gradient: linear-gradient(90deg, rgba(60, 36, 18, .17), transparent 15%, transparent 82%, rgba(96, 63, 31, .14));
+                --page-shadow: .22rem .44rem .85rem rgba(45, 26, 13, .2), inset 0 0 1.15rem rgba(123, 82, 39, .08);
                 display: block;
                 width: min(var(--book-width), calc(100vw - 2rem));
                 color: #2c1d13;
@@ -404,14 +421,23 @@
                 aspect-ratio: var(--book-ratio);
                 max-height: calc(100vh - 15rem);
                 perspective: 1900px;
-                filter: drop-shadow(1rem 1.1rem 1.2rem rgba(0, 0, 0, .45));
+                border-radius: 1.25rem;
+                filter: drop-shadow(0 1.15rem 1.25rem rgba(0, 0, 0, .34));
               }
 
               .book {
                 position: absolute;
                 inset: 0;
-                border-radius: 1rem;
+                border-radius: 1.25rem;
+                padding: .45rem;
                 outline: none;
+                background:
+                  radial-gradient(circle at 50% 0%, rgba(255, 232, 174, .22), transparent 36%),
+                  var(--book-container-background);
+                box-shadow:
+                  0 1.2rem 2.4rem rgba(0, 0, 0, .38),
+                  0 .25rem .7rem rgba(0, 0, 0, .22),
+                  inset 0 0 0 1px rgba(255, 235, 180, .18);
                 user-select: none;
                 touch-action: pan-y;
                 overscroll-behavior: contain;
@@ -452,7 +478,7 @@
               }
 
               .book-bed {
-                border-radius: 1rem;
+                border-radius: .95rem;
                 background:
                   linear-gradient(90deg, rgba(83, 48, 24, .44), rgba(123, 77, 39, .24) 12%, transparent 50%, rgba(55, 31, 14, .24)),
                   linear-gradient(135deg, #6d4329, #3a2116);
@@ -460,11 +486,13 @@
               }
 
               .page-layer {
+                inset: .45rem;
                 transform-style: preserve-3d;
                 isolation: isolate;
               }
 
               .gutter {
+                inset: .45rem;
                 z-index: 900;
                 pointer-events: none;
                 background: linear-gradient(90deg, transparent calc(50% - .75rem), rgba(49, 30, 14, .25), rgba(255, 255, 255, .2), rgba(49, 30, 14, .24), transparent calc(50% + .75rem));
@@ -533,7 +561,7 @@
               .page {
                 position: absolute;
                 top: 4%;
-                width: calc(var(--page-width) - 1rem);
+                width: calc(var(--page-width) - 1.05rem);
                 height: calc(100% - 8%);
                 overflow: hidden;
                 --curl-progress: 0;
@@ -541,9 +569,14 @@
                 --curl-opacity: 0;
                 --shadow-opacity: 0;
                 --fold-angle: 0deg;
-                border: 1px solid rgba(93, 65, 36, .22);
-                background: #fffdf5;
-                box-shadow: .2rem .45rem .8rem rgba(45, 26, 13, .18), inset 0 0 1.15rem rgba(123, 82, 39, .08);
+                --back-opacity: 0;
+                --paper-rigidity: 1;
+                border: 1px solid rgba(93, 65, 36, .24);
+                background:
+                  var(--page-gradient),
+                  repeating-linear-gradient(0deg, transparent 0 1.58rem, var(--page-lines-colour) 1.58rem calc(1.58rem + 1px)),
+                  var(--page-background);
+                box-shadow: var(--page-shadow);
                 transition:
                   transform var(--turn-duration) cubic-bezier(.2, .68, .16, 1),
                   opacity calc(var(--turn-duration) * .55) ease,
@@ -561,7 +594,8 @@
               .page::after,
               .curl-highlight,
               .curl-shadow,
-              .page-shade {
+              .page-shade,
+              .fold-line {
                 content: '';
                 position: absolute;
                 inset: 0;
@@ -570,7 +604,8 @@
 
               .curl-highlight,
               .curl-shadow,
-              .page-shade {
+              .page-shade,
+              .fold-line {
                 z-index: 3;
                 opacity: 0;
                 transition: opacity 140ms ease;
@@ -579,33 +614,45 @@
               .page.turn-live .curl-highlight,
               .page.turn-live .curl-shadow,
               .page.turn-live .page-shade,
+              .page.turn-live .fold-line,
               .page.turning-next .curl-highlight,
               .page.turning-next .curl-shadow,
               .page.turning-next .page-shade,
               .page.turning-previous .curl-highlight,
               .page.turning-previous .curl-shadow,
-              .page.turning-previous .page-shade {
+              .page.turning-previous .page-shade,
+              .page.turning-next .fold-line,
+              .page.turning-previous .fold-line {
                 opacity: 1;
               }
 
               .curl-highlight {
                 background:
-                  linear-gradient(var(--fold-angle), transparent 0 42%, rgba(255, 255, 255, calc(var(--curl-opacity) * .78)) 47%, rgba(255, 234, 180, calc(var(--curl-opacity) * .42)) 50%, transparent 58%),
-                  radial-gradient(circle at var(--curl-x) 50%, rgba(255, 255, 255, calc(var(--curl-opacity) * .55)), transparent 34%);
+                  linear-gradient(var(--fold-angle), transparent 0 41%, rgba(255, 255, 255, calc(var(--curl-opacity) * .9)) 47%, rgba(255, 236, 178, calc(var(--curl-opacity) * .5)) 50%, transparent 60%),
+                  radial-gradient(circle at var(--curl-x) 50%, rgba(255, 255, 255, calc(var(--curl-opacity) * .62)), transparent 34%);
                 mix-blend-mode: screen;
-                transform: translateX(calc((.5 - var(--curl-progress)) * 11%));
+                transform: translateX(calc((.5 - var(--curl-progress)) * 14%));
               }
 
               .curl-shadow {
                 background:
-                  linear-gradient(var(--fold-angle), transparent 0 48%, rgba(31, 18, 8, calc(var(--shadow-opacity) * .72)) 52%, transparent 67%),
-                  radial-gradient(ellipse at var(--curl-x) 50%, rgba(22, 11, 5, calc(var(--shadow-opacity) * .58)), transparent 44%);
-                filter: blur(.25px);
+                  linear-gradient(var(--fold-angle), transparent 0 45%, rgba(31, 18, 8, calc(var(--shadow-opacity) * .78)) 52%, transparent 69%),
+                  radial-gradient(ellipse at var(--curl-x) 50%, rgba(22, 11, 5, calc(var(--shadow-opacity) * .66)), transparent 46%);
+                filter: blur(.35px);
               }
 
               .page-shade {
                 z-index: 2;
-                background: linear-gradient(90deg, rgba(20, 10, 4, calc(var(--shadow-opacity) * .85)), transparent 36%, rgba(255, 255, 255, calc(var(--curl-opacity) * .22)) 62%, rgba(28, 13, 5, calc(var(--shadow-opacity) * .55)));
+                background: linear-gradient(90deg, rgba(20, 10, 4, calc(var(--back-opacity) * .96)), transparent 34%, rgba(255, 255, 255, calc(var(--curl-opacity) * .2)) 62%, rgba(28, 13, 5, calc(var(--shadow-opacity) * .58)));
+              }
+
+              .fold-line {
+                z-index: 4;
+                width: 18%;
+                left: calc(var(--curl-x) - 9%);
+                background: linear-gradient(90deg, transparent, rgba(255, 255, 255, calc(var(--curl-opacity) * .42)) 42%, rgba(42, 22, 9, calc(var(--shadow-opacity) * .4)) 54%, transparent);
+                filter: blur(.45px);
+                transform: skewX(calc(var(--curl-progress) * -10deg));
               }
 
               .page::before,
@@ -617,28 +664,47 @@
               }
 
               .page::before {
-                background: repeating-linear-gradient(0deg, rgba(108, 77, 42, .08) 0 1px, transparent 1px 1.65rem);
-                opacity: .55;
+                background:
+                  linear-gradient(90deg, transparent 0 12%, rgba(111, 69, 32, .08) 12% calc(12% + 1px), transparent calc(12% + 1px)),
+                  repeating-linear-gradient(0deg, transparent 0 1.58rem, var(--page-lines-colour) 1.58rem calc(1.58rem + 1px));
+                opacity: .62;
               }
 
               :host([gradients]) .page::after {
-                opacity: .65;
+                opacity: .82;
               }
 
               :host([gradients]) .page.is-left::after {
-                background: linear-gradient(90deg, rgba(48, 28, 12, .18), transparent 18%, transparent 88%, rgba(119, 77, 35, .16));
+                background: linear-gradient(90deg, rgba(48, 28, 12, .2), transparent 18%, transparent 88%, rgba(119, 77, 35, .16));
               }
 
               :host([gradients]) .page.is-right::after,
               :host([gradients]) .page.is-single::after {
-                background: linear-gradient(90deg, rgba(119, 77, 35, .12), transparent 14%, transparent 84%, rgba(48, 28, 12, .2));
+                background: var(--page-gradient);
               }
 
               .page.is-hard {
-                background: linear-gradient(135deg, #7f4e2f, #4a2a19);
-                border-color: rgba(248, 220, 158, .26);
+                --paper-rigidity: .34;
+                background:
+                  linear-gradient(135deg, rgba(255, 228, 158, .1), transparent 36%),
+                  linear-gradient(135deg, var(--book-cover), var(--book-cover-dark));
+                border: 2px solid rgba(43, 24, 12, .55);
                 color: #ffe6ae;
-                box-shadow: .3rem .55rem .85rem rgba(19, 10, 5, .32), inset 0 0 0 .55rem rgba(0, 0, 0, .12);
+                box-shadow:
+                  .35rem .65rem 1.05rem rgba(19, 10, 5, .36),
+                  inset 0 0 0 .55rem rgba(0, 0, 0, .12),
+                  inset 0 0 0 .7rem var(--book-cover-border);
+                transition-duration: calc(var(--turn-duration) * 1.25), calc(var(--turn-duration) * .7), calc(var(--turn-duration) * 1.25);
+              }
+
+              .page.is-hard::before {
+                background: linear-gradient(135deg, rgba(255, 246, 205, .16), transparent 42%, rgba(0, 0, 0, .12));
+                opacity: 1;
+              }
+
+              .page.is-hard::after {
+                background: linear-gradient(90deg, rgba(0, 0, 0, .22), transparent 18%, transparent 82%, rgba(255, 232, 169, .12));
+                opacity: .85;
               }
 
               .page.is-hard .page-content {
@@ -716,13 +782,62 @@
                 transition: none !important;
               }
 
+              .page.turning-next {
+                --curl-progress: .82;
+                --curl-x: 34%;
+                --curl-opacity: .82;
+                --shadow-opacity: .78;
+                --back-opacity: .7;
+                --fold-angle: -22deg;
+              }
+
+              .page.turning-previous {
+                --curl-progress: .82;
+                --curl-x: 66%;
+                --curl-opacity: .82;
+                --shadow-opacity: .78;
+                --back-opacity: .7;
+                --fold-angle: 202deg;
+              }
+
+              .page.turning-next .curl-highlight,
+              .page.turning-next .curl-shadow,
+              .page.turning-next .fold-line,
+              .page.turning-previous .curl-highlight,
+              .page.turning-previous .curl-shadow,
+              .page.turning-previous .fold-line {
+                animation: fold-glide var(--turn-duration) cubic-bezier(.2, .68, .16, 1) both;
+              }
+
+              .page.is-hard.turning-next .curl-highlight,
+              .page.is-hard.turning-next .curl-shadow,
+              .page.is-hard.turning-next .fold-line,
+              .page.is-hard.turning-previous .curl-highlight,
+              .page.is-hard.turning-previous .curl-shadow,
+              .page.is-hard.turning-previous .fold-line {
+                animation-duration: calc(var(--turn-duration) * 1.25);
+              }
+
+              @keyframes fold-glide {
+                0% { opacity: .08; transform: translateX(18%); }
+                38% { opacity: 1; }
+                100% { opacity: .3; transform: translateX(-18%); }
+              }
+
+
               .page.is-single.turn-live[data-drag-direction=previous] {
                 transform-origin: right center;
               }
 
               .page.is-hard.turning-next,
               .page.is-hard.turning-previous {
-                transition-timing-function: cubic-bezier(.18, .62, .2, 1);
+                transition-timing-function: cubic-bezier(.15, .54, .18, 1);
+              }
+
+              .page.is-hard .curl-highlight,
+              .page.is-hard .curl-shadow,
+              .page.is-hard .fold-line {
+                opacity: calc(var(--paper-rigidity) * .65);
               }
 
               .page-content {
@@ -803,13 +918,19 @@
                 .edge-peek {
                   transition-duration: 1ms;
                 }
+
+                .curl-highlight,
+                .curl-shadow,
+                .fold-line {
+                  animation-duration: 1ms !important;
+                }
               }
             </style>
             <section class="shell">
               <div class="viewport">
                 <div class="book" tabindex="0" role="region" aria-label="Turn book">
                   <div class="book-bed" aria-hidden="true"></div>
-                  <div class="page-layer"></div>
+                  <div class="page-layer" role="list" aria-label="Book pages"></div>
                   <span class="edge-peek previous" aria-hidden="true"></span>
                   <span class="edge-peek next" aria-hidden="true"></span>
                   <div class="gutter" aria-hidden="true"></div>
@@ -827,7 +948,9 @@
           const article = document.createElement('article');
           article.className = `page${page.hard ? ' is-hard' : ''}`;
           article.dataset.page = String(page.number);
-          article.innerHTML = `<div class="page-content">${page.html}</div><span class="curl-highlight" aria-hidden="true"></span><span class="curl-shadow" aria-hidden="true"></span><span class="page-shade" aria-hidden="true"></span><span class="page-number" aria-hidden="true">${page.number}</span>`;
+          article.setAttribute('role', 'listitem');
+          article.setAttribute('aria-label', `${page.hard ? 'Hard cover' : 'Page'} ${page.number} of ${this.pagesModel.length}`);
+          article.innerHTML = `<div class="page-content">${page.html}</div><span class="curl-highlight" aria-hidden="true"></span><span class="curl-shadow" aria-hidden="true"></span><span class="page-shade" aria-hidden="true"></span><span class="fold-line" aria-hidden="true"></span><span class="page-number" aria-hidden="true">${page.number}</span>`;
           return article;
         }
 
@@ -1030,8 +1153,10 @@
           }
 
           event.preventDefault();
-          const velocityCompletes = drag.direction === 'next' ? drag.velocityX < -0.45 : drag.velocityX > 0.45;
-          const shouldComplete = drag.progress >= 0.5 || velocityCompletes;
+          const velocityCompletes = drag.direction === 'next' ? drag.velocityX < -0.28 : drag.velocityX > 0.28;
+          const movedAwayFromStart = Math.abs(dx) >= Math.min(42, drag.pageWidth * .105);
+          const stillNearStart = drag.progress < .045 && Math.abs(dx) < 18;
+          const shouldComplete = !stillNearStart && (drag.progress >= .12 || movedAwayFromStart || velocityCompletes);
           if (shouldComplete) {
             const turnEvent = this.dispatchTurnEvent('turning', {
               page: drag.targetPage,
@@ -1066,14 +1191,18 @@
           if (!drag?.sheet) return;
 
           const eased = this._clamp(progress, 0, 1);
+          const isHard = drag.sheet.classList.contains('is-hard');
+          const rigidity = isHard ? .34 : 1;
           const rotation = drag.direction === 'next' ? -180 * eased : 180 * eased;
-          const lift = Math.sin(eased * Math.PI) * this.options.elevation;
+          const lift = Math.sin(eased * Math.PI) * this.options.elevation * (isHard ? .52 : 1);
           const singlePrefix = drag.sheet.classList.contains('is-single') ? 'translateX(-50%) ' : '';
-          drag.sheet.style.transform = `${singlePrefix}rotateY(${rotation}deg) translateZ(${lift}px)`;
+          const stiffTilt = isHard ? ` rotateZ(${(drag.direction === 'next' ? -1 : 1) * Math.sin(eased * Math.PI) * 1.4}deg)` : '';
+          drag.sheet.style.transform = `${singlePrefix}rotateY(${rotation}deg)${stiffTilt} translateZ(${lift}px)`;
           drag.sheet.style.setProperty('--curl-progress', eased.toFixed(4));
           drag.sheet.style.setProperty('--curl-x', drag.direction === 'next' ? `${100 - eased * 62}%` : `${eased * 62}%`);
-          drag.sheet.style.setProperty('--curl-opacity', String(Math.min(1, .18 + eased * .95)));
-          drag.sheet.style.setProperty('--shadow-opacity', String(Math.min(1, .16 + Math.sin(eased * Math.PI) * .72 + eased * .18)));
+          drag.sheet.style.setProperty('--curl-opacity', String(Math.min(1, (.18 + eased * .95) * rigidity)));
+          drag.sheet.style.setProperty('--shadow-opacity', String(Math.min(1, (.16 + Math.sin(eased * Math.PI) * .72 + eased * .18) * (isHard ? .72 : 1))));
+          drag.sheet.style.setProperty('--back-opacity', String(Math.min(1, (eased * .72 + Math.sin(eased * Math.PI) * .26) * (isHard ? .9 : 1))));
           drag.sheet.style.setProperty('--fold-angle', drag.direction === 'next' ? `${28 - eased * 54}deg` : `${152 + eased * 54}deg`);
           drag.progress = eased;
         }
@@ -1085,9 +1214,10 @@
           const from = drag.progress;
           const to = this._clamp(targetProgress, 0, 1);
           const distance = Math.abs(to - from);
+          const hardMultiplier = drag.sheet.classList.contains('is-hard') ? 1.2 : 1;
           const duration = this._prefersReducedMotion()
             ? 1
-            : Math.max(120, this.options.duration * Math.max(.22, distance));
+            : Math.max(120, this.options.duration * hardMultiplier * Math.max(.22, distance));
           const started = performance.now();
 
           return new Promise((resolve) => {
@@ -1142,6 +1272,7 @@
             page.style.removeProperty('--curl-x');
             page.style.removeProperty('--curl-opacity');
             page.style.removeProperty('--shadow-opacity');
+            page.style.removeProperty('--back-opacity');
             page.style.removeProperty('--fold-angle');
             delete page.dataset.dragDirection;
           });
@@ -1319,10 +1450,16 @@
 
         previousPageNumber() {
           if (this.options.display === 'single') return Math.max(this.currentPage - 1, 1);
-          const spreadStart = this.spreadStartFor(this.currentPage);
-          if (spreadStart <= 1) return 1;
-          if (spreadStart === 2) return 1;
-          return Math.max(spreadStart - 2, 1);
+
+          const currentView = this.computeView(this.currentPage);
+          const currentStart = currentView[0] ?? 1;
+          let previousStart = 1;
+          for (let page = 1; page < currentStart; page += 1) {
+            const candidateView = this.computeView(page);
+            if (candidateView[0] < currentStart) previousStart = candidateView[0];
+            page = Math.max(page, candidateView.at(-1));
+          }
+          return previousStart;
         }
 
         normalizedPage(pageNumber) {
@@ -1340,13 +1477,28 @@
           if (this.pages() === 0) return [];
           const page = this.normalizedPage(pageNumber);
           if (this.options.display === 'single') return [page];
-          if (page === 1) return [1];
+          if (this.isStandaloneHardPage(page)) return [page];
 
           // turn.js-style grouping: cover alone, then even/odd interior spreads.
           const start = this.spreadStartFor(page);
           const view = [start];
-          if (start + 1 <= this.pages()) view.push(start + 1);
+          if (start + 1 <= this.pages() && !this.isStandaloneHardPage(start + 1)) view.push(start + 1);
           return view;
+        }
+
+        isStandaloneHardPage(pageNumber) {
+          const page = this.pagesModel[pageNumber - 1];
+          return Boolean(page?.hard && (pageNumber === 1 || pageNumber === this.pages()));
+        }
+
+        animationPageFor(direction, previousView) {
+          const pageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
+          return this.pageElements[pageNumber - 1];
+        }
+
+        animationDurationFor(pageElement) {
+          if (this._prefersReducedMotion()) return 1;
+          return Math.round(this.options.duration * (pageElement?.classList.contains('is-hard') ? 1.25 : 1));
         }
 
         goTo(pageNumber) {
@@ -1378,13 +1530,16 @@
 
           this.applyState({ animate: true, direction, previousView, targetView });
 
+          const animatedPage = this.animationPageFor(direction, previousView);
+          const animationDuration = this.animationDurationFor(animatedPage);
+
           window.setTimeout(() => {
             this.pageElements.forEach((page) => page.classList.remove('turn-live', 'turning-next', 'turning-previous'));
             this.isAnimating = false;
             this.applyState({ animate: false });
             this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1 });
             this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1 });
-          }, this.options.duration);
+          }, animationDuration);
 
           return this.currentPage;
         }
