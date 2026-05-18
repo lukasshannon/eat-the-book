@@ -200,6 +200,7 @@
           this._previewFrame = 0;
           this._ghostClickUntil = 0;
           this._previousDocumentUserSelect = '';
+          this._previousDocumentWebkitUserSelect = '';
           this.boundListeners = [];
           this.motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
           this.options = this.parseAttributes();
@@ -438,6 +439,8 @@
                   0 1.2rem 2.4rem rgba(0, 0, 0, .38),
                   0 .25rem .7rem rgba(0, 0, 0, .22),
                   inset 0 0 0 1px rgba(255, 235, 180, .18);
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
                 user-select: none;
                 touch-action: pan-y;
                 overscroll-behavior: contain;
@@ -464,6 +467,24 @@
                 cursor: grabbing;
                 user-select: none;
                 touch-action: none;
+              }
+
+              .book,
+              .book * {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+              }
+
+              .book :is(img, svg, canvas, video) {
+                -webkit-user-drag: none;
+                user-drag: none;
+                pointer-events: none;
+              }
+
+              .book :is(input, textarea, [contenteditable=""], [contenteditable="true"]) {
+                -webkit-user-select: text;
+                user-select: text;
               }
 
               .book.is-dragging .page-content {
@@ -566,6 +587,7 @@
                 overflow: hidden;
                 --curl-progress: 0;
                 --curl-x: 100%;
+                --curl-y: 50%;
                 --curl-opacity: 0;
                 --shadow-opacity: 0;
                 --fold-angle: 0deg;
@@ -629,7 +651,7 @@
               .curl-highlight {
                 background:
                   linear-gradient(var(--fold-angle), transparent 0 41%, rgba(255, 255, 255, calc(var(--curl-opacity) * .9)) 47%, rgba(255, 236, 178, calc(var(--curl-opacity) * .5)) 50%, transparent 60%),
-                  radial-gradient(circle at var(--curl-x) 50%, rgba(255, 255, 255, calc(var(--curl-opacity) * .62)), transparent 34%);
+                  radial-gradient(circle at var(--curl-x) var(--curl-y), rgba(255, 255, 255, calc(var(--curl-opacity) * .62)), transparent 34%);
                 mix-blend-mode: screen;
                 transform: translateX(calc((.5 - var(--curl-progress)) * 14%));
               }
@@ -637,7 +659,7 @@
               .curl-shadow {
                 background:
                   linear-gradient(var(--fold-angle), transparent 0 45%, rgba(31, 18, 8, calc(var(--shadow-opacity) * .78)) 52%, transparent 69%),
-                  radial-gradient(ellipse at var(--curl-x) 50%, rgba(22, 11, 5, calc(var(--shadow-opacity) * .66)), transparent 46%);
+                  radial-gradient(ellipse at var(--curl-x) var(--curl-y), rgba(22, 11, 5, calc(var(--shadow-opacity) * .66)), transparent 46%);
                 filter: blur(.35px);
               }
 
@@ -652,7 +674,7 @@
                 left: calc(var(--curl-x) - 9%);
                 background: linear-gradient(90deg, transparent, rgba(255, 255, 255, calc(var(--curl-opacity) * .42)) 42%, rgba(42, 22, 9, calc(var(--shadow-opacity) * .4)) 54%, transparent);
                 filter: blur(.45px);
-                transform: skewX(calc(var(--curl-progress) * -10deg));
+                transform: translateY(calc((var(--curl-y) - 50%) * .16)) skewX(calc(var(--curl-progress) * -10deg));
               }
 
               .page::before,
@@ -983,6 +1005,9 @@
           });
           this.addBoundListener(this.book, 'pointerup', (event) => this._finishDrag(event));
           this.addBoundListener(this.book, 'pointercancel', (event) => this._cancelDrag(event));
+          this.addBoundListener(this.book, 'selectstart', (event) => this._preventBookBrowserAction(event));
+          this.addBoundListener(this.book, 'dragstart', (event) => this._preventBookBrowserAction(event));
+          this.addBoundListener(this.book, 'contextmenu', (event) => this._preventBookBrowserAction(event));
           this.addBoundListener(this.book, 'pointerleave', () => this._clearTurnPreview());
           this.addBoundListener(this.book, 'blur', () => this._clearTurnPreview());
         }
@@ -1034,6 +1059,9 @@
 
           const direction = this._getDragDirection(event);
           if (!direction) return;
+          event.preventDefault();
+          this.book.focus({ preventScroll: true });
+          window.getSelection?.()?.removeAllRanges();
           this._clearTurnPreview();
 
           const targetPage = direction === 'next' ? this.nextPageNumber() : this.previousPageNumber();
@@ -1045,6 +1073,7 @@
           const turningPageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
           const sheet = this.pageElements[turningPageNumber - 1];
           if (!sheet) return;
+          const sheetRect = sheet.getBoundingClientRect();
 
           this.applyState({ animate: true, direction, previousView, targetView });
           sheet.classList.add('turn-live', direction === 'next' ? 'turning-next' : 'turning-previous');
@@ -1065,7 +1094,8 @@
             startY: event.clientY,
             currentX: event.clientX,
             currentY: event.clientY,
-            pageWidth: this._getPageWidth(sheet),
+            pageWidth: Math.max(1, sheetRect.width),
+            pageRect: sheetRect,
             startTime: now,
             lastX: event.clientX,
             lastY: event.clientY,
@@ -1075,15 +1105,16 @@
             progress: 0,
             didMove: false,
             horizontal: false,
-            cancelledForVertical: false,
           };
 
           this._previousDocumentUserSelect = document.documentElement.style.userSelect;
+          this._previousDocumentWebkitUserSelect = document.documentElement.style.webkitUserSelect;
           document.documentElement.style.userSelect = 'none';
+          document.documentElement.style.webkitUserSelect = 'none';
           this.book.classList.add('is-dragging', `is-pressing-${direction}`);
           this._applyPeekStyle(direction, event.pointerType === 'touch' ? .72 : .42);
           this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0, pointerType: this._drag.pointerType });
-          this._applyDragProgress(this._initialDragProgress(event.pointerType));
+          this._applyDragProgress(this._dragProgressForPoint(this._drag, event.clientX, event.clientY));
 
           try { this.book.setPointerCapture(event.pointerId); } catch (error) { /* Pointer capture can fail if the pointer already ended. */ }
         }
@@ -1098,17 +1129,9 @@
           const absX = Math.abs(dx);
           const absY = Math.abs(dy);
 
-          if (!drag.horizontal && absY > 12 && absY > absX * 1.35) {
-            drag.cancelledForVertical = true;
-            this._cancelDrag(event);
-            return;
-          }
-
-          if (!drag.horizontal && absX >= 5 && absX >= absY) drag.horizontal = true;
-          if (drag.horizontal) {
-            event.preventDefault();
-            this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
-          }
+          event.preventDefault();
+          if (!drag.horizontal && (absX >= 5 || absY >= 5)) drag.horizontal = true;
+          if (drag.horizontal) this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
 
           const elapsed = Math.max(now - drag.lastTime, 1);
           drag.velocityX = (event.clientX - drag.lastX) / elapsed;
@@ -1119,7 +1142,7 @@
           drag.currentX = event.clientX;
           drag.currentY = event.clientY;
           drag.didMove = absX > 7 || absY > 7;
-          drag.progress = this._progressForDrag(drag, event.clientX);
+          drag.progress = this._dragProgressForPoint(drag, event.clientX, event.clientY);
 
           if (!this._dragFrame) {
             this._dragFrame = requestAnimationFrame(() => {
@@ -1135,7 +1158,7 @@
 
           drag.currentX = event.clientX;
           drag.currentY = event.clientY;
-          drag.progress = this._progressForDrag(drag, event.clientX);
+          drag.progress = this._dragProgressForPoint(drag, event.clientX, event.clientY);
           const dx = event.clientX - drag.startX;
           const dy = event.clientY - drag.startY;
           const isTap = !drag.didMove && Math.abs(dx) < 8 && Math.abs(dy) < 8;
@@ -1197,13 +1220,19 @@
           const lift = Math.sin(eased * Math.PI) * this.options.elevation * (isHard ? .52 : 1);
           const singlePrefix = drag.sheet.classList.contains('is-single') ? 'translateX(-50%) ' : '';
           const stiffTilt = isHard ? ` rotateZ(${(drag.direction === 'next' ? -1 : 1) * Math.sin(eased * Math.PI) * 1.4}deg)` : '';
+          const originX = drag.direction === 'next' ? 'left' : 'right';
+          const originY = this._dragOriginY(drag);
+          const curlPoint = this._dragCurlPoint(drag, eased);
+
+          drag.sheet.style.transformOrigin = `${originX} ${originY}%`;
           drag.sheet.style.transform = `${singlePrefix}rotateY(${rotation}deg)${stiffTilt} translateZ(${lift}px)`;
           drag.sheet.style.setProperty('--curl-progress', eased.toFixed(4));
-          drag.sheet.style.setProperty('--curl-x', drag.direction === 'next' ? `${100 - eased * 62}%` : `${eased * 62}%`);
+          drag.sheet.style.setProperty('--curl-x', `${curlPoint.x}%`);
+          drag.sheet.style.setProperty('--curl-y', `${curlPoint.y}%`);
           drag.sheet.style.setProperty('--curl-opacity', String(Math.min(1, (.18 + eased * .95) * rigidity)));
           drag.sheet.style.setProperty('--shadow-opacity', String(Math.min(1, (.16 + Math.sin(eased * Math.PI) * .72 + eased * .18) * (isHard ? .72 : 1))));
           drag.sheet.style.setProperty('--back-opacity', String(Math.min(1, (eased * .72 + Math.sin(eased * Math.PI) * .26) * (isHard ? .9 : 1))));
-          drag.sheet.style.setProperty('--fold-angle', drag.direction === 'next' ? `${28 - eased * 54}deg` : `${152 + eased * 54}deg`);
+          drag.sheet.style.setProperty('--fold-angle', drag.direction === 'next' ? `${28 - eased * 54 + (curlPoint.y - 50) * .18}deg` : `${152 + eased * 54 - (curlPoint.y - 50) * .18}deg`);
           drag.progress = eased;
         }
 
@@ -1254,6 +1283,7 @@
           const detail = { page: drag.targetPage, previousPage: drag.previousPage, direction: drag.direction, progress: drag.progress, pointerType: drag.pointerType };
           this._resetDragStyles();
           document.documentElement.style.userSelect = this._previousDocumentUserSelect;
+          document.documentElement.style.webkitUserSelect = this._previousDocumentWebkitUserSelect;
           this.book.classList.remove('is-dragging');
           this._drag = null;
           this.applyState({ animate: false });
@@ -1268,14 +1298,23 @@
           this.pageElements.forEach((page) => {
             page.classList.remove('turn-live', 'turning-next', 'turning-previous');
             page.style.transform = '';
+            page.style.transformOrigin = '';
             page.style.removeProperty('--curl-progress');
             page.style.removeProperty('--curl-x');
+            page.style.removeProperty('--curl-y');
             page.style.removeProperty('--curl-opacity');
             page.style.removeProperty('--shadow-opacity');
             page.style.removeProperty('--back-opacity');
             page.style.removeProperty('--fold-angle');
             delete page.dataset.dragDirection;
           });
+        }
+
+        _preventBookBrowserAction(event) {
+          if (this._isInteractiveTarget(event.target) && !this._drag) return;
+          event.preventDefault();
+          event.stopPropagation();
+          window.getSelection?.()?.removeAllRanges();
         }
 
         _updateTurnPreview(event) {
@@ -1380,11 +1419,6 @@
           return this._clamp((isCorner ? .4 : .25) + proximity * .75, 0, 1);
         }
 
-        _initialDragProgress(pointerType) {
-          if (this._prefersReducedMotion()) return 0;
-          return pointerType === 'touch' ? .035 : .018;
-        }
-
         _prefersReducedMotion() {
           return Boolean(this.motionQuery?.matches);
         }
@@ -1420,15 +1454,43 @@
           return event.clientX >= rect.left + rect.width / 2 ? 'next' : 'previous';
         }
 
-        _getPageWidth(sheet) {
-          return Math.max(1, sheet?.getBoundingClientRect().width || this.book.getBoundingClientRect().width / (this.options.display === 'double' ? 2 : 1));
+        _dragProgressForPoint(drag, clientX, clientY = drag.currentY) {
+          drag.currentX = clientX;
+          drag.currentY = clientY;
+
+          const rect = drag.pageRect;
+          const width = Math.max(rect?.width || drag.pageWidth, 1);
+          const hingeX = drag.direction === 'next' ? rect.left : rect.right;
+          const projectedWidth = drag.direction === 'next' ? clientX - hingeX : hingeX - clientX;
+          const cosine = this._clamp(projectedWidth / width, -1, 1);
+          const progress = Math.acos(cosine) / Math.PI;
+          return this._clamp(Math.max(progress, this._minimumGrabProgress(drag)), 0, 1);
         }
 
-        _progressForDrag(drag, currentX) {
-          const raw = drag.direction === 'next'
-            ? (drag.startX - currentX) / drag.pageWidth
-            : (currentX - drag.startX) / drag.pageWidth;
-          return this._clamp(raw, 0, 1);
+        _minimumGrabProgress(drag) {
+          if (this._prefersReducedMotion()) return 0;
+          return drag.pointerType === 'touch' ? .045 : .025;
+        }
+
+        _dragOriginY(drag) {
+          const rect = drag.pageRect;
+          const height = Math.max(rect?.height || this.book.getBoundingClientRect().height, 1);
+          const localY = this._clamp((drag.currentY - rect.top) / height, 0, 1);
+          return Number((localY * 100).toFixed(2));
+        }
+
+        _dragCurlPoint(drag, progress) {
+          const rect = drag.pageRect;
+          const width = Math.max(rect?.width || drag.pageWidth, 1);
+          const height = Math.max(rect?.height || this.book.getBoundingClientRect().height, 1);
+          const localX = this._clamp((drag.currentX - rect.left) / width, 0, 1) * 100;
+          const localY = this._clamp((drag.currentY - rect.top) / height, 0, 1) * 100;
+          const restingEdge = drag.direction === 'next' ? 100 : 0;
+          const x = restingEdge + (localX - restingEdge) * Math.max(.35, progress);
+          return {
+            x: Number(this._clamp(x, 0, 100).toFixed(2)),
+            y: Number(localY.toFixed(2)),
+          };
         }
 
         _releasePointerCapture(pointerId) {
