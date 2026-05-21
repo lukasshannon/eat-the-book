@@ -159,6 +159,7 @@
     <script>
       const PAGE_INTERACTIVE_SELECTOR = 'a, button, input, textarea, select, label, summary, [contenteditable=""], [contenteditable="true"]';
       const BOOLEAN_ATTRIBUTES = new Set(['gradients', 'acceleration', 'keyboard', 'swipe', 'auto-center', 'disabled']);
+      const CORNER_SIZE = 80;
 
       function clamp(value, min, max) {
         return Math.min(Math.max(value, min), max);
@@ -193,7 +194,7 @@
           this.pagesModel = [];
           this.pageElements = [];
           this.currentPage = 1;
-          this.isAnimating = false;
+          this._isAnimating = false;
           this.pointerStart = null;
           this._drag = null;
           this._dragFrame = 0;
@@ -336,6 +337,29 @@
           `;
         }
 
+        isAnimating() {
+          return this._isAnimating;
+        }
+
+        turn(command, value) {
+          const actions = {
+            next: () => this.next(),
+            previous: () => this.previous(),
+            page: () => (value === undefined ? this.currentPage : this.goTo(value)),
+            pages: () => this.pages(),
+            display: () => this.display(value),
+            disable: (v) => {
+              if (v) this.setAttribute('disabled', '');
+              else this.removeAttribute('disabled');
+              return this.options.disabled;
+            },
+            is: () => this.isAnimating() ? 'animating' : 'ready',
+            options: () => ({ ...this.options }),
+            destroy: () => this.destroy(),
+          };
+          return actions[command]?.(value);
+        }
+
         parseAttributes() {
           return {
             page: toPositiveInteger(this.getAttribute('page'), 1),
@@ -445,12 +469,6 @@
                 touch-action: pan-y;
                 overscroll-behavior: contain;
                 transform-style: preserve-3d;
-                --peek-opacity: 0;
-                --peek-overlay-opacity: .25;
-                --peek-next-angle: 0deg;
-                --peek-next-offset: 0rem;
-                --peek-previous-angle: 0deg;
-                --peek-previous-offset: 0rem;
               }
 
               .book:focus-visible {
@@ -521,62 +539,58 @@
               }
 
 
-              .edge-peek {
+              .corner-peek {
                 position: absolute;
-                top: 5%;
-                bottom: 5%;
                 z-index: 980;
-                width: min(18%, 6rem);
-                border: 1px solid rgba(93, 65, 36, .16);
-                background:
-                  linear-gradient(90deg, rgba(255, 255, 255, .5), rgba(255, 245, 214, .32) 38%, rgba(88, 52, 24, .16)),
-                  repeating-linear-gradient(0deg, rgba(108, 77, 42, .07) 0 1px, transparent 1px 1.65rem),
-                  #fffdf5;
-                box-shadow: .35rem .35rem .8rem rgba(22, 12, 6, .22);
-                opacity: 0;
+                width: 70px;
+                height: 70px;
                 pointer-events: none;
-                transition: opacity 120ms ease, transform 150ms cubic-bezier(.2, .68, .16, 1);
-                will-change: opacity, transform;
+                opacity: 0;
+                transition: opacity 150ms ease;
               }
 
-              .edge-peek.next {
-                right: .5rem;
-                border-radius: .15rem .75rem .75rem .15rem;
-                transform-origin: right center;
-                transform: rotateY(0deg) translateX(0) translateZ(18px);
-              }
-
-              .edge-peek.previous {
-                left: .5rem;
-                border-radius: .75rem .15rem .15rem .75rem;
-                transform-origin: left center;
-                transform: rotateY(0deg) translateX(0) translateZ(18px);
-              }
-
-              .edge-peek::after {
+              .corner-peek::before {
                 content: '';
                 position: absolute;
                 inset: 0;
-                background: linear-gradient(90deg, rgba(34, 18, 8, .22), transparent 38%, rgba(255, 255, 255, .32));
-                opacity: var(--peek-overlay-opacity);
+                background:
+                  linear-gradient(135deg, rgba(255,255,255,.6), rgba(255,245,214,.3) 50%, transparent 70%),
+                  #fffdf5;
+                border: 1px solid rgba(93,65,36,.18);
+                box-shadow: .25rem .25rem .6rem rgba(22,12,6,.22);
+              }
+
+              .corner-peek.tl { top: -.2rem; left: -.2rem; }
+              .corner-peek.tr { top: -.2rem; right: -.2rem; }
+              .corner-peek.bl { bottom: -.2rem; left: -.2rem; }
+              .corner-peek.br { bottom: -.2rem; right: -.2rem; }
+
+              .corner-peek.tl::before { clip-path: polygon(0 0, 100% 0, 0 100%); transform-origin: 0 0; transform: rotate(-2deg) translate(1px,1px); border-radius: .5rem 0 0 0; }
+              .corner-peek.tr::before { clip-path: polygon(100% 0, 0 0, 100% 100%); transform-origin: 100% 0; transform: rotate(2deg) translate(-1px,1px); border-radius: 0 .5rem 0 0; }
+              .corner-peek.bl::before { clip-path: polygon(0 100%, 0 0, 100% 100%); transform-origin: 0 100%; transform: rotate(2deg) translate(1px,-1px); border-radius: 0 0 0 .5rem; }
+              .corner-peek.br::before { clip-path: polygon(100% 100%, 100% 0, 0 100%); transform-origin: 100% 100%; transform: rotate(-2deg) translate(-1px,-1px); border-radius: 0 0 .5rem 0; }
+
+              .corner-peek::after {
+                content: '';
+                position: absolute;
+                inset: 0;
                 pointer-events: none;
               }
 
-              .book.is-preview-next .edge-peek.next,
-              .book.is-preview-previous .edge-peek.previous,
-              .book.is-pressing-next .edge-peek.next,
-              .book.is-pressing-previous .edge-peek.previous {
-                opacity: var(--peek-opacity);
-              }
+              .corner-peek.tl::after { background: linear-gradient(to bottom right, rgba(0,0,0,.12), transparent 50%); }
+              .corner-peek.tr::after { background: linear-gradient(to bottom left, rgba(0,0,0,.12), transparent 50%); }
+              .corner-peek.bl::after { background: linear-gradient(to top right, rgba(0,0,0,.12), transparent 50%); }
+              .corner-peek.br::after { background: linear-gradient(to top left, rgba(0,0,0,.12), transparent 50%); }
 
-              .book.is-preview-next .edge-peek.next,
-              .book.is-pressing-next .edge-peek.next {
-                transform: rotateY(var(--peek-next-angle)) translateX(var(--peek-next-offset)) translateZ(18px);
-              }
-
-              .book.is-preview-previous .edge-peek.previous,
-              .book.is-pressing-previous .edge-peek.previous {
-                transform: rotateY(var(--peek-previous-angle)) translateX(var(--peek-previous-offset)) translateZ(18px);
+              .book.is-peek-tl .corner-peek.tl,
+              .book.is-peek-tr .corner-peek.tr,
+              .book.is-peek-bl .corner-peek.bl,
+              .book.is-peek-br .corner-peek.br,
+              .book.is-pressing-tl .corner-peek.tl,
+              .book.is-pressing-tr .corner-peek.tr,
+              .book.is-pressing-bl .corner-peek.bl,
+              .book.is-pressing-br .corner-peek.br {
+                opacity: 1;
               }
 
               .page {
@@ -902,12 +916,11 @@
                 left: .85rem;
               }
 
-              .click-zone {
+              .corner-zone {
                 position: absolute;
-                top: 0;
-                bottom: 0;
                 z-index: 1000;
-                width: 36%;
+                width: 80px;
+                height: 80px;
                 border: 0;
                 padding: 0;
                 background: transparent;
@@ -918,12 +931,14 @@
                 cursor: pointer;
               }
 
-              .click-zone:disabled {
+              .corner-zone:disabled {
                 cursor: default;
               }
 
-              .click-zone.previous { left: 0; }
-              .click-zone.next { right: 0; }
+              .corner-zone.tl { top: 0; left: 0; }
+              .corner-zone.tr { top: 0; right: 0; }
+              .corner-zone.bl { bottom: 0; left: 0; }
+              .corner-zone.br { bottom: 0; right: 0; }
 
               .status {
                 margin: 0;
@@ -937,7 +952,7 @@
 
               @media (prefers-reduced-motion: reduce) {
                 .page,
-                .edge-peek {
+                .corner-peek {
                   transition-duration: 1ms;
                 }
 
@@ -953,11 +968,15 @@
                 <div class="book" tabindex="0" role="region" aria-label="Turn book">
                   <div class="book-bed" aria-hidden="true"></div>
                   <div class="page-layer" role="list" aria-label="Book pages"></div>
-                  <span class="edge-peek previous" aria-hidden="true"></span>
-                  <span class="edge-peek next" aria-hidden="true"></span>
+                  <span class="corner-peek tl" aria-hidden="true"></span>
+                  <span class="corner-peek tr" aria-hidden="true"></span>
+                  <span class="corner-peek bl" aria-hidden="true"></span>
+                  <span class="corner-peek br" aria-hidden="true"></span>
                   <div class="gutter" aria-hidden="true"></div>
-                  <button class="click-zone previous" type="button" tabindex="-1" aria-label="Previous page"></button>
-                  <button class="click-zone next" type="button" tabindex="-1" aria-label="Next page"></button>
+                  <button class="corner-zone tl" type="button" tabindex="-1" aria-label="Previous page"></button>
+                  <button class="corner-zone tr" type="button" tabindex="-1" aria-label="Next page"></button>
+                  <button class="corner-zone bl" type="button" tabindex="-1" aria-label="Previous page"></button>
+                  <button class="corner-zone br" type="button" tabindex="-1" aria-label="Next page"></button>
                 </div>
               </div>
               <p class="status" aria-live="polite"></p>
@@ -990,11 +1009,19 @@
 
         bindEvents() {
           this.unbindEvents();
-          const previousButton = this.shadowRoot.querySelector('.click-zone.previous');
-          const nextButton = this.shadowRoot.querySelector('.click-zone.next');
+          const cornerZones = {
+            tl: this.shadowRoot.querySelector('.corner-zone.tl'),
+            tr: this.shadowRoot.querySelector('.corner-zone.tr'),
+            bl: this.shadowRoot.querySelector('.corner-zone.bl'),
+            br: this.shadowRoot.querySelector('.corner-zone.br'),
+          };
+          this._cornerZones = cornerZones;
 
-          previousButton.disabled = this.options.disabled;
-          nextButton.disabled = this.options.disabled;
+          const disabled = this.options.disabled;
+          cornerZones.tl.disabled = disabled;
+          cornerZones.tr.disabled = disabled;
+          cornerZones.bl.disabled = disabled;
+          cornerZones.br.disabled = disabled;
 
           this.addBoundListener(this.book, 'click', (event) => this.handleBookClick(event));
           this.addBoundListener(this.book, 'keydown', (event) => this.handleKeydown(event));
@@ -1030,6 +1057,7 @@
           }
           if (this.options.disabled || this._drag || this.shouldIgnoreInteraction(event)) return;
           const direction = this._getTapDirection(event);
+          if (!direction) return;
           direction === 'next' ? this.next() : this.previous();
         }
 
@@ -1038,10 +1066,15 @@
           if (event.key === 'ArrowRight') {
             event.preventDefault();
             this.next();
-          }
-          if (event.key === 'ArrowLeft') {
+          } else if (event.key === 'ArrowLeft') {
             event.preventDefault();
             this.previous();
+          } else if (event.key === 'Home') {
+            event.preventDefault();
+            this.page(1);
+          } else if (event.key === 'End') {
+            event.preventDefault();
+            this.page(this.pages());
           }
         }
 
@@ -1054,11 +1087,12 @@
         }
 
         _startDrag(event) {
-          if (!this.options.swipe || this.options.disabled || this.isAnimating || this._drag || this.pages() === 0) return;
+          if (!this.options.swipe || this.options.disabled || this._isAnimating || this._drag || this.pages() === 0) return;
           if (event.isPrimary === false || this._isInteractiveTarget(event.target)) return;
 
-          const direction = this._getDragDirection(event);
-          if (!direction) return;
+          const corner = this._cornerForPoint(event.clientX, event.clientY);
+          if (!corner) return;
+          const direction = this._cornerDirection(corner);
           event.preventDefault();
           this.book.focus({ preventScroll: true });
           window.getSelection?.()?.removeAllRanges();
@@ -1084,6 +1118,7 @@
           this._drag = {
             pointerId: event.pointerId,
             pointerType: event.pointerType || 'mouse',
+            corner,
             direction,
             targetPage,
             previousPage,
@@ -1111,8 +1146,8 @@
           this._previousDocumentWebkitUserSelect = document.documentElement.style.webkitUserSelect;
           document.documentElement.style.userSelect = 'none';
           document.documentElement.style.webkitUserSelect = 'none';
-          this.book.classList.add('is-dragging', `is-pressing-${direction}`);
-          this._applyPeekStyle(direction, event.pointerType === 'touch' ? .72 : .42);
+          this.book.classList.add('is-dragging');
+          this._applyPeekStyle(corner, event.pointerType === 'touch' ? .72 : .42);
           this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0, pointerType: this._drag.pointerType });
           this._applyDragProgress(this._dragProgressForPoint(this._drag, event.clientX, event.clientY));
 
@@ -1131,7 +1166,7 @@
 
           event.preventDefault();
           if (!drag.horizontal && (absX >= 5 || absY >= 5)) drag.horizontal = true;
-          if (drag.horizontal) this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
+          if (drag.horizontal) this._resetPeekStyle();
 
           const elapsed = Math.max(now - drag.lastTime, 1);
           drag.velocityX = (event.clientX - drag.lastX) / elapsed;
@@ -1167,7 +1202,7 @@
           this._ghostClickUntil = Date.now() + (drag.pointerType === 'touch' ? 500 : 120);
 
           if (isTap) {
-            const direction = this._getTapDirection(event);
+            const direction = this._getTapDirection(event) || drag.direction;
             this._animateDragTo(0).then(() => {
               this._endDragState();
               direction === 'next' ? this.next() : this.previous();
@@ -1193,7 +1228,7 @@
               return;
             }
 
-            this.isAnimating = true;
+            this._isAnimating = true;
             this._animateDragTo(1).then(() => this._commitTurn(drag.direction));
             return;
           }
@@ -1271,9 +1306,12 @@
           const previousPage = drag.previousPage;
           this.currentPage = drag.targetPage;
           this._endDragState();
-          this.isAnimating = false;
+          this._isAnimating = false;
           this.applyState({ animate: false });
           this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
+          this.dispatchTurnEvent('pagechange', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
+          if (this.currentPage === 1) this.dispatchTurnEvent('first', { page: this.currentPage, previousPage, direction, pointerType: drag.pointerType });
+          if (this.currentPage === this.pages()) this.dispatchTurnEvent('last', { page: this.currentPage, previousPage, direction, pointerType: drag.pointerType });
           this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
         }
 
@@ -1287,13 +1325,13 @@
           this.book.classList.remove('is-dragging');
           this._drag = null;
           this.applyState({ animate: false });
-          if (!this.isAnimating) this.dispatchTurnEvent('end', detail);
+          if (!this._isAnimating) this.dispatchTurnEvent('end', detail);
         }
 
         _resetDragStyles() {
           if (this._dragFrame) cancelAnimationFrame(this._dragFrame);
           this._dragFrame = 0;
-          this.book.classList.remove('is-pressing-next', 'is-pressing-previous');
+          this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
           this._resetPeekStyle();
           this.pageElements.forEach((page) => {
             page.classList.remove('turn-live', 'turning-next', 'turning-previous');
@@ -1318,7 +1356,8 @@
         }
 
         _updateTurnPreview(event) {
-          if (this._drag || this.options.disabled || this.isAnimating || !this.options.swipe || event.pointerType === 'touch') return;
+          if (this._drag || this.options.disabled || this._isAnimating || !this.options.swipe || event.pointerType === 'touch') return;
+          if (!window.matchMedia?.('(hover: hover)')?.matches) return;
           if (this._isInteractiveTarget(event.target)) {
             this._clearTurnPreview();
             return;
@@ -1330,21 +1369,21 @@
             return;
           }
 
-          this._setTurnPreview(preview.direction, preview.progress);
+          this._setTurnPreview(preview.corner, preview.progress);
         }
 
-        _setTurnPreview(direction, progress) {
+        _setTurnPreview(corner, progress) {
           const safeProgress = this._clamp(progress, 0, 1);
-          if (this._preview?.direction === direction && Math.abs(this._preview.progress - safeProgress) < .02) return;
-          this._preview = { direction, progress: safeProgress };
+          if (this._preview?.corner === corner && Math.abs(this._preview.progress - safeProgress) < .02) return;
+          this._preview = { corner, progress: safeProgress };
 
           if (!this._previewFrame) {
             this._previewFrame = requestAnimationFrame(() => {
               this._previewFrame = 0;
               if (!this._preview) return;
-              this.book.classList.toggle('is-preview-next', this._preview.direction === 'next');
-              this.book.classList.toggle('is-preview-previous', this._preview.direction === 'previous');
-              this._applyPeekStyle(this._preview.direction, this._preview.progress);
+              const { corner, progress } = this._preview;
+              this.book.classList.remove('is-peek-tl', 'is-peek-tr', 'is-peek-bl', 'is-peek-br');
+              this.book.classList.add(`is-peek-${corner}`);
             });
           }
         }
@@ -1354,69 +1393,27 @@
           this._previewFrame = 0;
           this._preview = null;
           if (!this.book) return;
-          this.book.classList.remove('is-preview-next', 'is-preview-previous');
-          if (!this._drag) this._resetPeekStyle();
+          this.book.classList.remove('is-peek-tl', 'is-peek-tr', 'is-peek-bl', 'is-peek-br');
         }
 
-        _applyPeekStyle(direction, progress) {
-          const safeProgress = this._clamp(progress, 0, 1);
-          const offset = `${(.75 * safeProgress).toFixed(3)}rem`;
-          const angle = `${(13 * safeProgress).toFixed(2)}deg`;
-          this.book.style.setProperty('--peek-opacity', (.18 + safeProgress * .72).toFixed(3));
-          this.book.style.setProperty('--peek-overlay-opacity', (.25 + safeProgress * .7).toFixed(3));
-          this.book.style.setProperty('--peek-next-angle', direction === 'next' ? `-${angle}` : '0deg');
-          this.book.style.setProperty('--peek-next-offset', direction === 'next' ? `-${offset}` : '0rem');
-          this.book.style.setProperty('--peek-previous-angle', direction === 'previous' ? angle : '0deg');
-          this.book.style.setProperty('--peek-previous-offset', direction === 'previous' ? offset : '0rem');
+        _applyPeekStyle(corner, _progress) {
+          this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
+          if (corner) this.book.classList.add(`is-pressing-${corner}`);
         }
 
         _resetPeekStyle() {
-          ['--peek-opacity', '--peek-overlay-opacity', '--peek-next-angle', '--peek-next-offset', '--peek-previous-angle', '--peek-previous-offset']
-            .forEach((property) => this.book.style.removeProperty(property));
+          this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
         }
 
         _previewForPoint(clientX, clientY) {
-          const view = this.view();
-          if (view.length === 0) return null;
+          const corner = this._cornerForPoint(clientX, clientY);
+          if (!corner) return null;
 
-          const rect = this.book.getBoundingClientRect();
-          const x = clientX - rect.left;
-          const y = clientY - rect.top;
-          if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+          const direction = this._cornerDirection(corner);
+          const nextPage = direction === 'next' ? this.nextPageNumber() : this.previousPageNumber();
+          if (nextPage === this.currentPage) return null;
 
-          const edgeZone = this._edgeZone(rect);
-          const cornerZone = Math.min(rect.height * .24, 120);
-          const inTopOrBottomCorner = y <= cornerZone || y >= rect.height - cornerZone;
-          const half = rect.width / 2;
-
-          if (this.options.display === 'single' || view.length === 1) {
-            if (x >= half && this.nextPageNumber() !== this.currentPage) {
-              return { direction: 'next', progress: this._edgeProgress(rect.width - x, edgeZone) };
-            }
-            if (x < half && this.previousPageNumber() !== this.currentPage) {
-              return { direction: 'previous', progress: this._edgeProgress(x, edgeZone) };
-            }
-            return null;
-          }
-
-          const onRightPage = x >= half;
-          const onLeftPage = x < half;
-          if (onRightPage && (x >= rect.width - edgeZone || inTopOrBottomCorner) && this.nextPageNumber() !== this.currentPage) {
-            return { direction: 'next', progress: this._edgeProgress(rect.width - x, edgeZone, inTopOrBottomCorner) };
-          }
-          if (onLeftPage && (x <= edgeZone || inTopOrBottomCorner) && this.previousPageNumber() !== this.currentPage) {
-            return { direction: 'previous', progress: this._edgeProgress(x, edgeZone, inTopOrBottomCorner) };
-          }
-          return null;
-        }
-
-        _edgeZone(rect) {
-          return Math.max(rect.width * .22, Math.min(rect.width * .3, 120));
-        }
-
-        _edgeProgress(distanceFromEdge, edgeZone, isCorner = false) {
-          const proximity = 1 - this._clamp(distanceFromEdge / Math.max(edgeZone, 1), 0, 1);
-          return this._clamp((isCorner ? .4 : .25) + proximity * .75, 0, 1);
+          return { corner, direction, progress: 0.5 };
         }
 
         _prefersReducedMotion() {
@@ -1424,34 +1421,33 @@
         }
 
         _getDragDirection(event) {
-          const view = this.view();
-          if (view.length === 0) return null;
-          const rect = this.book.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          const edgeZone = this._edgeZone(rect);
-          const cornerZone = Math.min(rect.height * .24, 120);
-          const inTopOrBottomCorner = y <= cornerZone || y >= rect.height - cornerZone;
-
-          if (this.options.display === 'single' || view.length === 1) {
-            if (x >= rect.width / 2 && this.nextPageNumber() !== this.currentPage) return 'next';
-            if (x < rect.width / 2 && this.previousPageNumber() !== this.currentPage) return 'previous';
-            return null;
-          }
-
-          const half = rect.width / 2;
-          const onRightPage = x >= half;
-          const onLeftPage = x < half;
-          const nearRightEdge = x >= rect.width - edgeZone || (onRightPage && inTopOrBottomCorner);
-          const nearLeftEdge = x <= edgeZone || (onLeftPage && inTopOrBottomCorner);
-          if (onRightPage && nearRightEdge && this.nextPageNumber() !== this.currentPage) return 'next';
-          if (onLeftPage && nearLeftEdge && this.previousPageNumber() !== this.currentPage) return 'previous';
+          const corner = this._cornerForPoint(event.clientX, event.clientY);
+          if (corner) return this._cornerDirection(corner);
           return null;
         }
 
-        _getTapDirection(event) {
+        _cornerForPoint(clientX, clientY) {
           const rect = this.book.getBoundingClientRect();
-          return event.clientX >= rect.left + rect.width / 2 ? 'next' : 'previous';
+          const x = clientX - rect.left;
+          const y = clientY - rect.top;
+          const sz = CORNER_SIZE;
+
+          if (x <= sz && y <= sz) return 'tl';
+          if (x >= rect.width - sz && y <= sz) return 'tr';
+          if (x <= sz && y >= rect.height - sz) return 'bl';
+          if (x >= rect.width - sz && y >= rect.height - sz) return 'br';
+          return null;
+        }
+
+        _cornerDirection(corner) {
+          if (corner === 'tl' || corner === 'bl') return 'previous';
+          return 'next';
+        }
+
+        _getTapDirection(event) {
+          const corner = this._cornerForPoint(event.clientX, event.clientY);
+          if (corner) return this._cornerDirection(corner);
+          return null;
         }
 
         _dragProgressForPoint(drag, clientX, clientY = drag.currentY) {
@@ -1564,7 +1560,7 @@
         }
 
         goTo(pageNumber) {
-          if (this.options.disabled || this.isAnimating || this.pages() === 0) return this.currentPage;
+          if (this.options.disabled || this._isAnimating || this.pages() === 0) return this.currentPage;
 
           const requestedPage = Number.parseInt(pageNumber, 10);
           if (!Number.isFinite(requestedPage) || requestedPage < 1 || requestedPage > this.pages()) {
@@ -1587,7 +1583,7 @@
 
           const direction = targetView[0] > previousView[0] ? 'next' : 'previous';
           this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0 });
-          this.isAnimating = true;
+          this._isAnimating = true;
           this.currentPage = targetPage;
 
           this.applyState({ animate: true, direction, previousView, targetView });
@@ -1597,9 +1593,12 @@
 
           window.setTimeout(() => {
             this.pageElements.forEach((page) => page.classList.remove('turn-live', 'turning-next', 'turning-previous'));
-            this.isAnimating = false;
+            this._isAnimating = false;
             this.applyState({ animate: false });
             this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1 });
+            this.dispatchTurnEvent('pagechange', { page: this.currentPage, previousPage, direction, progress: 1 });
+            if (this.currentPage === 1) this.dispatchTurnEvent('first', { page: this.currentPage, previousPage, direction });
+            if (this.currentPage === this.pages()) this.dispatchTurnEvent('last', { page: this.currentPage, previousPage, direction });
             this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1 });
           }, animationDuration);
 
@@ -1613,8 +1612,15 @@
           const spreadStart = this.spreadStartFor(this.currentPage);
 
           this.book.classList.toggle('is-disabled', this.options.disabled);
-          this.shadowRoot.querySelector('.click-zone.previous').disabled = this.options.disabled || view[0] === 1;
-          this.shadowRoot.querySelector('.click-zone.next').disabled = this.options.disabled || view.at(-1) === this.pages();
+          const atFirst = view[0] === 1;
+          const atLast = view.at(-1) === this.pages();
+          const disabled = this.options.disabled;
+          if (this._cornerZones) {
+            this._cornerZones.tl.disabled = disabled || atFirst;
+            this._cornerZones.tr.disabled = disabled || atLast;
+            this._cornerZones.bl.disabled = disabled || atFirst;
+            this._cornerZones.br.disabled = disabled || atLast;
+          }
 
           this.pageElements.forEach((element, index) => {
             const pageNumber = index + 1;
