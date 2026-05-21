@@ -521,7 +521,12 @@ const { port } = server.address();
 
 let browser;
 try {
-  browser = await chromium.launch({ headless: true });
+  const systemChromium = '/snap/bin/chromium';
+  const isSystemChromium = await import('node:fs').then((fs) => fs.promises.access(systemChromium).then(() => true).catch(() => false));
+  const launchOptions = isSystemChromium
+    ? { executablePath: systemChromium, headless: true, args: ['--no-sandbox', '--disable-gpu'] }
+    : { headless: true };
+  browser = await chromium.launch(launchOptions);
 
   for (const viewport of viewportSizes) {
     const viewportPage = await browser.newPage();
@@ -644,15 +649,15 @@ try {
 
   await page.locator('turn-book').evaluate((book) => book.next());
   assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [2, 3], 'turn-book should advance from cover to the first interior spread');
-  await page.waitForTimeout(740);
+  await page.waitForTimeout(900);
 
   await page.locator('turn-book').evaluate((book) => book.next());
   assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [4, 5], 'turn-book should advance by spreads in double display');
-  await page.waitForTimeout(740);
+  await page.waitForTimeout(900);
 
   await page.locator('turn-book').evaluate((book) => book.page(6));
   assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [6], 'turn-book should show the back cover alone');
-  await page.waitForTimeout(740);
+  await page.waitForTimeout(900);
 
   await page.locator('turn-book').evaluate((book) => book.display('single'));
   assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [6], 'turn-book should switch to single-page display');
@@ -667,6 +672,50 @@ try {
 
   await page.locator('[data-demo-command="double"]').click();
   assert.match(await page.locator('#eventLog').textContent(), /display double/i, 'book demo should expose public API controls');
+
+  // Test isAnimating() method
+  assert.equal(await page.locator('turn-book').evaluate((book) => book.isAnimating()), false, 'turn-book isAnimating should return false when idle');
+
+  // Test turn() convenience method
+  assert.equal(await page.locator('turn-book').evaluate((book) => book.turn('pages')), 6, 'turn-book turn("pages") should return page count');
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.turn('display')), 'double', 'turn-book turn("display") should return current display mode');
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.turn('page')), 6, 'turn-book turn("page") should return current page');
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.turn('is')), 'ready', 'turn-book turn("is") should return ready status');
+
+  // Test turn-book events: pagechange, first, last
+  const turnBookEvents = await page.locator('turn-book').evaluate((book) => {
+    const events = [];
+    const record = (event) => events.push({ type: event.type, page: event.detail.page, previousPage: event.detail.previousPage });
+    book.addEventListener('pagechange', record);
+    book.addEventListener('first', record);
+    book.addEventListener('last', record);
+    book.page(1);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        book.removeEventListener('pagechange', record);
+        book.removeEventListener('first', record);
+        book.removeEventListener('last', record);
+        resolve(events.map((e) => ({ type: e.type, page: e.page })));
+      }, 1200);
+    });
+  });
+  assert.ok(turnBookEvents.some((e) => e.type === 'pagechange'), 'turn-book should fire pagechange event');
+  assert.ok(turnBookEvents.some((e) => e.type === 'first'), 'turn-book should fire first event when on page 1');
+
+  // Test Home/End keyboard navigation on turn-book
+  await page.locator('turn-book').evaluate((book) => book.page(3));
+  await page.waitForTimeout(1000);
+  await page.locator('turn-book').evaluate((book) => {
+    book.shadowRoot.querySelector('.book').dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+  });
+  await page.waitForTimeout(1000);
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [6], 'turn-book End key should jump to last page');
+
+  await page.locator('turn-book').evaluate((book) => {
+    book.shadowRoot.querySelector('.book').dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+  });
+  await page.waitForTimeout(1000);
+  assert.deepEqual(await page.locator('turn-book').evaluate((book) => book.view()), [1], 'turn-book Home key should jump to first page');
 
   console.log('UI smoke checks passed');
 } finally {
