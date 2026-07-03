@@ -1,0 +1,1520 @@
+const PAGE_INTERACTIVE_SELECTOR = 'a, button, input, textarea, select, label, summary, [contenteditable=""], [contenteditable="true"]';
+const BOOLEAN_ATTRIBUTES = new Set(['gradients', 'acceleration', 'keyboard', 'swipe', 'auto-center', 'disabled']);
+const CORNER_SIZE = 80;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function toPositiveInteger(value, fallback) {
+  const number = Number.parseInt(value, 10);
+  return Number.isFinite(number) && number > 0 ? number : fallback;
+}
+
+class TurnBook extends HTMLElement {
+  static get observedAttributes() {
+    return [
+      'page',
+      'display',
+      'width',
+      'height',
+      'duration',
+      'elevation',
+      'gradients',
+      'acceleration',
+      'keyboard',
+      'swipe',
+      'auto-center',
+      'disabled',
+    ];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.pagesModel = [];
+    this.pageElements = [];
+    this.currentPage = 1;
+    this._isAnimating = false;
+    this._drag = null;
+    this._dragFrame = 0;
+    this._previewFrame = 0;
+    this._ghostClickUntil = 0;
+    this._previousDocumentUserSelect = '';
+    this._previousDocumentWebkitUserSelect = '';
+    this.boundListeners = [];
+    this.motionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    this.options = this.parseAttributes();
+  }
+
+  connectedCallback() {
+    this.options = this.parseAttributes();
+    this.collectPages();
+    this.currentPage = this.normalizedPage(toPositiveInteger(this.getAttribute('page'), 1));
+    this.render();
+    this.bindEvents();
+    this.applyState({ animate: false });
+  }
+
+  disconnectedCallback() {
+    this.unbindEvents();
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue || !this.shadowRoot) return;
+
+    this.options = this.parseAttributes();
+    this.applySizing();
+
+    if (name === 'page') {
+      this.page(toPositiveInteger(newValue, this.currentPage));
+      return;
+    }
+
+    if (name === 'display') {
+      this.currentPage = this.normalizedPage(this.currentPage);
+      this.applyState({ animate: false });
+      return;
+    }
+
+    if (BOOLEAN_ATTRIBUTES.has(name)) {
+      this.applyState({ animate: false });
+    }
+  }
+
+  page(number) {
+    if (number === undefined) return this.currentPage;
+    return this.goTo(number);
+  }
+
+  next() {
+    return this.goTo(this.nextPageNumber());
+  }
+
+  previous() {
+    return this.goTo(this.previousPageNumber());
+  }
+
+  pages() {
+    return this.pagesModel.length;
+  }
+
+  view() {
+    return this.computeView(this.currentPage);
+  }
+
+  display(value) {
+    if (value === undefined) return this.options.display;
+
+    const nextDisplay = value === 'single' ? 'single' : 'double';
+    if (nextDisplay !== this.options.display) {
+      this.setAttribute('display', nextDisplay);
+    }
+    return this.options.display;
+  }
+
+  size(width, height) {
+    this.options.width = toPositiveInteger(width, this.options.width);
+    this.options.height = toPositiveInteger(height, this.options.height);
+    this.setAttribute('width', String(this.options.width));
+    this.setAttribute('height', String(this.options.height));
+    this.applySizing();
+    return { width: this.options.width, height: this.options.height };
+  }
+
+  addPage(node, pageNumber) {
+    const pageNode = node instanceof HTMLElement ? node : document.createElement('section');
+    if (!(node instanceof HTMLElement)) pageNode.textContent = String(node ?? '');
+
+    const logicalPages = this.logicalLightDomChildren();
+    const insertAt = pageNumber === undefined
+      ? logicalPages.length
+      : clamp(Number.parseInt(pageNumber, 10) - 1, 0, logicalPages.length);
+    const referenceNode = logicalPages[insertAt] || null;
+
+    this.insertBefore(pageNode, referenceNode);
+    this.collectPages();
+    this.render();
+    this.bindEvents();
+    this.currentPage = this.normalizedPage(this.currentPage);
+    this.applyState({ animate: false });
+    return this.pages();
+  }
+
+  removePage(pageNumber) {
+    const index = Number.parseInt(pageNumber, 10) - 1;
+    const page = this.pagesModel[index];
+    if (!page) {
+      this.dispatchTurnEvent('missing', { page: pageNumber, previousPage: this.currentPage });
+      return false;
+    }
+
+    page.source.remove();
+    this.collectPages();
+    this.render();
+    this.bindEvents();
+    this.currentPage = this.normalizedPage(Math.min(this.currentPage, this.pages()));
+    this.applyState({ animate: false });
+    return true;
+  }
+
+  destroy() {
+    this.unbindEvents();
+    const readablePages = this.pagesModel.map((page, index) => `
+      <article class="fallback-page">
+        <h2>Page ${index + 1}</h2>
+        ${page.html}
+      </article>
+    `).join('');
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; color: #2b1a10; font-family: Georgia, 'Times New Roman', serif; }
+        .fallback { display: grid; gap: 1rem; padding: 1rem; background: #f3dfb9; }
+        .fallback-page { padding: 1rem; border: 1px solid #d5b276; background: #fff8e6; }
+      </style>
+      <section class="fallback" aria-label="Readable book fallback">${readablePages}</section>
+    `;
+  }
+
+  isAnimating() {
+    return this._isAnimating;
+  }
+
+  turn(command, value) {
+    const actions = {
+      next: () => this.next(),
+      previous: () => this.previous(),
+      page: () => (value === undefined ? this.currentPage : this.goTo(value)),
+      pages: () => this.pages(),
+      display: () => this.display(value),
+      disable: (v) => {
+        if (v) this.setAttribute('disabled', '');
+        else this.removeAttribute('disabled');
+        return this.options.disabled;
+      },
+      is: () => this.isAnimating() ? 'animating' : 'ready',
+      options: () => ({ ...this.options }),
+      destroy: () => this.destroy(),
+    };
+    return actions[command]?.(value);
+  }
+
+  parseAttributes() {
+    return {
+      page: toPositiveInteger(this.getAttribute('page'), 1),
+      display: this.getAttribute('display') === 'single' ? 'single' : 'double',
+      width: toPositiveInteger(this.getAttribute('width'), 800),
+      height: toPositiveInteger(this.getAttribute('height'), 500),
+      duration: Math.max(0, toPositiveInteger(this.getAttribute('duration'), 700)),
+      elevation: Math.max(0, toPositiveInteger(this.getAttribute('elevation'), 50)),
+      gradients: this.hasAttribute('gradients'),
+      acceleration: this.hasAttribute('acceleration'),
+      keyboard: this.hasAttribute('keyboard'),
+      swipe: this.hasAttribute('swipe'),
+      autoCenter: this.hasAttribute('auto-center'),
+      disabled: this.hasAttribute('disabled'),
+    };
+  }
+
+  collectPages() {
+    this.pagesModel = this.logicalLightDomChildren().map((source, index) => ({
+      number: index + 1,
+      source,
+      html: source.innerHTML,
+      hard: source.classList.contains('hard') || source.hasAttribute('hard'),
+    }));
+  }
+
+  logicalLightDomChildren() {
+    return Array.from(this.children).filter((child) => {
+      if (!(child instanceof HTMLElement)) return false;
+      return !child.hasAttribute('ignore') && !child.hasAttribute('data-ignore') && !child.hidden;
+    });
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = this.template();
+    this.book = this.shadowRoot.querySelector('.book');
+    this.viewport = this.shadowRoot.querySelector('.viewport');
+    this.layer = this.shadowRoot.querySelector('.page-layer');
+    this.status = this.shadowRoot.querySelector('.status');
+    this.pageElements = this.pagesModel.map((page) => this.createPageElement(page));
+    this.layer.append(...this.pageElements);
+    this.applySizing();
+  }
+
+  template() {
+    return `
+      <style>
+        :host {
+          --book-width: ${this.options.width}px;
+          --book-height: ${this.options.height}px;
+          --page-width: ${this.options.display === 'double' ? this.options.width / 2 : this.options.width}px;
+          --page-height: ${this.options.height}px;
+          --turn-duration: ${this.options.duration}ms;
+          --book-ratio: ${this.options.width} / ${this.options.height};
+          --book-cover: #6f4328;
+          --book-cover-dark: #3d2317;
+          --book-cover-border: rgba(255, 225, 162, .28);
+          --book-container-background: linear-gradient(135deg, rgba(120, 72, 37, .62), rgba(37, 22, 14, .92));
+          --page-background: #fff9e9;
+          --page-lines-colour: rgba(120, 85, 48, .105);
+          --page-gradient: linear-gradient(90deg, rgba(60, 36, 18, .17), transparent 15%, transparent 82%, rgba(96, 63, 31, .14));
+          --page-shadow: .22rem .44rem .85rem rgba(45, 26, 13, .2), inset 0 0 1.15rem rgba(123, 82, 39, .08);
+          display: block;
+          width: min(var(--book-width), calc(100vw - 2rem));
+          color: #2c1d13;
+          font-family: Georgia, 'Times New Roman', serif;
+        }
+
+        :host([auto-center]) {
+          margin-inline: auto;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .shell {
+          display: grid;
+          gap: .85rem;
+          justify-items: center;
+        }
+
+        .viewport {
+          position: relative;
+          width: min(var(--book-width), calc(100vw - 2rem));
+          aspect-ratio: var(--book-ratio);
+          max-height: calc(100vh - 15rem);
+          perspective: 1900px;
+          border-radius: 1.25rem;
+          filter: drop-shadow(0 1.15rem 1.25rem rgba(0, 0, 0, .34));
+        }
+
+        .book {
+          position: absolute;
+          inset: 0;
+          border-radius: 1.25rem;
+          padding: .45rem;
+          outline: none;
+          background:
+            radial-gradient(circle at 50% 0%, rgba(255, 232, 174, .22), transparent 36%),
+            var(--book-container-background);
+          box-shadow:
+            0 1.2rem 2.4rem rgba(0, 0, 0, .38),
+            0 .25rem .7rem rgba(0, 0, 0, .22),
+            inset 0 0 0 1px rgba(255, 235, 180, .18);
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
+          touch-action: pan-y;
+          overscroll-behavior: contain;
+          transform-style: preserve-3d;
+        }
+
+        .book:focus-visible {
+          outline: 3px solid rgba(255, 217, 138, .78);
+          outline-offset: .5rem;
+        }
+
+        .book.is-disabled {
+          cursor: not-allowed;
+          opacity: .7;
+        }
+
+        .book.is-dragging {
+          cursor: grabbing;
+          user-select: none;
+          touch-action: none;
+        }
+
+        .book,
+        .book * {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+
+        .book :is(img, svg, canvas, video) {
+          -webkit-user-drag: none;
+          user-drag: none;
+          pointer-events: none;
+        }
+
+        .book :is(input, textarea, [contenteditable=""], [contenteditable="true"]) {
+          -webkit-user-select: text;
+          user-select: text;
+        }
+
+        .book.is-dragging .page-content {
+          user-select: none;
+        }
+
+        .page-layer,
+        .book-bed,
+        .gutter {
+          position: absolute;
+          inset: 0;
+        }
+
+        .book-bed {
+          border-radius: .95rem;
+          background:
+            linear-gradient(90deg, rgba(83, 48, 24, .44), rgba(123, 77, 39, .24) 12%, transparent 50%, rgba(55, 31, 14, .24)),
+            linear-gradient(135deg, #6d4329, #3a2116);
+          box-shadow: inset 0 0 0 2px rgba(245, 211, 143, .14), inset 0 0 2rem rgba(0, 0, 0, .32);
+        }
+
+        .page-layer {
+          inset: .45rem;
+          transform-style: preserve-3d;
+          isolation: isolate;
+        }
+
+        .gutter {
+          inset: .45rem;
+          z-index: 900;
+          pointer-events: none;
+          background: linear-gradient(90deg, transparent calc(50% - .75rem), rgba(49, 30, 14, .25), rgba(255, 255, 255, .2), rgba(49, 30, 14, .24), transparent calc(50% + .75rem));
+          opacity: .9;
+        }
+
+
+        .corner-peek {
+          position: absolute;
+          z-index: 980;
+          width: 70px;
+          height: 70px;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 150ms ease;
+        }
+
+        .corner-peek::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,.6), rgba(255,245,214,.3) 50%, transparent 70%),
+            #fffdf5;
+          border: 1px solid rgba(93,65,36,.18);
+          box-shadow: .25rem .25rem .6rem rgba(22,12,6,.22);
+        }
+
+        .corner-peek.tl { top: -.2rem; left: -.2rem; }
+        .corner-peek.tr { top: -.2rem; right: -.2rem; }
+        .corner-peek.bl { bottom: -.2rem; left: -.2rem; }
+        .corner-peek.br { bottom: -.2rem; right: -.2rem; }
+
+        .corner-peek.tl::before { clip-path: polygon(0 0, 100% 0, 0 100%); transform-origin: 0 0; transform: rotate(-2deg) translate(1px,1px); border-radius: .5rem 0 0 0; }
+        .corner-peek.tr::before { clip-path: polygon(100% 0, 0 0, 100% 100%); transform-origin: 100% 0; transform: rotate(2deg) translate(-1px,1px); border-radius: 0 .5rem 0 0; }
+        .corner-peek.bl::before { clip-path: polygon(0 100%, 0 0, 100% 100%); transform-origin: 0 100%; transform: rotate(2deg) translate(1px,-1px); border-radius: 0 0 0 .5rem; }
+        .corner-peek.br::before { clip-path: polygon(100% 100%, 100% 0, 0 100%); transform-origin: 100% 100%; transform: rotate(-2deg) translate(-1px,-1px); border-radius: 0 0 .5rem 0; }
+
+        .corner-peek::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .corner-peek.tl::after { background: linear-gradient(to bottom right, rgba(0,0,0,.12), transparent 50%); }
+        .corner-peek.tr::after { background: linear-gradient(to bottom left, rgba(0,0,0,.12), transparent 50%); }
+        .corner-peek.bl::after { background: linear-gradient(to top right, rgba(0,0,0,.12), transparent 50%); }
+        .corner-peek.br::after { background: linear-gradient(to top left, rgba(0,0,0,.12), transparent 50%); }
+
+        .book.is-peek-tl .corner-peek.tl,
+        .book.is-peek-tr .corner-peek.tr,
+        .book.is-peek-bl .corner-peek.bl,
+        .book.is-peek-br .corner-peek.br,
+        .book.is-pressing-tl .corner-peek.tl,
+        .book.is-pressing-tr .corner-peek.tr,
+        .book.is-pressing-bl .corner-peek.bl,
+        .book.is-pressing-br .corner-peek.br {
+          opacity: 1;
+        }
+
+        .page {
+          position: absolute;
+          top: 4%;
+          width: calc(var(--page-width) - 1.05rem);
+          height: calc(100% - 8%);
+          overflow: hidden;
+          --curl-progress: 0;
+          --curl-x: 100%;
+          --curl-y: 50%;
+          --curl-opacity: 0;
+          --shadow-opacity: 0;
+          --fold-angle: 0deg;
+          --back-opacity: 0;
+          --paper-rigidity: 1;
+          border: 1px solid rgba(93, 65, 36, .24);
+          background:
+            var(--page-gradient),
+            repeating-linear-gradient(0deg, transparent 0 1.58rem, var(--page-lines-colour) 1.58rem calc(1.58rem + 1px)),
+            var(--page-background);
+          box-shadow: var(--page-shadow);
+          transition:
+            transform var(--turn-duration) cubic-bezier(.2, .68, .16, 1),
+            opacity calc(var(--turn-duration) * .55) ease,
+            box-shadow var(--turn-duration) ease;
+          transform-style: preserve-3d;
+          backface-visibility: hidden;
+          will-change: transform;
+        }
+
+        :host([acceleration]) .page {
+          transform: translateZ(0);
+        }
+
+        .page::before,
+        .page::after,
+        .curl-highlight,
+        .curl-shadow,
+        .page-shade,
+        .fold-line {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .curl-highlight,
+        .curl-shadow,
+        .page-shade,
+        .fold-line {
+          z-index: 3;
+          opacity: 0;
+          transition: opacity 140ms ease;
+        }
+
+        .page.turn-live .curl-highlight,
+        .page.turn-live .curl-shadow,
+        .page.turn-live .page-shade,
+        .page.turn-live .fold-line,
+        .page.turning-next .curl-highlight,
+        .page.turning-next .curl-shadow,
+        .page.turning-next .page-shade,
+        .page.turning-previous .curl-highlight,
+        .page.turning-previous .curl-shadow,
+        .page.turning-previous .page-shade,
+        .page.turning-next .fold-line,
+        .page.turning-previous .fold-line {
+          opacity: 1;
+        }
+
+        .curl-highlight {
+          background:
+            linear-gradient(var(--fold-angle), transparent 0 41%, rgba(255, 255, 255, calc(var(--curl-opacity) * .9)) 47%, rgba(255, 236, 178, calc(var(--curl-opacity) * .5)) 50%, transparent 60%),
+            radial-gradient(circle at var(--curl-x) var(--curl-y), rgba(255, 255, 255, calc(var(--curl-opacity) * .62)), transparent 34%);
+          mix-blend-mode: screen;
+          transform: translateX(calc((.5 - var(--curl-progress)) * 14%));
+        }
+
+        .curl-shadow {
+          background:
+            linear-gradient(var(--fold-angle), transparent 0 45%, rgba(31, 18, 8, calc(var(--shadow-opacity) * .78)) 52%, transparent 69%),
+            radial-gradient(ellipse at var(--curl-x) var(--curl-y), rgba(22, 11, 5, calc(var(--shadow-opacity) * .66)), transparent 46%);
+          filter: blur(.35px);
+        }
+
+        .page-shade {
+          z-index: 2;
+          background: linear-gradient(90deg, rgba(20, 10, 4, calc(var(--back-opacity) * .96)), transparent 34%, rgba(255, 255, 255, calc(var(--curl-opacity) * .2)) 62%, rgba(28, 13, 5, calc(var(--shadow-opacity) * .58)));
+        }
+
+        .fold-line {
+          z-index: 4;
+          width: 18%;
+          left: calc(var(--curl-x) - 9%);
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, calc(var(--curl-opacity) * .42)) 42%, rgba(42, 22, 9, calc(var(--shadow-opacity) * .4)) 54%, transparent);
+          filter: blur(.45px);
+          transform: translateY(calc((var(--curl-y) - 50%) * .16)) skewX(calc(var(--curl-progress) * -10deg));
+        }
+
+        .page::before,
+        .page::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .page::before {
+          background:
+            linear-gradient(90deg, transparent 0 12%, rgba(111, 69, 32, .08) 12% calc(12% + 1px), transparent calc(12% + 1px)),
+            repeating-linear-gradient(0deg, transparent 0 1.58rem, var(--page-lines-colour) 1.58rem calc(1.58rem + 1px));
+          opacity: .62;
+        }
+
+        :host([gradients]) .page::after {
+          opacity: .82;
+        }
+
+        :host([gradients]) .page.is-left::after {
+          background: linear-gradient(90deg, rgba(48, 28, 12, .2), transparent 18%, transparent 88%, rgba(119, 77, 35, .16));
+        }
+
+        :host([gradients]) .page.is-right::after,
+        :host([gradients]) .page.is-single::after {
+          background: var(--page-gradient);
+        }
+
+        .page.is-hard {
+          --paper-rigidity: .34;
+          background:
+            linear-gradient(135deg, rgba(255, 228, 158, .1), transparent 36%),
+            linear-gradient(135deg, var(--book-cover), var(--book-cover-dark));
+          border: 2px solid rgba(43, 24, 12, .55);
+          color: #ffe6ae;
+          box-shadow:
+            .35rem .65rem 1.05rem rgba(19, 10, 5, .36),
+            inset 0 0 0 .55rem rgba(0, 0, 0, .12),
+            inset 0 0 0 .7rem var(--book-cover-border);
+          transition-duration: calc(var(--turn-duration) * 1.25), calc(var(--turn-duration) * .7), calc(var(--turn-duration) * 1.25);
+        }
+
+        .page.is-hard::before {
+          background: linear-gradient(135deg, rgba(255, 246, 205, .16), transparent 42%, rgba(0, 0, 0, .12));
+          opacity: 1;
+        }
+
+        .page.is-hard::after {
+          background: linear-gradient(90deg, rgba(0, 0, 0, .22), transparent 18%, transparent 82%, rgba(255, 232, 169, .12));
+          opacity: .85;
+        }
+
+        .page.is-hard .page-content {
+          display: grid;
+          place-items: center;
+          text-align: center;
+        }
+
+        .page.is-hidden {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .page.is-left {
+          left: .5rem;
+          border-radius: .75rem .15rem .15rem .75rem;
+          transform-origin: right center;
+        }
+
+        .page.is-right {
+          right: .5rem;
+          border-radius: .15rem .75rem .75rem .15rem;
+          transform-origin: left center;
+        }
+
+        .page.is-single {
+          left: 50%;
+          border-radius: .75rem;
+          transform-origin: left center;
+        }
+
+        .page.is-before.is-left,
+        .page.turning-previous {
+          transform: rotateY(0deg) translateZ(-8px);
+        }
+
+        .page.is-before.is-right,
+        .page.turning-next {
+          transform: rotateY(-180deg) translateZ(var(--turn-elevation));
+        }
+
+        .page.is-after.is-left {
+          transform: rotateY(180deg) translateZ(-8px);
+        }
+
+        .page.is-after.is-right {
+          transform: rotateY(0deg) translateZ(-12px);
+        }
+
+        .page.is-current {
+          opacity: 1;
+          transform: rotateY(0deg) translateZ(0);
+        }
+
+        .page.is-single.is-current {
+          transform: translateX(-50%) rotateY(0deg) translateZ(0);
+        }
+
+        .page.is-single.is-before {
+          transform: translateX(-50%) rotateY(-180deg) translateZ(-10px);
+        }
+
+        .page.is-single.is-after {
+          transform: translateX(-50%) rotateY(12deg) translateZ(-18px);
+        }
+
+        .page.turning-next,
+        .page.turning-previous,
+        .page.turn-live {
+          z-index: 950 !important;
+          box-shadow: .55rem .75rem 1.4rem rgba(22, 12, 6, .32);
+        }
+
+        .page.turn-live {
+          transition: none !important;
+        }
+
+        .page.turning-next {
+          --curl-progress: .82;
+          --curl-x: 34%;
+          --curl-opacity: .82;
+          --shadow-opacity: .78;
+          --back-opacity: .7;
+          --fold-angle: -22deg;
+        }
+
+        .page.turning-previous {
+          --curl-progress: .82;
+          --curl-x: 66%;
+          --curl-opacity: .82;
+          --shadow-opacity: .78;
+          --back-opacity: .7;
+          --fold-angle: 202deg;
+        }
+
+        .page.turning-next .curl-highlight,
+        .page.turning-next .curl-shadow,
+        .page.turning-next .fold-line,
+        .page.turning-previous .curl-highlight,
+        .page.turning-previous .curl-shadow,
+        .page.turning-previous .fold-line {
+          animation: fold-glide var(--turn-duration) cubic-bezier(.2, .68, .16, 1) both;
+        }
+
+        .page.is-hard.turning-next .curl-highlight,
+        .page.is-hard.turning-next .curl-shadow,
+        .page.is-hard.turning-next .fold-line,
+        .page.is-hard.turning-previous .curl-highlight,
+        .page.is-hard.turning-previous .curl-shadow,
+        .page.is-hard.turning-previous .fold-line {
+          animation-duration: calc(var(--turn-duration) * 1.25);
+        }
+
+        @keyframes fold-glide {
+          0% { opacity: .08; transform: translateX(18%); }
+          38% { opacity: 1; }
+          100% { opacity: .3; transform: translateX(-18%); }
+        }
+
+
+        .page.is-single.turn-live[data-drag-direction=previous] {
+          transform-origin: right center;
+        }
+
+        .page.is-hard.turning-next,
+        .page.is-hard.turning-previous {
+          transition-timing-function: cubic-bezier(.15, .54, .18, 1);
+        }
+
+        .page.is-hard .curl-highlight,
+        .page.is-hard .curl-shadow,
+        .page.is-hard .fold-line {
+          opacity: calc(var(--paper-rigidity) * .65);
+        }
+
+        .page-content {
+          position: relative;
+          z-index: 1;
+          display: block;
+          height: 100%;
+          padding: clamp(1rem, 4vw, 2.1rem);
+          overflow: auto;
+        }
+
+        .page-content h1,
+        .page-content h2,
+        .page-content p {
+          margin-top: 0;
+        }
+
+        .page-content h1,
+        .page-content h2 {
+          color: inherit;
+          line-height: 1;
+        }
+
+        .page:not(.is-hard) .page-content h1,
+        .page:not(.is-hard) .page-content h2 {
+          color: #70401f;
+        }
+
+        .page-number {
+          position: absolute;
+          right: .85rem;
+          bottom: .6rem;
+          z-index: 2;
+          color: rgba(72, 46, 24, .42);
+          font-size: .82rem;
+        }
+
+        .page.is-left .page-number {
+          right: auto;
+          left: .85rem;
+        }
+
+        .corner-zone {
+          position: absolute;
+          z-index: 1000;
+          width: 80px;
+          height: 80px;
+          border: 0;
+          padding: 0;
+          background: transparent;
+          pointer-events: none;
+        }
+
+        .book:not(.is-disabled) {
+          cursor: pointer;
+        }
+
+        .corner-zone:disabled {
+          cursor: default;
+        }
+
+        .corner-zone.tl { top: 0; left: 0; }
+        .corner-zone.tr { top: 0; right: 0; }
+        .corner-zone.bl { bottom: 0; left: 0; }
+        .corner-zone.br { bottom: 0; right: 0; }
+
+        .status {
+          margin: 0;
+          color: rgba(255, 239, 204, .82);
+          font-size: .95rem;
+          letter-spacing: .04em;
+          text-align: center;
+        }
+
+        slot { display: none; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .page,
+          .corner-peek {
+            transition-duration: 1ms;
+          }
+
+          .curl-highlight,
+          .curl-shadow,
+          .fold-line {
+            animation-duration: 1ms !important;
+          }
+        }
+      </style>
+      <section class="shell">
+        <div class="viewport">
+          <div class="book" tabindex="0" role="region" aria-label="Turn book">
+            <div class="book-bed" aria-hidden="true"></div>
+            <div class="page-layer" role="list" aria-label="Book pages"></div>
+            <span class="corner-peek tl" aria-hidden="true"></span>
+            <span class="corner-peek tr" aria-hidden="true"></span>
+            <span class="corner-peek bl" aria-hidden="true"></span>
+            <span class="corner-peek br" aria-hidden="true"></span>
+            <div class="gutter" aria-hidden="true"></div>
+            <button class="corner-zone tl" type="button" tabindex="-1" aria-label="Previous page"></button>
+            <button class="corner-zone tr" type="button" tabindex="-1" aria-label="Next page"></button>
+            <button class="corner-zone bl" type="button" tabindex="-1" aria-label="Previous page"></button>
+            <button class="corner-zone br" type="button" tabindex="-1" aria-label="Next page"></button>
+          </div>
+        </div>
+        <p class="status" aria-live="polite"></p>
+        <slot></slot>
+      </section>
+    `;
+  }
+
+  createPageElement(page) {
+    const article = document.createElement('article');
+    article.className = `page${page.hard ? ' is-hard' : ''}`;
+    article.dataset.page = String(page.number);
+    article.setAttribute('role', 'listitem');
+    article.setAttribute('aria-label', `${page.hard ? 'Hard cover' : 'Page'} ${page.number} of ${this.pagesModel.length}`);
+    article.innerHTML = `<div class="page-content">${page.html}</div><span class="curl-highlight" aria-hidden="true"></span><span class="curl-shadow" aria-hidden="true"></span><span class="page-shade" aria-hidden="true"></span><span class="fold-line" aria-hidden="true"></span><span class="page-number" aria-hidden="true">${page.number}</span>`;
+    return article;
+  }
+
+  applySizing() {
+    if (!this.shadowRoot) return;
+    const pageWidth = this.options.display === 'double' ? this.options.width / 2 : this.options.width;
+    this.style.setProperty('--book-width', `${this.options.width}px`);
+    this.style.setProperty('--book-height', `${this.options.height}px`);
+    this.style.setProperty('--page-width', `${pageWidth}px`);
+    this.style.setProperty('--page-height', `${this.options.height}px`);
+    this.style.setProperty('--turn-duration', `${this.options.duration}ms`);
+    this.style.setProperty('--turn-elevation', `${this.options.elevation}px`);
+    this.style.setProperty('--book-ratio', `${this.options.width} / ${this.options.height}`);
+  }
+
+  bindEvents() {
+    this.unbindEvents();
+    const cornerZones = {
+      tl: this.shadowRoot.querySelector('.corner-zone.tl'),
+      tr: this.shadowRoot.querySelector('.corner-zone.tr'),
+      bl: this.shadowRoot.querySelector('.corner-zone.bl'),
+      br: this.shadowRoot.querySelector('.corner-zone.br'),
+    };
+    this._cornerZones = cornerZones;
+
+    const disabled = this.options.disabled;
+    cornerZones.tl.disabled = disabled;
+    cornerZones.tr.disabled = disabled;
+    cornerZones.bl.disabled = disabled;
+    cornerZones.br.disabled = disabled;
+
+    this.addBoundListener(this.book, 'click', (event) => this.handleBookClick(event));
+    this.addBoundListener(this.book, 'keydown', (event) => this.handleKeydown(event));
+    this.addBoundListener(this.book, 'pointerdown', (event) => this._startDrag(event));
+    this.addBoundListener(this.book, 'pointermove', (event) => {
+      this._updateDrag(event);
+      this._updateTurnPreview(event);
+    });
+    this.addBoundListener(this.book, 'pointerup', (event) => this._finishDrag(event));
+    this.addBoundListener(this.book, 'pointercancel', (event) => this._cancelDrag(event));
+    this.addBoundListener(this.book, 'selectstart', (event) => this._preventBookBrowserAction(event));
+    this.addBoundListener(this.book, 'dragstart', (event) => this._preventBookBrowserAction(event));
+    this.addBoundListener(this.book, 'contextmenu', (event) => this._preventBookBrowserAction(event));
+    this.addBoundListener(this.book, 'pointerleave', () => this._clearTurnPreview());
+    this.addBoundListener(this.book, 'blur', () => this._clearTurnPreview());
+  }
+
+  addBoundListener(target, type, listener) {
+    target.addEventListener(type, listener);
+    this.boundListeners.push({ target, type, listener });
+  }
+
+  unbindEvents() {
+    this.boundListeners.forEach(({ target, type, listener }) => target.removeEventListener(type, listener));
+    this.boundListeners = [];
+  }
+
+  handleBookClick(event) {
+    if (Date.now() < this._ghostClickUntil) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (this.options.disabled || this._drag || this.shouldIgnoreInteraction(event)) return;
+    const direction = this._getTapDirection(event);
+    if (!direction) return;
+    direction === 'next' ? this.next() : this.previous();
+  }
+
+  handleKeydown(event) {
+    if (!this.options.keyboard || this.options.disabled) return;
+    if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.next();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.previous();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      this.page(1);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      this.page(this.pages());
+    }
+  }
+
+  shouldIgnoreInteraction(event) {
+    return this._isInteractiveTarget(event.target);
+  }
+
+  _isInteractiveTarget(target) {
+    return Boolean(target?.closest?.(PAGE_INTERACTIVE_SELECTOR));
+  }
+
+  _startDrag(event) {
+    if (!this.options.swipe || this.options.disabled || this._isAnimating || this._drag || this.pages() === 0) return;
+    if (event.isPrimary === false || this._isInteractiveTarget(event.target)) return;
+
+    const corner = this._cornerForPoint(event.clientX, event.clientY);
+    if (!corner) return;
+    const direction = this._cornerDirection(corner);
+    event.preventDefault();
+    this.book.focus({ preventScroll: true });
+    window.getSelection?.()?.removeAllRanges();
+    this._clearTurnPreview();
+
+    const targetPage = direction === 'next' ? this.nextPageNumber() : this.previousPageNumber();
+    if (targetPage === this.currentPage) return;
+
+    const previousPage = this.currentPage;
+    const previousView = this.computeView(previousPage);
+    const targetView = this.computeView(targetPage);
+    const turningPageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
+    const sheet = this.pageElements[turningPageNumber - 1];
+    if (!sheet) return;
+    const sheetRect = sheet.getBoundingClientRect();
+
+    this.applyState({ animate: true, direction, previousView, targetView });
+    sheet.classList.add('turn-live', direction === 'next' ? 'turning-next' : 'turning-previous');
+    sheet.dataset.dragDirection = direction;
+    sheet.setAttribute('aria-hidden', 'false');
+
+    const now = performance.now();
+    this._drag = {
+      pointerId: event.pointerId,
+      pointerType: event.pointerType || 'mouse',
+      corner,
+      direction,
+      targetPage,
+      previousPage,
+      previousView,
+      targetView,
+      sheet,
+      startX: event.clientX,
+      startY: event.clientY,
+      currentX: event.clientX,
+      currentY: event.clientY,
+      pageWidth: Math.max(1, sheetRect.width),
+      pageRect: sheetRect,
+      startTime: now,
+      lastX: event.clientX,
+      lastY: event.clientY,
+      lastTime: now,
+      velocityX: 0,
+      velocityY: 0,
+      progress: 0,
+      didMove: false,
+      horizontal: false,
+    };
+
+    this._previousDocumentUserSelect = document.documentElement.style.userSelect;
+    this._previousDocumentWebkitUserSelect = document.documentElement.style.webkitUserSelect;
+    document.documentElement.style.userSelect = 'none';
+    document.documentElement.style.webkitUserSelect = 'none';
+    this.book.classList.add('is-dragging');
+    this._applyPeekStyle(corner);
+    this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0, pointerType: this._drag.pointerType });
+    this._applyDragProgress(this._dragProgressForPoint(this._drag, event.clientX, event.clientY));
+
+    try { this.book.setPointerCapture(event.pointerId); } catch (error) { /* Pointer capture can fail if the pointer already ended. */ }
+  }
+
+  _updateDrag(event) {
+    const drag = this._drag;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    const now = performance.now();
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    event.preventDefault();
+    if (!drag.horizontal && (absX >= 5 || absY >= 5)) drag.horizontal = true;
+    if (drag.horizontal) this._resetPeekStyle();
+
+    const elapsed = Math.max(now - drag.lastTime, 1);
+    drag.velocityX = (event.clientX - drag.lastX) / elapsed;
+    drag.velocityY = (event.clientY - drag.lastY) / elapsed;
+    drag.lastX = event.clientX;
+    drag.lastY = event.clientY;
+    drag.lastTime = now;
+    drag.currentX = event.clientX;
+    drag.currentY = event.clientY;
+    drag.didMove = absX > 7 || absY > 7;
+    drag.progress = this._dragProgressForPoint(drag, event.clientX, event.clientY);
+
+    if (!this._dragFrame) {
+      this._dragFrame = requestAnimationFrame(() => {
+        this._dragFrame = 0;
+        if (this._drag) this._applyDragProgress(this._drag.progress);
+      });
+    }
+  }
+
+  _finishDrag(event) {
+    const drag = this._drag;
+    if (!drag || event.pointerId !== drag.pointerId) return;
+
+    drag.currentX = event.clientX;
+    drag.currentY = event.clientY;
+    drag.progress = this._dragProgressForPoint(drag, event.clientX, event.clientY);
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    const isTap = !drag.didMove && Math.abs(dx) < 8 && Math.abs(dy) < 8;
+
+    this._releasePointerCapture(drag.pointerId);
+    this._ghostClickUntil = Date.now() + (drag.pointerType === 'touch' ? 500 : 120);
+
+    if (isTap) {
+      const direction = this._getTapDirection(event) || drag.direction;
+      this._animateDragTo(0).then(() => {
+        this._endDragState();
+        direction === 'next' ? this.next() : this.previous();
+      });
+      return;
+    }
+
+    event.preventDefault();
+    const velocityCompletes = drag.direction === 'next' ? drag.velocityX < -0.28 : drag.velocityX > 0.28;
+    const movedAwayFromStart = Math.abs(dx) >= Math.min(42, drag.pageWidth * .105);
+    const stillNearStart = drag.progress < .045 && Math.abs(dx) < 18;
+    const shouldComplete = !stillNearStart && (drag.progress >= .12 || movedAwayFromStart || velocityCompletes);
+    if (shouldComplete) {
+      const turnEvent = this.dispatchTurnEvent('turning', {
+        page: drag.targetPage,
+        previousPage: drag.previousPage,
+        direction: drag.direction,
+        progress: drag.progress,
+        pointerType: drag.pointerType,
+      });
+      if (!turnEvent) {
+        this._animateDragTo(0).then(() => this._endDragState());
+        return;
+      }
+
+      this._isAnimating = true;
+      this._animateDragTo(1).then(() => this._commitTurn(drag.direction));
+      return;
+    }
+
+    this._animateDragTo(0).then(() => this._endDragState());
+  }
+
+  _cancelDrag(event) {
+    const drag = this._drag;
+    if (!drag) return;
+    if (event?.pointerId !== undefined && event.pointerId !== drag.pointerId) return;
+    this._releasePointerCapture(drag.pointerId);
+    this._animateDragTo(0).then(() => this._endDragState());
+  }
+
+  _applyDragProgress(progress) {
+    const drag = this._drag;
+    if (!drag?.sheet) return;
+
+    const eased = this._clamp(progress, 0, 1);
+    const isHard = drag.sheet.classList.contains('is-hard');
+    const rigidity = isHard ? .34 : 1;
+    const rotation = drag.direction === 'next' ? -180 * eased : 180 * eased;
+    const lift = Math.sin(eased * Math.PI) * this.options.elevation * (isHard ? .52 : 1);
+    const singlePrefix = drag.sheet.classList.contains('is-single') ? 'translateX(-50%) ' : '';
+    const stiffTilt = isHard ? ` rotateZ(${(drag.direction === 'next' ? -1 : 1) * Math.sin(eased * Math.PI) * 1.4}deg)` : '';
+    const originX = drag.direction === 'next' ? 'left' : 'right';
+    const originY = this._dragOriginY(drag);
+    const curlPoint = this._dragCurlPoint(drag, eased);
+
+    drag.sheet.style.transformOrigin = `${originX} ${originY}%`;
+    drag.sheet.style.transform = `${singlePrefix}rotateY(${rotation}deg)${stiffTilt} translateZ(${lift}px)`;
+    drag.sheet.style.setProperty('--curl-progress', eased.toFixed(4));
+    drag.sheet.style.setProperty('--curl-x', `${curlPoint.x}%`);
+    drag.sheet.style.setProperty('--curl-y', `${curlPoint.y}%`);
+    drag.sheet.style.setProperty('--curl-opacity', String(Math.min(1, (.18 + eased * .95) * rigidity)));
+    drag.sheet.style.setProperty('--shadow-opacity', String(Math.min(1, (.16 + Math.sin(eased * Math.PI) * .72 + eased * .18) * (isHard ? .72 : 1))));
+    drag.sheet.style.setProperty('--back-opacity', String(Math.min(1, (eased * .72 + Math.sin(eased * Math.PI) * .26) * (isHard ? .9 : 1))));
+    drag.sheet.style.setProperty('--fold-angle', drag.direction === 'next' ? `${28 - eased * 54 + (curlPoint.y - 50) * .18}deg` : `${152 + eased * 54 - (curlPoint.y - 50) * .18}deg`);
+    drag.progress = eased;
+  }
+
+  _animateDragTo(targetProgress) {
+    const drag = this._drag;
+    if (!drag) return Promise.resolve();
+
+    const from = drag.progress;
+    const to = this._clamp(targetProgress, 0, 1);
+    const distance = Math.abs(to - from);
+    const hardMultiplier = drag.sheet.classList.contains('is-hard') ? 1.2 : 1;
+    const duration = this._prefersReducedMotion()
+      ? 1
+      : Math.max(120, this.options.duration * hardMultiplier * Math.max(.22, distance));
+    const started = performance.now();
+
+    return new Promise((resolve) => {
+      const step = (now) => {
+        if (!this._drag) {
+          resolve();
+          return;
+        }
+        const t = this._clamp((now - started) / duration, 0, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        this._applyDragProgress(from + (to - from) * eased);
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  _commitTurn(direction) {
+    const drag = this._drag;
+    if (!drag) return;
+    const previousPage = drag.previousPage;
+    this.currentPage = drag.targetPage;
+    this._endDragState();
+    this._isAnimating = false;
+    this.applyState({ animate: false });
+    this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
+    this.dispatchTurnEvent('pagechange', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
+    if (this.currentPage === 1) this.dispatchTurnEvent('first', { page: this.currentPage, previousPage, direction, pointerType: drag.pointerType });
+    if (this.currentPage === this.pages()) this.dispatchTurnEvent('last', { page: this.currentPage, previousPage, direction, pointerType: drag.pointerType });
+    this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1, pointerType: drag.pointerType });
+  }
+
+  _endDragState() {
+    const drag = this._drag;
+    if (!drag) return;
+    const detail = { page: drag.targetPage, previousPage: drag.previousPage, direction: drag.direction, progress: drag.progress, pointerType: drag.pointerType };
+    this._resetDragStyles();
+    document.documentElement.style.userSelect = this._previousDocumentUserSelect;
+    document.documentElement.style.webkitUserSelect = this._previousDocumentWebkitUserSelect;
+    this.book.classList.remove('is-dragging');
+    this._drag = null;
+    this.applyState({ animate: false });
+    if (!this._isAnimating) this.dispatchTurnEvent('end', detail);
+  }
+
+  _resetDragStyles() {
+    if (this._dragFrame) cancelAnimationFrame(this._dragFrame);
+    this._dragFrame = 0;
+    this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
+    this._resetPeekStyle();
+    this.pageElements.forEach((page) => {
+      page.classList.remove('turn-live', 'turning-next', 'turning-previous');
+      page.style.transform = '';
+      page.style.transformOrigin = '';
+      page.style.removeProperty('--curl-progress');
+      page.style.removeProperty('--curl-x');
+      page.style.removeProperty('--curl-y');
+      page.style.removeProperty('--curl-opacity');
+      page.style.removeProperty('--shadow-opacity');
+      page.style.removeProperty('--back-opacity');
+      page.style.removeProperty('--fold-angle');
+      delete page.dataset.dragDirection;
+    });
+  }
+
+  _preventBookBrowserAction(event) {
+    if (this._isInteractiveTarget(event.target) && !this._drag) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.getSelection?.()?.removeAllRanges();
+  }
+
+  _updateTurnPreview(event) {
+    if (this._drag || this.options.disabled || this._isAnimating || !this.options.swipe || event.pointerType === 'touch') return;
+    if (!window.matchMedia?.('(hover: hover)')?.matches) return;
+    if (this._isInteractiveTarget(event.target)) {
+      this._clearTurnPreview();
+      return;
+    }
+
+    const preview = this._previewForPoint(event.clientX, event.clientY);
+    if (!preview) {
+      this._clearTurnPreview();
+      return;
+    }
+
+    this._setTurnPreview(preview.corner, preview.progress);
+  }
+
+  _setTurnPreview(corner, progress) {
+    const safeProgress = this._clamp(progress, 0, 1);
+    if (this._preview?.corner === corner && Math.abs(this._preview.progress - safeProgress) < .02) return;
+    this._preview = { corner, progress: safeProgress };
+
+    if (!this._previewFrame) {
+      this._previewFrame = requestAnimationFrame(() => {
+        this._previewFrame = 0;
+        if (!this._preview) return;
+        const { corner } = this._preview;
+        this.book.classList.remove('is-peek-tl', 'is-peek-tr', 'is-peek-bl', 'is-peek-br');
+        this.book.classList.add(`is-peek-${corner}`);
+      });
+    }
+  }
+
+  _clearTurnPreview() {
+    if (this._previewFrame) cancelAnimationFrame(this._previewFrame);
+    this._previewFrame = 0;
+    this._preview = null;
+    if (!this.book) return;
+    this.book.classList.remove('is-peek-tl', 'is-peek-tr', 'is-peek-bl', 'is-peek-br');
+  }
+
+  _applyPeekStyle(corner) {
+    this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
+    if (corner) this.book.classList.add(`is-pressing-${corner}`);
+  }
+
+  _resetPeekStyle() {
+    this.book.classList.remove('is-pressing-tl', 'is-pressing-tr', 'is-pressing-bl', 'is-pressing-br');
+  }
+
+  _previewForPoint(clientX, clientY) {
+    const corner = this._cornerForPoint(clientX, clientY);
+    if (!corner) return null;
+
+    const direction = this._cornerDirection(corner);
+    const nextPage = direction === 'next' ? this.nextPageNumber() : this.previousPageNumber();
+    if (nextPage === this.currentPage) return null;
+
+    return { corner, direction, progress: 0.5 };
+  }
+
+  _prefersReducedMotion() {
+    return Boolean(this.motionQuery?.matches);
+  }
+
+  _cornerForPoint(clientX, clientY) {
+    const rect = this.book.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const sz = CORNER_SIZE;
+
+    if (x <= sz && y <= sz) return 'tl';
+    if (x >= rect.width - sz && y <= sz) return 'tr';
+    if (x <= sz && y >= rect.height - sz) return 'bl';
+    if (x >= rect.width - sz && y >= rect.height - sz) return 'br';
+    return null;
+  }
+
+  _cornerDirection(corner) {
+    if (corner === 'tl' || corner === 'bl') return 'previous';
+    return 'next';
+  }
+
+  _getTapDirection(event) {
+    const corner = this._cornerForPoint(event.clientX, event.clientY);
+    if (corner) return this._cornerDirection(corner);
+    return null;
+  }
+
+  _dragProgressForPoint(drag, clientX, clientY = drag.currentY) {
+    drag.currentX = clientX;
+    drag.currentY = clientY;
+
+    const rect = drag.pageRect;
+    const width = Math.max(rect?.width || drag.pageWidth, 1);
+    const hingeX = drag.direction === 'next' ? rect.left : rect.right;
+    const projectedWidth = drag.direction === 'next' ? clientX - hingeX : hingeX - clientX;
+    const cosine = this._clamp(projectedWidth / width, -1, 1);
+    const progress = Math.acos(cosine) / Math.PI;
+    return this._clamp(Math.max(progress, this._minimumGrabProgress(drag)), 0, 1);
+  }
+
+  _minimumGrabProgress(drag) {
+    if (this._prefersReducedMotion()) return 0;
+    return drag.pointerType === 'touch' ? .045 : .025;
+  }
+
+  _dragOriginY(drag) {
+    const rect = drag.pageRect;
+    const height = Math.max(rect?.height || this.book.getBoundingClientRect().height, 1);
+    const localY = this._clamp((drag.currentY - rect.top) / height, 0, 1);
+    return Number((localY * 100).toFixed(2));
+  }
+
+  _dragCurlPoint(drag, progress) {
+    const rect = drag.pageRect;
+    const width = Math.max(rect?.width || drag.pageWidth, 1);
+    const height = Math.max(rect?.height || this.book.getBoundingClientRect().height, 1);
+    const localX = this._clamp((drag.currentX - rect.left) / width, 0, 1) * 100;
+    const localY = this._clamp((drag.currentY - rect.top) / height, 0, 1) * 100;
+    const restingEdge = drag.direction === 'next' ? 100 : 0;
+    const x = restingEdge + (localX - restingEdge) * Math.max(.35, progress);
+    return {
+      x: Number(this._clamp(x, 0, 100).toFixed(2)),
+      y: Number(localY.toFixed(2)),
+    };
+  }
+
+  _releasePointerCapture(pointerId) {
+    try {
+      if (this.book.hasPointerCapture?.(pointerId)) this.book.releasePointerCapture(pointerId);
+    } catch (error) { /* Safe no-op for older pointer capture implementations. */ }
+  }
+
+  _clamp(value, min, max) {
+    return clamp(value, min, max);
+  }
+
+  nextPageNumber() {
+    const view = this.computeView(this.currentPage);
+    if (this.options.display === 'single') return Math.min(this.currentPage + 1, this.pages());
+    if (view.length === 0) return 1;
+    return Math.min(view.at(-1) + 1, this.pages());
+  }
+
+  previousPageNumber() {
+    if (this.options.display === 'single') return Math.max(this.currentPage - 1, 1);
+
+    const currentView = this.computeView(this.currentPage);
+    const currentStart = currentView[0] ?? 1;
+    let previousStart = 1;
+    for (let page = 1; page < currentStart; page += 1) {
+      const candidateView = this.computeView(page);
+      if (candidateView[0] < currentStart) previousStart = candidateView[0];
+      page = Math.max(page, candidateView.at(-1));
+    }
+    return previousStart;
+  }
+
+  normalizedPage(pageNumber) {
+    if (this.pages() === 0) return 0;
+    return clamp(Number.parseInt(pageNumber, 10) || 1, 1, this.pages());
+  }
+
+  spreadStartFor(pageNumber) {
+    const page = this.normalizedPage(pageNumber);
+    if (this.options.display === 'single' || page <= 1) return page;
+    return page % 2 === 0 ? page : page - 1;
+  }
+
+  computeView(pageNumber) {
+    if (this.pages() === 0) return [];
+    const page = this.normalizedPage(pageNumber);
+    if (this.options.display === 'single') return [page];
+    if (this.isStandaloneHardPage(page)) return [page];
+
+    // turn.js-style grouping: cover alone, then even/odd interior spreads.
+    const start = this.spreadStartFor(page);
+    const view = [start];
+    if (start + 1 <= this.pages() && !this.isStandaloneHardPage(start + 1)) view.push(start + 1);
+    return view;
+  }
+
+  isStandaloneHardPage(pageNumber) {
+    const page = this.pagesModel[pageNumber - 1];
+    return Boolean(page?.hard && (pageNumber === 1 || pageNumber === this.pages()));
+  }
+
+  animationPageFor(direction, previousView) {
+    const pageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
+    return this.pageElements[pageNumber - 1];
+  }
+
+  animationDurationFor(pageElement) {
+    if (this._prefersReducedMotion()) return 1;
+    return Math.round(this.options.duration * (pageElement?.classList.contains('is-hard') ? 1.25 : 1));
+  }
+
+  goTo(pageNumber) {
+    if (this.options.disabled || this._isAnimating || this.pages() === 0) return this.currentPage;
+
+    const requestedPage = Number.parseInt(pageNumber, 10);
+    if (!Number.isFinite(requestedPage) || requestedPage < 1 || requestedPage > this.pages()) {
+      this.dispatchTurnEvent('missing', { page: pageNumber, previousPage: this.currentPage });
+      return this.currentPage;
+    }
+
+    const targetPage = this.normalizedPage(requestedPage);
+
+    const previousPage = this.currentPage;
+    const previousView = this.computeView(previousPage);
+    const targetView = this.computeView(targetPage);
+    if (previousView.join(',') === targetView.join(',')) {
+      this.currentPage = targetPage;
+      this.applyState({ animate: false });
+      return this.currentPage;
+    }
+
+    if (!this.dispatchTurnEvent('turning', { page: targetPage, previousPage })) return this.currentPage;
+
+    const direction = targetView[0] > previousView[0] ? 'next' : 'previous';
+    this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0 });
+    this._isAnimating = true;
+    this.currentPage = targetPage;
+
+    this.applyState({ animate: true, direction, previousView, targetView });
+
+    const animatedPage = this.animationPageFor(direction, previousView);
+    const animationDuration = this.animationDurationFor(animatedPage);
+
+    window.setTimeout(() => {
+      this.pageElements.forEach((page) => page.classList.remove('turn-live', 'turning-next', 'turning-previous'));
+      this._isAnimating = false;
+      this.applyState({ animate: false });
+      this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1 });
+      this.dispatchTurnEvent('pagechange', { page: this.currentPage, previousPage, direction, progress: 1 });
+      if (this.currentPage === 1) this.dispatchTurnEvent('first', { page: this.currentPage, previousPage, direction });
+      if (this.currentPage === this.pages()) this.dispatchTurnEvent('last', { page: this.currentPage, previousPage, direction });
+      this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1 });
+    }, animationDuration);
+
+    return this.currentPage;
+  }
+
+  applyState({ animate = false, direction, previousView = [], targetView = this.view() } = {}) {
+    if (!this.book) return;
+    const view = this.computeView(this.currentPage);
+    const visibleForAnimation = new Set([...previousView, ...targetView, ...view]);
+    const spreadStart = this.spreadStartFor(this.currentPage);
+
+    this.book.classList.toggle('is-disabled', this.options.disabled);
+    const atFirst = view[0] === 1;
+    const atLast = view.at(-1) === this.pages();
+    const disabled = this.options.disabled;
+    if (this._cornerZones) {
+      this._cornerZones.tl.disabled = disabled || atFirst;
+      this._cornerZones.tr.disabled = disabled || atLast;
+      this._cornerZones.bl.disabled = disabled || atFirst;
+      this._cornerZones.br.disabled = disabled || atLast;
+    }
+
+    this.pageElements.forEach((element, index) => {
+      const pageNumber = index + 1;
+      const isCurrent = view.includes(pageNumber);
+      const isLeft = this.options.display === 'double' && isCurrent && view.length > 1 && pageNumber === view[0];
+      const isRight = this.options.display === 'double' && isCurrent && view.length > 1 && pageNumber === view[1];
+      const isSingle = this.options.display === 'single' || (isCurrent && view.length === 1);
+      const isBefore = this.options.display === 'single' ? pageNumber < this.currentPage : pageNumber < spreadStart;
+      const isAfter = this.options.display === 'single' ? pageNumber > this.currentPage : pageNumber > view.at(-1);
+      const isAnimationPage = animate && (direction === 'next'
+        ? previousView.at(-1) === pageNumber
+        : previousView[0] === pageNumber);
+
+      element.className = `page${this.pagesModel[index].hard ? ' is-hard' : ''}`;
+      element.classList.toggle('is-current', isCurrent);
+      element.classList.toggle('is-left', isLeft);
+      element.classList.toggle('is-right', isRight);
+      element.classList.toggle('is-single', isSingle);
+      element.classList.toggle('is-before', isBefore);
+      element.classList.toggle('is-after', isAfter);
+      element.classList.toggle('is-hidden', !isCurrent && !visibleForAnimation.has(pageNumber));
+      if (isAnimationPage) element.classList.add(direction === 'next' ? 'turning-next' : 'turning-previous');
+      element.style.zIndex = this.zIndexFor(pageNumber, view, isAnimationPage);
+      element.setAttribute('aria-hidden', String(!isCurrent));
+    });
+
+    this.status.textContent = this.statusText();
+  }
+
+  zIndexFor(pageNumber, view, isAnimationPage) {
+    if (isAnimationPage) return '950';
+    if (view.includes(pageNumber)) return String(700 + pageNumber);
+    // Pages before the current spread stack below the active pages, after pages recede behind them.
+    return pageNumber < view[0] ? String(100 + pageNumber) : String(600 - pageNumber);
+  }
+
+  statusText() {
+    const view = this.view();
+    if (view.length === 0) return 'No pages';
+    return view.length === 1
+      ? `Page ${view[0]} of ${this.pages()}`
+      : `Pages ${view[0]}–${view.at(-1)} of ${this.pages()}`;
+  }
+
+  dispatchTurnEvent(type, detail = {}) {
+    return this.dispatchEvent(new CustomEvent(type, {
+      bubbles: true,
+      cancelable: type === 'turning',
+      detail: {
+        page: detail.page ?? this.currentPage,
+        previousPage: detail.previousPage ?? this.currentPage,
+        view: this.computeView(detail.page ?? this.currentPage),
+        display: this.options.display,
+        pages: this.pages(),
+        direction: detail.direction,
+        progress: detail.progress,
+        pointerType: detail.pointerType,
+      },
+    }));
+  }
+}
+
+customElements.define('turn-book', TurnBook);
