@@ -11,6 +11,69 @@ function toPositiveInteger(value, fallback) {
   return Number.isFinite(number) && number > 0 ? number : fallback;
 }
 
+function foldClampCircle(point, centerX, centerY, radius) {
+  const dx = point.x - centerX;
+  const dy = point.y - centerY;
+  const distance = Math.hypot(dx, dy);
+  if (distance <= radius || distance === 0) return point;
+  const scale = radius / distance;
+  return { x: centerX + dx * scale, y: centerY + dy * scale };
+}
+
+function toPolygon(points) {
+  return `polygon(${points.map((q) => `${q.x.toFixed(2)}px ${q.y.toFixed(2)}px`).join(', ')})`;
+}
+
+// Fold geometry: the grabbed corner K is carried to the pointer P, so the sheet
+// creases along the perpendicular bisector of K→P. The lifted region is the
+// reflection across that crease; the back face (mirror-printed next page) lands
+// there under an orientation-preserving matrix (reflection ∘ mirror = rotation).
+function computeFold(K, P, w, h) {
+  const vx = P.x - K.x;
+  const vy = P.y - K.y;
+  const length = Math.hypot(vx, vy);
+  if (length < 0.5) return null;
+
+  const n = { x: vx / length, y: vy / length };
+  const m = { x: (P.x + K.x) / 2, y: (P.y + K.y) / 2 };
+  const d = m.x * n.x + m.y * n.y;
+  const u = { x: -n.y, y: n.x };
+  const L = 3 * (w + h);
+
+  const c1 = { x: m.x + u.x * L, y: m.y + u.y * L };
+  const c2 = { x: m.x - u.x * L, y: m.y - u.y * L };
+  const frontClip = [
+    c1,
+    c2,
+    { x: c2.x + n.x * L, y: c2.y + n.y * L },
+    { x: c1.x + n.x * L, y: c1.y + n.y * L },
+  ];
+  const foldedRegion = [
+    c1,
+    c2,
+    { x: c2.x - n.x * L, y: c2.y - n.y * L },
+    { x: c1.x - n.x * L, y: c1.y - n.y * L },
+  ];
+
+  const reflect = (q) => {
+    const k = 2 * (q.x * n.x + q.y * n.y - d);
+    return { x: q.x - k * n.x, y: q.y - k * n.y };
+  };
+  const mapBack = (b) => reflect({ x: w - b.x, y: b.y });
+  const t00 = mapBack({ x: 0, y: 0 });
+  const t10 = mapBack({ x: 1, y: 0 });
+  const t01 = mapBack({ x: 0, y: 1 });
+
+  return {
+    n,
+    m,
+    length,
+    frontClip,
+    backClip: foldedRegion.map((q) => ({ x: w - q.x, y: q.y })),
+    matrix: [t10.x - t00.x, t10.y - t00.y, t01.x - t00.x, t01.y - t00.y, t00.x, t00.y],
+  };
+}
+
 class TurnBook extends HTMLElement {
   static get observedAttributes() {
     return [
@@ -37,6 +100,7 @@ class TurnBook extends HTMLElement {
     this.currentPage = 1;
     this._isAnimating = false;
     this._drag = null;
+    this._foldSession = null;
     this._dragFrame = 0;
     this._previewFrame = 0;
     this._ghostClickUntil = 0;
@@ -57,6 +121,7 @@ class TurnBook extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._destroyFoldSession();
     this.unbindEvents();
   }
 
@@ -234,6 +299,7 @@ class TurnBook extends HTMLElement {
   }
 
   render() {
+    this._destroyFoldSession();
     this.shadowRoot.innerHTML = this.template();
     this.book = this.shadowRoot.querySelector('.book');
     this.viewport = this.shadowRoot.querySelector('.viewport');
@@ -944,20 +1010,31 @@ class TurnBook extends HTMLElement {
     const previousPage = this.currentPage;
     const previousView = this.computeView(previousPage);
     const targetView = this.computeView(targetPage);
-    const turningPageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
-    const sheet = this.pageElements[turningPageNumber - 1];
-    if (!sheet) return;
-    const sheetRect = sheet.getBoundingClientRect();
+    const foldPlan = this._foldPlanFor(direction, targetPage);
 
-    this.applyState({ animate: true, direction, previousView, targetView });
-    sheet.classList.add('turn-live', direction === 'next' ? 'turning-next' : 'turning-previous');
-    sheet.dataset.dragDirection = direction;
-    sheet.setAttribute('aria-hidden', 'false');
+    let sheet;
+    let sheetRect;
+    if (foldPlan) {
+      const session = this._startFoldSession(foldPlan, corner[0]);
+      sheet = session.sheetEl;
+      sheetRect = session.rect;
+    } else {
+      const turningPageNumber = direction === 'next' ? previousView.at(-1) : previousView[0];
+      sheet = this.pageElements[turningPageNumber - 1];
+      if (!sheet) return;
+      sheetRect = sheet.getBoundingClientRect();
+
+      this.applyState({ animate: true, direction, previousView, targetView });
+      sheet.classList.add('turn-live', direction === 'next' ? 'turning-next' : 'turning-previous');
+      sheet.dataset.dragDirection = direction;
+      sheet.setAttribute('aria-hidden', 'false');
+    }
 
     const now = performance.now();
     this._drag = {
       pointerId: event.pointerId,
       pointerType: event.pointerType || 'mouse',
+      mode: foldPlan ? 'fold' : 'rigid',
       corner,
       direction,
       targetPage,
@@ -987,9 +1064,14 @@ class TurnBook extends HTMLElement {
     document.documentElement.style.userSelect = 'none';
     document.documentElement.style.webkitUserSelect = 'none';
     this.book.classList.add('is-dragging');
-    this._applyPeekStyle(corner);
     this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0, pointerType: this._drag.pointerType });
-    this._applyDragProgress(this._dragProgressForPoint(this._drag, event.clientX, event.clientY));
+    this._drag.progress = this._dragProgressForPoint(this._drag, event.clientX, event.clientY);
+    if (foldPlan) {
+      this._renderFold(this._foldLocalPoint(event));
+    } else {
+      this._applyPeekStyle(corner);
+      this._applyDragProgress(this._drag.progress);
+    }
 
     try { this.book.setPointerCapture(event.pointerId); } catch (error) { /* Pointer capture can fail if the pointer already ended. */ }
   }
@@ -1018,11 +1100,15 @@ class TurnBook extends HTMLElement {
     drag.currentY = event.clientY;
     drag.didMove = absX > 7 || absY > 7;
     drag.progress = this._dragProgressForPoint(drag, event.clientX, event.clientY);
+    if (drag.mode === 'fold') drag.pendingFoldPoint = this._foldLocalPoint(event);
 
     if (!this._dragFrame) {
       this._dragFrame = requestAnimationFrame(() => {
         this._dragFrame = 0;
-        if (this._drag) this._applyDragProgress(this._drag.progress);
+        const active = this._drag;
+        if (!active) return;
+        if (active.mode === 'fold') this._renderFold(active.pendingFoldPoint);
+        else this._applyDragProgress(active.progress);
       });
     }
   }
@@ -1115,6 +1201,18 @@ class TurnBook extends HTMLElement {
     const drag = this._drag;
     if (!drag) return Promise.resolve();
 
+    if (drag.mode === 'fold') {
+      const session = this._foldSession;
+      if (!session) return Promise.resolve();
+      const to = targetProgress >= 1 ? session.donePoint : session.restPoint;
+      const distance = Math.hypot(to.x - session.P.x, to.y - session.P.y);
+      const duration = this._prefersReducedMotion()
+        ? 1
+        : Math.max(140, this.options.duration * Math.min(1, distance / (2 * session.w)));
+      const arc = targetProgress >= 1 ? session.h * 0.18 : 0;
+      return this._animateFoldPoint(to, duration, arc, 'out');
+    }
+
     const from = drag.progress;
     const to = this._clamp(targetProgress, 0, 1);
     const distance = Math.abs(to - from);
@@ -1159,6 +1257,7 @@ class TurnBook extends HTMLElement {
     const drag = this._drag;
     if (!drag) return;
     const detail = { page: drag.targetPage, previousPage: drag.previousPage, direction: drag.direction, progress: drag.progress, pointerType: drag.pointerType };
+    this._destroyFoldSession();
     this._resetDragStyles();
     document.documentElement.style.userSelect = this._previousDocumentUserSelect;
     document.documentElement.style.webkitUserSelect = this._previousDocumentWebkitUserSelect;
@@ -1213,6 +1312,23 @@ class TurnBook extends HTMLElement {
   }
 
   _setTurnPreview(corner, progress) {
+    if (this._foldSession?.peek && this._foldSession.peekCorner === corner) return;
+
+    const direction = this._cornerDirection(corner);
+    const plan = this._foldPlanFor(direction);
+    if (plan) {
+      const session = this._startFoldSession(plan, corner[0]);
+      session.peek = true;
+      session.peekCorner = corner;
+      const inwardX = session.K.x === 0 ? 1 : -1;
+      const inwardY = session.K.y === 0 ? 1 : -1;
+      const target = plan.mode === 'single-back'
+        ? { x: session.restPoint.x + 52, y: session.restPoint.y + inwardY * 22 }
+        : { x: session.K.x + inwardX * 42, y: session.K.y + inwardY * 42 };
+      this._animateFoldPoint(target, 150, 0, 'out');
+      return;
+    }
+
     const safeProgress = this._clamp(progress, 0, 1);
     if (this._preview?.corner === corner && Math.abs(this._preview.progress - safeProgress) < .02) return;
     this._preview = { corner, progress: safeProgress };
@@ -1232,6 +1348,10 @@ class TurnBook extends HTMLElement {
     if (this._previewFrame) cancelAnimationFrame(this._previewFrame);
     this._previewFrame = 0;
     this._preview = null;
+    if (this._foldSession?.peek) {
+      this._destroyFoldSession();
+      this.applyState({ animate: false });
+    }
     if (!this.book) return;
     this.book.classList.remove('is-peek-tl', 'is-peek-tr', 'is-peek-bl', 'is-peek-br');
   }
@@ -1333,6 +1453,232 @@ class TurnBook extends HTMLElement {
     return clamp(value, min, max);
   }
 
+  // Decide whether a turn can use the fold engine, and which pages play which
+  // role: `sheetPage` is the leaf that folds, `backPage` supplies its back-face
+  // content, `farPage` is revealed underneath. Hard sheets and turns into a
+  // standalone hard cover fall back to the rigid flip (null plan).
+  _foldPlanFor(direction, requestedTarget) {
+    if (this._prefersReducedMotion()) return null;
+    const previousView = this.computeView(this.currentPage);
+    const targetPage = requestedTarget
+      ?? (direction === 'next' ? this.nextPageNumber() : this.previousPageNumber());
+    if (targetPage === this.currentPage) return null;
+    const targetView = this.computeView(targetPage);
+    const single = this.options.display === 'single';
+
+    let mode;
+    let sheetPage;
+    let backPage = null;
+    let farPage = null;
+    if (single) {
+      mode = direction === 'next' ? 'single-fwd' : 'single-back';
+      sheetPage = direction === 'next' ? this.currentPage : targetPage;
+      farPage = direction === 'next' ? targetPage : null;
+    } else {
+      mode = 'double';
+      sheetPage = direction === 'next' ? previousView.at(-1) : previousView[0];
+      backPage = direction === 'next' ? targetView[0] : targetView.at(-1);
+      farPage = targetView.length > 1 ? (direction === 'next' ? targetView[1] : targetView[0]) : null;
+    }
+
+    const sheetModel = this.pagesModel[sheetPage - 1];
+    if (!sheetModel || sheetModel.hard) return null;
+    if (backPage && this.isStandaloneHardPage(backPage)) return null;
+    return { direction, mode, sheetPage, backPage, farPage, targetPage };
+  }
+
+  _startFoldSession(plan, cornerRow) {
+    this._clearTurnPreview();
+    this._destroyFoldSession();
+
+    const sheetEl = this.pageElements[plan.sheetPage - 1];
+    const session = { plan, sheetEl, savedSheetClass: null, farEl: null, savedFarClass: null };
+
+    if (plan.mode === 'single-back') {
+      // The incoming previous leaf is normally hidden; show it in the slot so
+      // it can unfold over the current page.
+      session.savedSheetClass = sheetEl.className;
+      sheetEl.className = 'page is-single is-current';
+    }
+    sheetEl.style.zIndex = '960';
+    sheetEl.style.transition = 'none';
+
+    const layerRect = this.layer.getBoundingClientRect();
+    const rect = sheetEl.getBoundingClientRect();
+    const w = Math.max(1, rect.width);
+    const h = Math.max(1, rect.height);
+    session.rect = rect;
+    session.w = w;
+    session.h = h;
+    session.offX = rect.left - layerRect.left;
+    session.offY = rect.top - layerRect.top;
+
+    const kx = plan.mode === 'double' && plan.direction === 'previous' ? 0 : w;
+    const ky = cornerRow === 't' ? 0 : h;
+    session.K = { x: kx, y: ky };
+    session.hingeX = w - kx;
+    const mirroredX = 2 * session.hingeX - kx;
+    const forward = plan.mode !== 'single-back';
+    session.restPoint = forward ? { x: kx, y: ky } : { x: mirroredX, y: ky };
+    session.donePoint = forward ? { x: mirroredX, y: ky } : { x: kx, y: ky };
+    session.P = { ...session.restPoint };
+
+    if (plan.farPage) {
+      const farEl = this.pageElements[plan.farPage - 1];
+      const hard = this.pagesModel[plan.farPage - 1].hard ? ' is-hard' : '';
+      session.farEl = farEl;
+      session.savedFarClass = farEl.className;
+      farEl.className = plan.mode === 'double'
+        ? `page is-current ${plan.direction === 'next' ? 'is-right' : 'is-left'}${hard}`
+        : `page is-single is-current${hard}`;
+      farEl.style.zIndex = '300';
+      farEl.style.transition = 'none';
+    }
+
+    const backModel = plan.backPage ? this.pagesModel[plan.backPage - 1] : null;
+    const backSide = plan.direction === 'next' ? ' is-left' : ' is-right';
+    const backEl = document.createElement('div');
+    backEl.className = `page fold-back${backModel?.hard ? ' is-hard' : ''}${plan.mode === 'double' ? backSide : ''}`;
+    backEl.style.cssText = `left:0;top:0;width:${w}px;height:${h}px;transition:none;transform-origin:0 0;border-radius:.35rem;will-change:transform;box-shadow:.15rem .4rem 1.2rem rgba(18,9,4,.38);`;
+    backEl.innerHTML = (backModel
+      ? `<div class="page-content">${backModel.html}</div><span class="page-number" aria-hidden="true">${plan.backPage}</span>`
+      : '')
+      + '<span class="fold-back-shade" style="position:absolute;inset:0;pointer-events:none;"></span>';
+
+    const foldLayer = document.createElement('div');
+    foldLayer.className = 'fold-layer';
+    foldLayer.style.cssText = 'position:absolute;inset:0;overflow:hidden;z-index:970;pointer-events:none;';
+    foldLayer.append(backEl);
+    this.layer.append(foldLayer);
+
+    session.foldLayer = foldLayer;
+    session.backEl = backEl;
+    session.backShade = backEl.querySelector('.fold-back-shade');
+    session.frontShade = sheetEl.querySelector('.curl-shadow');
+    if (session.frontShade) session.frontShade.style.transition = 'none';
+
+    this._foldSession = session;
+    this._renderFold(session.restPoint);
+    return session;
+  }
+
+  _destroyFoldSession() {
+    const session = this._foldSession;
+    if (!session) return;
+    this._foldSession = null;
+    session.foldLayer.remove();
+    session.sheetEl.style.clipPath = '';
+    session.sheetEl.style.zIndex = '';
+    session.sheetEl.style.transition = '';
+    if (session.savedSheetClass !== null) session.sheetEl.className = session.savedSheetClass;
+    if (session.frontShade) {
+      session.frontShade.style.opacity = '';
+      session.frontShade.style.background = '';
+      session.frontShade.style.transition = '';
+    }
+    if (session.farEl) {
+      session.farEl.className = session.savedFarClass;
+      session.farEl.style.zIndex = '';
+      session.farEl.style.transition = '';
+    }
+  }
+
+  _foldLocalPoint(event) {
+    const rect = this._foldSession.rect;
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  // Keep the fold point within paper reach: no further than the page width
+  // from the near hinge corner, nor the diagonal from the far hinge corner.
+  _clampFoldPoint(session, point) {
+    const { w, h, hingeX, K } = session;
+    let clamped = foldClampCircle(point, hingeX, K.y, w);
+    clamped = foldClampCircle(clamped, hingeX, h - K.y, Math.hypot(w, h));
+    return clamped;
+  }
+
+  _renderFold(point) {
+    const session = this._foldSession;
+    if (!session) return;
+    const p = this._clampFoldPoint(session, point);
+    session.P = p;
+    const fold = computeFold(session.K, p, session.w, session.h);
+
+    if (!fold) {
+      session.sheetEl.style.clipPath = '';
+      session.backEl.style.display = 'none';
+      if (session.frontShade) session.frontShade.style.opacity = '0';
+      return;
+    }
+
+    session.backEl.style.display = '';
+    session.sheetEl.style.clipPath = toPolygon(fold.frontClip);
+    const m = fold.matrix;
+    session.backEl.style.transform = `matrix(${m[0].toFixed(6)}, ${m[1].toFixed(6)}, ${m[2].toFixed(6)}, ${m[3].toFixed(6)}, ${(m[4] + session.offX).toFixed(2)}, ${(m[5] + session.offY).toFixed(2)})`;
+    session.backEl.style.clipPath = toPolygon(fold.backClip);
+    this._renderFoldShading(session, fold);
+  }
+
+  // Gradient shading anchored to the crease: a shadow cast onto the flat part
+  // of the sheet, and a sheen/crease darkening along the back face's fold edge.
+  _renderFoldShading(session, fold) {
+    const { w, h } = session;
+    const amount = Math.min(1, fold.length / (2 * w));
+    const strength = Math.min(1, amount * 3);
+    const spread = 24 + 70 * amount;
+
+    if (session.frontShade) {
+      const angle = Math.atan2(fold.n.x, -fold.n.y);
+      const lineLength = Math.abs(w * Math.sin(angle)) + Math.abs(h * Math.cos(angle));
+      const offset = lineLength / 2 + (fold.m.x - w / 2) * fold.n.x + (fold.m.y - h / 2) * fold.n.y;
+      session.frontShade.style.opacity = '1';
+      session.frontShade.style.background = `linear-gradient(${angle.toFixed(4)}rad, transparent ${(offset - 1).toFixed(1)}px, rgba(28,15,7,${(0.3 * strength).toFixed(3)}) ${offset.toFixed(1)}px, rgba(28,15,7,0) ${(offset + spread).toFixed(1)}px)`;
+    }
+
+    if (session.backShade) {
+      const nb = { x: -fold.n.x, y: fold.n.y };
+      const angle = Math.atan2(nb.x, -nb.y);
+      const lineLength = Math.abs(w * Math.sin(angle)) + Math.abs(h * Math.cos(angle));
+      const mb = { x: w - fold.m.x, y: fold.m.y };
+      const offset = lineLength / 2 + (mb.x - w / 2) * nb.x + (mb.y - h / 2) * nb.y;
+      session.backShade.style.background = `linear-gradient(${angle.toFixed(4)}rad, transparent ${(offset - spread * 1.4).toFixed(1)}px, rgba(255,255,255,.14) ${(offset - spread * 0.5).toFixed(1)}px, rgba(52,28,10,${(0.24 * strength).toFixed(3)}) ${(offset - 1).toFixed(1)}px, transparent ${(offset + 1).toFixed(1)}px)`;
+    }
+  }
+
+  _animateFoldPoint(toPoint, duration, arc = 0, ease = 'out') {
+    const session = this._foldSession;
+    if (!session) return Promise.resolve();
+    const from = { ...session.P };
+    const liftDirection = session.K.y === 0 ? 1 : -1;
+    const control = {
+      x: (from.x + toPoint.x) / 2,
+      y: (from.y + toPoint.y) / 2 + liftDirection * arc,
+    };
+    const total = Math.max(1, duration);
+    const started = performance.now();
+
+    return new Promise((resolve) => {
+      const step = (now) => {
+        if (this._foldSession !== session) {
+          resolve();
+          return;
+        }
+        const t = clamp((now - started) / total, 0, 1);
+        const e = ease === 'inout'
+          ? (t < 0.5 ? 2 * t * t : 1 - ((2 - 2 * t) ** 2) / 2)
+          : 1 - Math.pow(1 - t, 3);
+        const inv = 1 - e;
+        this._renderFold({
+          x: inv * inv * from.x + 2 * inv * e * control.x + e * e * toPoint.x,
+          y: inv * inv * from.y + 2 * inv * e * control.y + e * e * toPoint.y,
+        });
+        if (t < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
   nextPageNumber() {
     const view = this.computeView(this.currentPage);
     if (this.options.display === 'single') return Math.min(this.currentPage + 1, this.pages());
@@ -1394,7 +1740,7 @@ class TurnBook extends HTMLElement {
   }
 
   goTo(pageNumber) {
-    if (this.options.disabled || this._isAnimating || this.pages() === 0) return this.currentPage;
+    if (this.options.disabled || this._isAnimating || this._drag || this.pages() === 0) return this.currentPage;
 
     const requestedPage = Number.parseInt(pageNumber, 10);
     if (!Number.isFinite(requestedPage) || requestedPage < 1 || requestedPage > this.pages()) {
@@ -1417,24 +1763,33 @@ class TurnBook extends HTMLElement {
 
     const direction = targetView[0] > previousView[0] ? 'next' : 'previous';
     this.dispatchTurnEvent('start', { page: targetPage, previousPage, direction, progress: 0 });
+    const foldPlan = this._foldPlanFor(direction, targetPage);
     this._isAnimating = true;
     this.currentPage = targetPage;
 
-    this.applyState({ animate: true, direction, previousView, targetView });
-
-    const animatedPage = this.animationPageFor(direction, previousView);
-    const animationDuration = this.animationDurationFor(animatedPage);
-
-    window.setTimeout(() => {
+    const finishTurn = () => {
       this.pageElements.forEach((page) => page.classList.remove('turn-live', 'turning-next', 'turning-previous'));
       this._isAnimating = false;
+      this._destroyFoldSession();
       this.applyState({ animate: false });
       this.dispatchTurnEvent('turned', { page: this.currentPage, previousPage, direction, progress: 1 });
       this.dispatchTurnEvent('pagechange', { page: this.currentPage, previousPage, direction, progress: 1 });
       if (this.currentPage === 1) this.dispatchTurnEvent('first', { page: this.currentPage, previousPage, direction });
       if (this.currentPage === this.pages()) this.dispatchTurnEvent('last', { page: this.currentPage, previousPage, direction });
       this.dispatchTurnEvent('end', { page: this.currentPage, previousPage, direction, progress: 1 });
-    }, animationDuration);
+    };
+
+    if (foldPlan) {
+      const session = this._startFoldSession(foldPlan, 'b');
+      this._animateFoldPoint(session.donePoint, this.animationDurationFor(session.sheetEl), session.h * 0.45, 'inout')
+        .then(finishTurn);
+      return this.currentPage;
+    }
+
+    this.applyState({ animate: true, direction, previousView, targetView });
+
+    const animatedPage = this.animationPageFor(direction, previousView);
+    window.setTimeout(finishTurn, this.animationDurationFor(animatedPage));
 
     return this.currentPage;
   }
